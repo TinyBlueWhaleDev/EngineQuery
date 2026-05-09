@@ -6,10 +6,25 @@ using System.Threading.Tasks;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Models
 {
-    public sealed record GeneratedSqlQuery
+    /// <summary>
+    /// Represents a parameter generated for a SQL query command.
+    /// </summary>
+    public sealed record QuerySqlParameter
     {
-        public required string CommandText { get; init; }
-        public required IReadOnlyList<QuerySqlParameter> Parameters { get; init; }
-        public bool HasParameters => Parameters.Count > 0;
+        /// <summary>
+        /// Gets the SQL parameter name.
+        /// </summary>
+        public required string Name { get; init; }
+
+        /// <summary>
+        /// Gets the SQL parameter value.
+        /// </summary>
+        public object? Value { get; init; }
+
+        /// <summary>
+        /// Gets the runtime type of the parameter value when available.
+        /// </summary>
+        public Type? ValueType =>
+            Value?.GetType();
     }
 }

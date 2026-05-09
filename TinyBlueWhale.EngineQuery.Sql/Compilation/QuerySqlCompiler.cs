@@ -11,10 +11,30 @@ using TinyBlueWhale.EngineQuery.Sql.ExpressionParsing;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 {
+    /// <summary>
+    /// Compiles query definitions into provider-specific SQL command text.
+    /// </summary>
+    /// <remarks>
+    /// The compiler is responsible only for SQL generation.
+    /// It does not execute queries or manage database connections.
+    /// </remarks>
     public sealed class QuerySqlCompiler(ISqlDatabaseDialect databaseDialect)
     {
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
 
+        /// <summary>
+        /// Compiles the specified query definition into SQL command text and parameters.
+        /// </summary>
+        /// <param name="queryDefinition">
+        /// Query definition containing projections, filters, ordering and pagination metadata.
+        /// </param>
+        /// <returns>
+        /// Generated SQL query command.
+        /// </returns>
+        /// <remarks>
+        /// SQL generation is deterministic:
+        /// compiling the same query definition multiple times produces identical SQL and parameter ordering.
+        /// </remarks>
         public GeneratedSqlQuery CompileToSql(CompiledQueryDefinition queryDefinition)
         {
             var sqlParameters = new List<QuerySqlParameter>();
@@ -38,6 +58,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             };
         }
 
+        // Builds the SQL SELECT clause from query projections.
         private string BuildSelectClause(CompiledQueryDefinition queryDefinition)
         {
             if (queryDefinition.SelectDefinitions.Count == 0)
@@ -48,6 +69,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             return "SELECT " + string.Join(", ", selectedColumns);
         }
+
+        // Adds SQL WHERE conditions when filters are defined.
         private void AddWhereClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
         {
             if (queryDefinition.WhereDefinitions.Count == 0)
@@ -65,6 +88,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             sqlLines.Add("WHERE " + string.Join(" AND ", whereConditions));
         }
 
+        // Adds SQL ORDER BY clauses preserving fluent ordering sequence.
         private void AddOrderByClauseIfNeeded(CompiledQueryDefinition queryDefinition,List<string> sqlLines)
         {
             if (queryDefinition.OrderingDefinitions.Count == 0)
@@ -81,6 +105,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             sqlLines.Add("ORDER BY " + string.Join(", ", orderingClauses));
         }
 
+        // Adds provider-specific pagination syntax when pagination is enabled. 
         private void AddPaginationClauseIfNeeded(CompiledQueryDefinition queryDefinition,List<string> sqlLines)
         {
             if (!queryDefinition.Pagination.HasPagination)
