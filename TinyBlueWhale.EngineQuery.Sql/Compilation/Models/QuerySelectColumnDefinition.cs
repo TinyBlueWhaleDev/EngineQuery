@@ -6,9 +6,19 @@ using System.Threading.Tasks;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Compilation.Models
 {
+    /// <summary>
+    /// Represents a selected column in a SQL query projection.
+    /// </summary>
     public sealed record QuerySelectColumnDefinition
     {
+        /// <summary>
+        /// Gets the entity property name used to generate the selected SQL column.
+        /// </summary>
         public required string PropertyName { get; init; }
+
+        /// <summary>
+        /// Gets the optional SQL column alias.
+        /// </summary>
         public string? Alias { get; init; }
     }
 }

@@ -9,11 +9,30 @@ using TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
 {
+    /// <summary>
+    /// Parses LINQ expression trees into SQL WHERE clause conditions.
+    /// </summary>
+    /// <remarks>
+    /// This parser is responsible for converting supported expression patterns
+    /// into provider-specific SQL predicate fragments and query parameters.
+    /// </remarks>
     public sealed class QueryWhereClauseExpressionParser(ISqlDatabaseDialect databaseDialect, List<QuerySqlParameter> sqlParameters)
     {
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
         private readonly List<QuerySqlParameter> _sqlParameters = sqlParameters;
 
+        /// <summary>
+        /// Parses the specified expression into a SQL WHERE condition fragment.
+        /// </summary>
+        /// <param name="expression">
+        /// Expression tree representing a query predicate.
+        /// </param>
+        /// <returns>
+        /// SQL condition fragment generated from the expression.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the expression type is not supported by the parser.
+        /// </exception>
         public string ParseToSqlCondition(Expression expression)
         {
             return expression switch
@@ -31,6 +50,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
             };
         }
 
+        // Parses binary expressions such as ==, !=, >, <, && and ||.
         private string ParseBinaryExpressionToSqlCondition(
             BinaryExpression binaryExpression)
         {
@@ -54,6 +74,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
             return $"({leftOperand} {sqlOperator} {rightOperand})";
         }
 
+        // Converts expression operands into SQL-compatible fragments or parameters.
         private string ParseExpressionOperandToSql(Expression expression)
         {
             return expression switch
@@ -77,6 +98,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
             };
         }
 
+        // Converts boolean property expressions into SQL equality conditions.
         private string ParseBooleanPropertyToSqlCondition(MemberExpression memberExpression)
         {
             if (memberExpression.Expression?.NodeType != ExpressionType.Parameter)
@@ -89,6 +111,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
             return $"({columnName} = {parameterName})";
         }
 
+        // Parses negated expressions such as !IsActive.
         private string ParseNegatedExpressionToSqlCondition(UnaryExpression unaryExpression)
         {
             if (unaryExpression.Operand is MemberExpression memberExpression &&memberExpression.Expression?.NodeType == ExpressionType.Parameter)
@@ -103,6 +126,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
             return $"NOT ({ParseToSqlCondition(unaryExpression.Operand)})";
         }
 
+        // Parses supported string method calls such as Contains, StartsWith and EndsWith.
         private string ParseMethodCallExpressionToSqlCondition(MethodCallExpression methodCallExpression)
         {
             if (methodCallExpression.Object is not MemberExpression memberExpression ||memberExpression.Expression?.NodeType != ExpressionType.Parameter)
@@ -122,6 +146,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
             };
         }
 
+        // Builds SQL LIKE conditions based on the selected search mode.
         private string BuildSqlLikeCondition(string columnName, Expression valueExpression, SqlLikeSearchMode searchMode)
         {
             var rawValue = RuntimeExpressionValueExtractor .ExtractValue(valueExpression);
@@ -141,6 +166,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
             return $"({columnName} LIKE {parameterName})";
         }
 
+        // Registers a SQL parameter preserving deterministic parameter ordering.
         private string AddSqlParameter(object? value)
         {
             var parameterName = $"@p{_sqlParameters.Count}";
@@ -154,6 +180,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
             return parameterName;
         }
 
+        // Represents supported SQL LIKE search patterns.
         private enum SqlLikeSearchMode
         {
             Contains,
