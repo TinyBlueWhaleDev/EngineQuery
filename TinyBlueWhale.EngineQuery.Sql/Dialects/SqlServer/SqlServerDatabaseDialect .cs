@@ -7,7 +7,7 @@ using TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Dialects.SqlServer
 {
-    public sealed class SqlServerDialect : ISqlDatabaseDialect
+    public sealed class SqlServerDatabaseDialect : ISqlDatabaseDialect
     {
         public string EscapeIdentifier(string identifier)
         {

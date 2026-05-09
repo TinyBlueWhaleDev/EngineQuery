@@ -6,18 +6,13 @@ using TinyBlueWhale.EngineQuery.Sql.Dialects.SqlServer;
 
 namespace TinyBlueWhale.EngineQuery.Sql.QueryBuilding
 {
-    public sealed class QueryEngine : IQueryEngine
+    public sealed class QueryEngine(ISqlDatabaseDialect databaseDialect) : IQueryEngine
     {
-        private readonly ISqlDatabaseDialect _databaseDialect;
+        private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
 
         public QueryEngine()
-            : this(new SqlServerDialect())
+            : this(new SqlServerDatabaseDialect())
         {
-        }
-
-        public QueryEngine(ISqlDatabaseDialect databaseDialect)
-        {
-            _databaseDialect = databaseDialect;
         }
 
         public IQueryCommandBuilder<T> Query<T>()
