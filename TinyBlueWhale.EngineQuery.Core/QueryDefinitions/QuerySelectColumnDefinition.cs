@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Sql.Compilation.Models
+﻿
+namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
     /// <summary>
     /// Represents a selected column in a SQL query projection.

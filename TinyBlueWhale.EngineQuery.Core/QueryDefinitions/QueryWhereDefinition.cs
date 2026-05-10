@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
-namespace TinyBlueWhale.EngineQuery.Sql.Compilation.Models
+namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
     /// <summary>
     /// Represents a filtering definition used to generate SQL WHERE conditions.

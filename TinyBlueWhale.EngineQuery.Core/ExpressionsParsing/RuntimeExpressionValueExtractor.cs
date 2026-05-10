@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
-namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
+namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
 {
     /// <summary>
     /// Extracts runtime values from expression tree nodes.

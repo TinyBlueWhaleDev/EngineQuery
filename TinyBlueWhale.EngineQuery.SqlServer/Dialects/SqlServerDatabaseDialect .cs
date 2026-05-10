@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
-namespace TinyBlueWhale.EngineQuery.Sql.Dialects.SqlServer
+namespace TinyBlueWhale.EngineQuery.SqlServer.Dialects
 {
     /// <summary>
     /// SQL Server implementation of database-specific SQL syntax rules.
