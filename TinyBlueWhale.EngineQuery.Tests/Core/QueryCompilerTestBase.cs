@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Sql.QueryBuilding;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Tests.TestModels;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Core
@@ -18,7 +18,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>().ToSql();
+            var sql = engine.Query<User>("Users").ToSql();
 
             Assert.Multiple(() =>
             {
@@ -32,7 +32,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Select(x => new { x.Id, x.Email })
                 .ToSql();
 
@@ -48,7 +48,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Where(x => x.IsActive)
                 .ToSql();
 
@@ -65,7 +65,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Where(x => !x.IsDeleted)
                 .ToSql();
 
@@ -83,7 +83,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
             var engine = CreateQueryEngine();
             var minimumAge = 18;
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Where(x => x.Age >= minimumAge)
                 .ToSql();
 
@@ -100,7 +100,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Where(x => x.Email.Contains("@gmail.com"))
                 .ToSql();
 
@@ -117,7 +117,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Where(x => x.Email.StartsWith("admin"))
                 .ToSql();
 
@@ -134,7 +134,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Where(x => x.Email.EndsWith(".com"))
                 .ToSql();
 
@@ -151,7 +151,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Where(x => x.IsActive && x.Age >= 18 && x.Email.Contains("@gmail.com"))
                 .ToSql();
 
@@ -170,7 +170,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Where(x => x.Email.Contains("@gmail.com") || x.Email.Contains("@company.com"))
                 .ToSql();
 
@@ -188,7 +188,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .OrderBy(x => x.Email)
                 .ToSql();
 
@@ -200,7 +200,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .OrderByDescending(x => x.CreatedAt)
                 .ToSql();
 
@@ -212,7 +212,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .OrderBy(x => x.Email)
                 .ThenByDescending(x => x.CreatedAt)
                 .ToSql();
@@ -225,7 +225,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .OrderBy(x => x.Id)
                 .Skip(20)
                 .Take(10)
@@ -239,7 +239,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .Select(x => new { x.Id, x.Email })
                 .Where(x => x.IsActive && x.Email.Contains("@gmail.com"))
                 .OrderByDescending(x => x.CreatedAt)
@@ -261,7 +261,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         {
             var engine = CreateQueryEngine();
 
-            var query = engine.Query<User>()
+            var query = engine.Query<User>("Users")
                 .Where(x => x.IsActive);
 
             var sql1 = query.ToSql();
@@ -282,7 +282,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
             var engine = CreateQueryEngine();
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
-                engine.Query<User>()
+                engine.Query<User>("Users")
                     .Skip(10)
                     .Take(5)
                     .ToSql());
@@ -297,7 +297,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
             var engine = CreateQueryEngine();
 
             // Act
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .WhereIf(true, x => x.IsActive)
                 .ToSql();
 
@@ -312,7 +312,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
             var engine = CreateQueryEngine();
 
             // Act
-            var sql = engine.Query<User>()
+            var sql = engine.Query<User>("Users")
                 .WhereIf(false, x => x.IsActive)
                 .ToSql();
 

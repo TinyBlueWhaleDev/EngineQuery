@@ -1,8 +1,10 @@
-﻿using TinyBlueWhale.EngineQuery.Sql.QueryBuilding;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
+using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
-var engine = new QueryEngine();
+var engine = new QueryEngine(new QuerySqlServerCompiler(new SqlServerDatabaseDialect()));
 
-var sql = engine.Query<User>()
+var sql = engine.Query<User>("Users")
     .Select(x => new { x.Id, x.Email })
     .Where(x => x.IsActive && x.Email.Contains("@gmail.com"))
     .OrderByDescending(x => x.CreatedAt)

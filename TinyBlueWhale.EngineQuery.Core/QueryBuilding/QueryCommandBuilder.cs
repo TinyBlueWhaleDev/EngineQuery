@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Sql.Compilation;
-using TinyBlueWhale.EngineQuery.Sql.Compilation.Models;
-using TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces;
-using TinyBlueWhale.EngineQuery.Sql.Enums;
-using TinyBlueWhale.EngineQuery.Sql.ExpressionParsing;
+using TinyBlueWhale.EngineQuery.Core.Enums;
+using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
+using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
-namespace TinyBlueWhale.EngineQuery.Sql.QueryBuilding
+namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 {
     /// <summary>
     /// Builds strongly typed query definitions using a fluent API.
@@ -26,8 +20,30 @@ namespace TinyBlueWhale.EngineQuery.Sql.QueryBuilding
     /// </remarks>
     public sealed class QueryCommandBuilder<T> : IOrderedQueryCommandBuilder<T>
     {
-        private readonly ISqlDatabaseDialect _databaseDialect;
+        private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QueryCommandBuilder{T}"/> class.
+        /// </summary>
+        /// <param name="queryCompiler">
+        /// Query compiler used to generate provider-specific query output.
+        /// </param>
+        /// <param name="tableName">
+        /// Database table name associated with the query.
+        /// </param>
+        public QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName)
+        {
+            ArgumentNullException.ThrowIfNull(queryCompiler);
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+
+            _queryCompiler = queryCompiler;
+
+            _queryDefinition = new CompiledQueryDefinition
+            {
+                TableName = tableName
+            };
+        }
 
         /// <summary>
         /// Adds selected entity properties to the query projection definition.
@@ -57,22 +73,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.QueryBuilding
             }
 
             return this;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="QueryCommandBuilder{T}"/> class.
-        /// </summary>
-        /// <param name="databaseDialect">
-        /// SQL database dialect used to generate provider-specific SQL syntax.
-        /// </param>
-        public QueryCommandBuilder(ISqlDatabaseDialect databaseDialect)
-        {
-            _databaseDialect = databaseDialect;
-
-            _queryDefinition = new CompiledQueryDefinition
-            {
-                TableName = typeof(T).Name + "s"
-            };
         }
 
         /// <summary>
@@ -278,9 +278,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.QueryBuilding
         /// </returns>
         public GeneratedSqlQuery ToSql()
         {
-            var compiler = new QuerySqlCompiler(_databaseDialect);
-
-            return compiler.CompileToSql(_queryDefinition);
+            return _queryCompiler.Compile(_queryDefinition);
         }
 
         // Registers an ordering definition preserving the fluent ordering sequence.

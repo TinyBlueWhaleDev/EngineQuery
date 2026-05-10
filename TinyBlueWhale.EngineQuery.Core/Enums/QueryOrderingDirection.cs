@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Sql.Enums
+﻿
+namespace TinyBlueWhale.EngineQuery.Core.Enums
 {
     /// <summary>
     /// Represents the SQL ordering direction used in ORDER BY clauses.

@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Sql.Compilation.Models;
-using TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces;
-using TinyBlueWhale.EngineQuery.Sql.Enums;
-using TinyBlueWhale.EngineQuery.Sql.ExpressionParsing;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.Core.Enums;
+using TinyBlueWhale.EngineQuery.Core.ExpressionParsing;
+using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
-namespace TinyBlueWhale.EngineQuery.Sql.Compilation
+namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
 {
     /// <summary>
     /// Compiles query definitions into provider-specific SQL command text.
@@ -18,7 +13,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// The compiler is responsible only for SQL generation.
     /// It does not execute queries or manage database connections.
     /// </remarks>
-    public sealed class QuerySqlCompiler(ISqlDatabaseDialect databaseDialect)
+    public sealed class QuerySqlServerCompiler(ISqlDatabaseDialect databaseDialect) : IQueryCompiler
     {
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
 
@@ -35,7 +30,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         /// SQL generation is deterministic:
         /// compiling the same query definition multiple times produces identical SQL and parameter ordering.
         /// </remarks>
-        public GeneratedSqlQuery CompileToSql(CompiledQueryDefinition queryDefinition)
+        public GeneratedSqlQuery Compile(CompiledQueryDefinition queryDefinition)
         {
             var sqlParameters = new List<QuerySqlParameter>();
 

@@ -14,6 +14,6 @@
         /// <returns>
         /// A fluent query command builder for composing SQL queries.
         /// </returns>
-        IQueryCommandBuilder<T> Query<T>();
+        IQueryCommandBuilder<T> Query<T>(string tableName);
     }
 }

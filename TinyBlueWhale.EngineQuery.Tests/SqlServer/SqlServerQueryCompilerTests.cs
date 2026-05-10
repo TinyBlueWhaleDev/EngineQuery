@@ -1,5 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Sql.Dialects.SqlServer;
-using TinyBlueWhale.EngineQuery.Sql.QueryBuilding;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
+using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 using TinyBlueWhale.EngineQuery.Tests.Core;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Sql
@@ -13,7 +14,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Sql
         protected override QueryEngine CreateQueryEngine()
         {
             return new QueryEngine(
-                new SqlServerDatabaseDialect());
+                new QuerySqlServerCompiler(new SqlServerDatabaseDialect()));
         }
     }
 }

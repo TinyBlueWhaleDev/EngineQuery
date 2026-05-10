@@ -1,10 +1,7 @@
-﻿
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces;
-using TinyBlueWhale.EngineQuery.Sql.Dialects.SqlServer;
-
-namespace TinyBlueWhale.EngineQuery.Sql.QueryBuilding
+namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 {
     /// <summary>
     /// Default implementation of the query engine responsible for creating query builders.
@@ -13,15 +10,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.QueryBuilding
     /// The query engine acts as the main entry point for composing strongly typed SQL queries.
     /// It does not execute queries or manage database connections.
     /// </remarks>
-    public sealed class QueryEngine(ISqlDatabaseDialect databaseDialect) : IQueryEngine
+    public sealed class QueryEngine(IQueryCompiler queryCompiler) : IQueryEngine
     {
-        private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
-
-        public QueryEngine()
-            : this(new SqlServerDatabaseDialect())
-        {
-        }
-
+        private readonly IQueryCompiler _queryCompiler = queryCompiler ?? throw new ArgumentNullException(nameof(queryCompiler));
         /// <summary>
         /// Creates a new fluent query command builder for the specified entity type.
         /// </summary>
@@ -31,10 +22,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.QueryBuilding
         /// <returns>
         /// Query command builder instance.
         /// </returns>
-        public IQueryCommandBuilder<T> Query<T>()
+        public IQueryCommandBuilder<T> Query<T>(string tableName)
         {
-            return new QueryCommandBuilder<T>(_databaseDialect);
-        }
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
+            return new QueryCommandBuilder<T>(_queryCompiler, tableName);
+        }
     }
 }

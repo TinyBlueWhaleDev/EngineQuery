@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Sql\TinyBlueWhale.EngineQuery.Sql.csproj" />
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.SqlServer\TinyBlueWhale.EngineQuery.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>

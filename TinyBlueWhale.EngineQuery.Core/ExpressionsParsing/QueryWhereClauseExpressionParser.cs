@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
+using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
-namespace TinyBlueWhale.EngineQuery.Sql.ExpressionParsing
+namespace TinyBlueWhale.EngineQuery.Core.ExpressionParsing
 {
     /// <summary>
     /// Parses LINQ expression trees into SQL WHERE clause conditions.

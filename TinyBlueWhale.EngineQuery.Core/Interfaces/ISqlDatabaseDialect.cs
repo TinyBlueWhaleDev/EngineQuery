@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces
+﻿
+namespace TinyBlueWhale.EngineQuery.Core.Interfaces
 {
     /// <summary>
     /// Defines provider-specific SQL syntax behavior required during query compilation.
@@ -38,6 +33,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Dialects.Interfaces
         /// <returns>
         /// Provider-specific pagination SQL fragment.
         /// </returns>
-        string BuildPaginationClause(int? skip,int? take);
+        string BuildPaginationClause(int? skip, int? take);
     }
 }
