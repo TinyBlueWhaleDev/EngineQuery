@@ -2,15 +2,15 @@
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
-var engine = new QueryEngine(new QuerySqlServerCompiler(new SqlServerDatabaseDialect()));
+var engine = new QueryBuilder(new QuerySqlServerCompiler(new SqlServerDatabaseDialect()));
 
-var sql = engine.Query<User>("Users")
+var sql = engine.From<User>("Users")
     .Select(x => new { x.Id, x.Email })
     .Where(x => x.IsActive && x.Email.Contains("@gmail.com"))
     .OrderByDescending(x => x.CreatedAt)
     .Skip(20)
     .Take(10)
-    .ToSql();
+    .Build();
 
 Console.WriteLine(sql.CommandText);
 

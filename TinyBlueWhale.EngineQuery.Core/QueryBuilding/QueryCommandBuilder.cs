@@ -276,7 +276,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Generated SQL query command.
         /// </returns>
-        public GeneratedSqlQuery ToSql()
+        public GeneratedSqlQuery Build()
         {
             return _queryCompiler.Compile(_queryDefinition);
         }

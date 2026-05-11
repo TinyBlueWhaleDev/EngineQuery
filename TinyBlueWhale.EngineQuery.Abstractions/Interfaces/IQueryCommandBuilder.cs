@@ -99,11 +99,11 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> Take(int count);
 
         /// <summary>
-        /// Generates the SQL command text and its parameters without executing it.
+        /// Builds the current query definition into SQL command text and parameters.
         /// </summary>
         /// <returns>
-        /// Generated SQL query definition.
+        /// Generated SQL query command.
         /// </returns>
-        GeneratedSqlQuery ToSql();
+        GeneratedSqlQuery Build();
     }
 }

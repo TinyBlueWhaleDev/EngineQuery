@@ -10,9 +10,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     /// The query engine acts as the main entry point for composing strongly typed SQL queries.
     /// It does not execute queries or manage database connections.
     /// </remarks>
-    public sealed class QueryEngine(IQueryCompiler queryCompiler) : IQueryEngine
+    public sealed class QueryBuilder(IQueryCompiler queryCompiler) : IQueryBuilder
     {
         private readonly IQueryCompiler _queryCompiler = queryCompiler ?? throw new ArgumentNullException(nameof(queryCompiler));
+
         /// <summary>
         /// Creates a new fluent query command builder for the specified entity type.
         /// </summary>
@@ -22,7 +23,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Query command builder instance.
         /// </returns>
-        public IQueryCommandBuilder<T> Query<T>(string tableName)
+        public IQueryCommandBuilder<T> From<T>(string tableName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
