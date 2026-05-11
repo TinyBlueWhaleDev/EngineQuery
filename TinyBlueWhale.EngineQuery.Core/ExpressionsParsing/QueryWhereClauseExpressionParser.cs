@@ -12,10 +12,13 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionParsing
     /// This parser is responsible for converting supported expression patterns
     /// into provider-specific SQL predicate fragments and query parameters.
     /// </remarks>
-    public sealed class QueryWhereClauseExpressionParser(ISqlDatabaseDialect databaseDialect, List<QuerySqlParameter> sqlParameters)
+    public sealed class QueryWhereClauseExpressionParser(ISqlDatabaseDialect databaseDialect, 
+        List<QuerySqlParameter> sqlParameters, 
+        IReadOnlyDictionary<string, string> columnMappings)
     {
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
         private readonly List<QuerySqlParameter> _sqlParameters = sqlParameters;
+        private readonly IReadOnlyDictionary<string, string> _columnMappings = columnMappings;
 
         /// <summary>
         /// Parses the specified expression into a SQL WHERE condition fragment.
@@ -78,7 +81,7 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionParsing
                 MemberExpression memberExpression when memberExpression.Expression?.NodeType == ExpressionType.Parameter => 
                     memberExpression.Type == typeof(bool)
                         ? ParseBooleanPropertyToSqlCondition(memberExpression)
-                        : _databaseDialect.EscapeIdentifier(memberExpression.Member.Name),
+                        : _databaseDialect.EscapeIdentifier(ResolveColumnName(memberExpression.Member.Name)),
 
                 ConstantExpression constantExpression => AddSqlParameter(constantExpression.Value),
 
@@ -100,7 +103,7 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionParsing
             if (memberExpression.Expression?.NodeType != ExpressionType.Parameter)
                 return AddSqlParameter(RuntimeExpressionValueExtractor.ExtractValue(memberExpression));
 
-            var columnName = _databaseDialect.EscapeIdentifier(memberExpression.Member.Name);
+            var columnName = _databaseDialect.EscapeIdentifier(ResolveColumnName(memberExpression.Member.Name));
 
             var parameterName = AddSqlParameter(true);
 
@@ -112,7 +115,7 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionParsing
         {
             if (unaryExpression.Operand is MemberExpression memberExpression &&memberExpression.Expression?.NodeType == ExpressionType.Parameter)
             {
-                var columnName = _databaseDialect.EscapeIdentifier(memberExpression.Member.Name);
+                var columnName = _databaseDialect.EscapeIdentifier(ResolveColumnName(memberExpression.Member.Name));
 
                 var parameterName = AddSqlParameter(false);
 
@@ -128,7 +131,7 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionParsing
             if (methodCallExpression.Object is not MemberExpression memberExpression ||memberExpression.Expression?.NodeType != ExpressionType.Parameter)
                 throw new NotSupportedException($"Method call '{methodCallExpression}' is not supported in WHERE clauses.");
 
-            var columnName = _databaseDialect.EscapeIdentifier(memberExpression.Member.Name);
+            var columnName = _databaseDialect.EscapeIdentifier(ResolveColumnName(memberExpression.Member.Name));
 
             return methodCallExpression.Method.Name switch
             {
@@ -174,6 +177,16 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionParsing
             });
 
             return parameterName;
+        }
+
+        // Resolves the database column name associated with a CLR property.
+        private string ResolveColumnName(string propertyName)
+        {
+            return _columnMappings.TryGetValue(
+                propertyName,
+                out var columnName)
+                    ? columnName
+                    : propertyName;
         }
 
         // Represents supported SQL LIKE search patterns.

@@ -60,7 +60,8 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
                 return "SELECT *";
 
             var selectedColumns = queryDefinition.SelectDefinitions
-                .Select(selectDefinition => _databaseDialect.EscapeIdentifier(selectDefinition.PropertyName));
+                .Select(selectDefinition => _databaseDialect.EscapeIdentifier(
+                        ResolveColumnName(queryDefinition,selectDefinition.PropertyName)));
 
             return "SELECT " + string.Join(", ", selectedColumns);
         }
@@ -74,7 +75,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
             var whereConditions = queryDefinition.WhereDefinitions
                 .Select(whereDefinition =>
                 {
-                    var parser = new QueryWhereClauseExpressionParser(_databaseDialect, sqlParameters);
+                    var parser = new QueryWhereClauseExpressionParser(_databaseDialect, sqlParameters, queryDefinition.ColumnMappings);
 
                     return parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
                 })
@@ -94,7 +95,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
                 {
                     var sqlDirection = orderingDefinition.Direction == QueryOrderingDirection.Ascending? "ASC" : "DESC";
 
-                    return $"{_databaseDialect.EscapeIdentifier(orderingDefinition.PropertyName)} {sqlDirection}";
+                    return $"{_databaseDialect.EscapeIdentifier(ResolveColumnName(queryDefinition, orderingDefinition.PropertyName))} {sqlDirection}";
                 });
 
             sqlLines.Add("ORDER BY " + string.Join(", ", orderingClauses));
@@ -112,6 +113,12 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
             var paginationClause = _databaseDialect.BuildPaginationClause(queryDefinition.Pagination.Skip, queryDefinition.Pagination.Take);
 
             sqlLines.Add(paginationClause);
+        }
+
+        // Resolves the database column name associated with a CLR property.
+        private string ResolveColumnName(CompiledQueryDefinition queryDefinition,string propertyName)
+        {
+            return queryDefinition.ColumnMappings.TryGetValue(propertyName,out var columnName) ? columnName : propertyName;
         }
     }
 }

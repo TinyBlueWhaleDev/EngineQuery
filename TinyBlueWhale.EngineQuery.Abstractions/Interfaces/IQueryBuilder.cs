@@ -18,5 +18,16 @@
         /// A fluent query command builder for composing and generating SQL queries.
         /// </returns>
         IQueryCommandBuilder<T> From<T>(string tableName);
+
+        /// <summary>
+        /// Creates a new query builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type used as the source of the query.
+        /// </typeparam>
+        /// <returns>
+        /// Fluent query command builder.
+        /// </returns>
+        IQueryCommandBuilder<T> From<T>();
     }
 }

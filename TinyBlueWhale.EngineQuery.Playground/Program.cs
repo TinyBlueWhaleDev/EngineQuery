@@ -1,33 +1,8 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
+﻿using TinyBlueWhale.EngineQuery.Playground.MappingValidators;
 
-var engine = new QueryBuilder(new QuerySqlServerCompiler(new SqlServerDatabaseDialect()));
+ExplicitMappingValidator.Run();
+ConventionMappingValidator.Run();
+FluentMappingValidator.Run();
+AttributeMappingValidator.Run();
+CompositeMappingValidator.Run();
 
-var sql = engine.From<User>("Users")
-    .Select(x => new { x.Id, x.Email })
-    .Where(x => x.IsActive && x.Email.Contains("@gmail.com"))
-    .OrderByDescending(x => x.CreatedAt)
-    .Skip(20)
-    .Take(10)
-    .Build();
-
-Console.WriteLine(sql.CommandText);
-
-Console.WriteLine();
-
-foreach (var parameter in sql.Parameters)
-{
-    Console.WriteLine($"{parameter.Name} = {parameter.Value}");
-}
-
-public sealed class User
-{
-    public int Id { get; set; }
-
-    public string Email { get; set; } = string.Empty;
-
-    public bool IsActive { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-}

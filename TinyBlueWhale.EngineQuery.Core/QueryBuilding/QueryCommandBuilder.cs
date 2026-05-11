@@ -32,7 +32,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="tableName">
         /// Database table name associated with the query.
         /// </param>
-        public QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName)
+        public QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
@@ -41,7 +41,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _queryDefinition = new CompiledQueryDefinition
             {
-                TableName = tableName
+                TableName = tableName,
+                ColumnMappings = columnMappings ?? new Dictionary<string, string>()
             };
         }
 
