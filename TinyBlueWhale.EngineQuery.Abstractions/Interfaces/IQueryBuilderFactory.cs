@@ -5,17 +5,17 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// <summary>
     /// Defines a factory contract for resolving query engines by database provider.
     /// </summary>
-    public interface IQueryEngineFactory
+    public interface IQueryBuilderFactory
     {
         /// <summary>
-        /// Resolves a query engine configured for the specified database provider.
+        /// Resolves a query builder configured for the specified database provider.
         /// </summary>
         /// <param name="provider">
-        /// Database provider associated with the query engine.
+        /// Database provider associated with the query builder.
         /// </param>
         /// <returns>
-        /// Query engine configured for the requested provider.
+        /// Query builder configured for the requested provider.
         /// </returns>
-        IQueryEngine For(DatabaseProvider provider);
+        IQueryBuilder For(DatabaseProvider provider);
     }
 }

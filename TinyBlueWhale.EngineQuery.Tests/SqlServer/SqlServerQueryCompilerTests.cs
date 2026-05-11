@@ -11,9 +11,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Sql
         protected override IQueryCompilerExpectedSyntax ExpectedSql { get; } =
             new SqlServerExpectedSqlSyntax();
 
-        protected override QueryEngine CreateQueryEngine()
+        protected override QueryBuilder CreateQueryBuilder()
         {
-            return new QueryEngine(
+            return new QueryBuilder(
                 new QuerySqlServerCompiler(new SqlServerDatabaseDialect()));
         }
     }

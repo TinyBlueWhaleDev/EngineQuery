@@ -10,15 +10,15 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
 {
     public abstract class QueryCompilerTestBase
     {
-        protected abstract QueryEngine CreateQueryEngine();
+        protected abstract QueryBuilder CreateQueryBuilder();
         protected abstract IQueryCompilerExpectedSyntax ExpectedSql { get; }
 
         [Test]
         public void ToSql_Should_Generate_Select_All_When_No_Projection_Is_Defined()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users").ToSql();
+            var sql = engine.From<User>("Users").Build();
 
             Assert.Multiple(() =>
             {
@@ -30,11 +30,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Select_Projection_For_Multiple_Properties()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Select(x => new { x.Id, x.Email })
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -46,11 +46,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Where_Clause_For_Boolean_Property()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Where(x => x.IsActive)
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -63,11 +63,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Where_Clause_For_Negated_Boolean_Property()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Where(x => !x.IsDeleted)
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -80,12 +80,12 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Where_Clause_For_Closure_Value()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
             var minimumAge = 18;
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Where(x => x.Age >= minimumAge)
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -98,11 +98,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Where_Clause_For_Contains_Expression()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Where(x => x.Email.Contains("@gmail.com"))
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -115,11 +115,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Where_Clause_For_StartsWith_Expression()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Where(x => x.Email.StartsWith("admin"))
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -132,11 +132,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Where_Clause_For_EndsWith_Expression()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Where(x => x.Email.EndsWith(".com"))
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -149,11 +149,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Where_Clause_For_Multiple_And_Conditions()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Where(x => x.IsActive && x.Age >= 18 && x.Email.Contains("@gmail.com"))
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -168,11 +168,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Where_Clause_For_Or_Conditions()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Where(x => x.Email.Contains("@gmail.com") || x.Email.Contains("@company.com"))
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -186,11 +186,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Order_By_Clause()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .OrderBy(x => x.Email)
-                .ToSql();
+                .Build();
 
             Assert.That(sql.CommandText, Is.EqualTo(ExpectedSql.OrderBySql));
         }
@@ -198,11 +198,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Order_By_Descending_Clause()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .OrderByDescending(x => x.CreatedAt)
-                .ToSql();
+                .Build();
 
             Assert.That(sql.CommandText, Is.EqualTo(ExpectedSql.OrderByDescendingSql));
         }
@@ -210,12 +210,12 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Then_By_Clause()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .OrderBy(x => x.Email)
                 .ThenByDescending(x => x.CreatedAt)
-                .ToSql();
+                .Build();
 
             Assert.That(sql.CommandText, Is.EqualTo(ExpectedSql.ThenBySql));
         }
@@ -223,13 +223,13 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Pagination_Clause()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .OrderBy(x => x.Id)
                 .Skip(20)
                 .Take(10)
-                .ToSql();
+                .Build();
 
             Assert.That(sql.CommandText, Is.EqualTo(ExpectedSql.PaginationSql));
         }
@@ -237,15 +237,15 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Generate_Complete_Query_With_Select_Where_Order_And_Pagination()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .Select(x => new { x.Id, x.Email })
                 .Where(x => x.IsActive && x.Email.Contains("@gmail.com"))
                 .OrderByDescending(x => x.CreatedAt)
                 .Skip(20)
                 .Take(10)
-                .ToSql();
+                .Build();
 
             Assert.Multiple(() =>
             {
@@ -259,13 +259,13 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Be_Deterministic()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
-            var query = engine.Query<User>("Users")
+            var query = engine.From<User>("Users")
                 .Where(x => x.IsActive);
 
-            var sql1 = query.ToSql();
-            var sql2 = query.ToSql();
+            var sql1 = query.Build();
+            var sql2 = query.Build();
 
             Assert.Multiple(() =>
             {
@@ -279,13 +279,13 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         [Test]
         public void ToSql_Should_Throw_When_Pagination_Has_No_Order_By()
         {
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
-                engine.Query<User>("Users")
+                engine.From<User>("Users")
                     .Skip(10)
                     .Take(5)
-                    .ToSql());
+                    .Build());
 
             Assert.That(exception, Is.Not.Null);
         }
@@ -294,12 +294,12 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         public void ToSql_Should_Apply_WhereIf_When_Condition_Is_True()
         {
             // Arrange
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
             // Act
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .WhereIf(true, x => x.IsActive)
-                .ToSql();
+                .Build();
 
             // Assert
             Assert.That(sql.CommandText, Is.EqualTo(ExpectedSql.BooleanWhereSql));
@@ -309,12 +309,12 @@ namespace TinyBlueWhale.EngineQuery.Tests.Core
         public void ToSql_Should_Not_Apply_WhereIf_When_Condition_Is_False()
         {
             // Arrange
-            var engine = CreateQueryEngine();
+            var engine = CreateQueryBuilder();
 
             // Act
-            var sql = engine.Query<User>("Users")
+            var sql = engine.From<User>("Users")
                 .WhereIf(false, x => x.IsActive)
-                .ToSql();
+                .Build();
 
             // Assert
             Assert.Multiple(() =>
