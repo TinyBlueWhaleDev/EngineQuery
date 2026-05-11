@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36408.4
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Abstractions", "TinyBlueWhale.EngineQuery.Abstractions\TinyBlueWhale.EngineQuery.Abstractions.csproj", "{E80BE78A-40E9-409B-968A-2381617D1E64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.SqlServer", "TinyBlueWhale.EngineQuery.SqlServer\TinyBlueWhale.EngineQuery.SqlServer.csproj", "{6AD3C10E-93F7-477E-A782-9DC5309583A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Tests", "TinyBlueWhale.EngineQuery.Tests\TinyBlueWhale.EngineQuery.Tests.csproj", "{041B828F-5553-40D0-A740-7E6D6DA15491}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Playground", "TinyBlueWhale.EngineQuery.Playground\TinyBlueWhale.EngineQuery.Playground.csproj", "{53167676-3843-477A-9214-0B19A22EA146}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Core", "TinyBlueWhale.EngineQuery.Core\TinyBlueWhale.EngineQuery.Core.csproj", "{860CA70F-CC03-4CF7-881B-02EB03F90EF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Metadata", "TinyBlueWhale.EngineQuery.Metadata\TinyBlueWhale.EngineQuery.Metadata.csproj", "{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E80BE78A-40E9-409B-968A-2381617D1E64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E80BE78A-40E9-409B-968A-2381617D1E64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E80BE78A-40E9-409B-968A-2381617D1E64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E80BE78A-40E9-409B-968A-2381617D1E64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AD3C10E-93F7-477E-A782-9DC5309583A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AD3C10E-93F7-477E-A782-9DC5309583A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AD3C10E-93F7-477E-A782-9DC5309583A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AD3C10E-93F7-477E-A782-9DC5309583A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{041B828F-5553-40D0-A740-7E6D6DA15491}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{041B828F-5553-40D0-A740-7E6D6DA15491}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{041B828F-5553-40D0-A740-7E6D6DA15491}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{041B828F-5553-40D0-A740-7E6D6DA15491}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53167676-3843-477A-9214-0B19A22EA146}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53167676-3843-477A-9214-0B19A22EA146}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53167676-3843-477A-9214-0B19A22EA146}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53167676-3843-477A-9214-0B19A22EA146}.Release|Any CPU.Build.0 = Release|Any CPU
+		{860CA70F-CC03-4CF7-881B-02EB03F90EF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{860CA70F-CC03-4CF7-881B-02EB03F90EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{860CA70F-CC03-4CF7-881B-02EB03F90EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{860CA70F-CC03-4CF7-881B-02EB03F90EF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E62FDF62-A4C7-474F-8E84-A07ABD4DE1FA}
+	EndGlobalSection
+EndGlobal
