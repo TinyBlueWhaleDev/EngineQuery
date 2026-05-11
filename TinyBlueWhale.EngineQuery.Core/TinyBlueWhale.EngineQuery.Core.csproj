@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Abstractions\TinyBlueWhale.EngineQuery.Abstractions.csproj" />
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Metadata\TinyBlueWhale.EngineQuery.Metadata.csproj" />
   </ItemGroup>
 
 </Project>
