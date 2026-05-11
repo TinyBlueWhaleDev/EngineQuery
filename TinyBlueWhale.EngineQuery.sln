@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Core", "TinyBlueWhale.EngineQuery.Core\TinyBlueWhale.EngineQuery.Core.csproj", "{860CA70F-CC03-4CF7-881B-02EB03F90EF0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Metadata", "TinyBlueWhale.EngineQuery.Metadata\TinyBlueWhale.EngineQuery.Metadata.csproj", "{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{860CA70F-CC03-4CF7-881B-02EB03F90EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{860CA70F-CC03-4CF7-881B-02EB03F90EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{860CA70F-CC03-4CF7-881B-02EB03F90EF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04E2D3EC-01C8-4E5A-A0DD-6323E28FDE1E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
