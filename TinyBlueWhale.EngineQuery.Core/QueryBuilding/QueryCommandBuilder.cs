@@ -3,8 +3,10 @@ using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
+using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 {
@@ -22,6 +24,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     {
         private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
+        private readonly IEntityMetadataResolver? _metadataResolver;
+        private readonly HashSet<string> _registeredAliases = [];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryCommandBuilder{T}"/> class.
@@ -38,10 +42,14 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
         /// </param>
+        /// <param name="metadataResolver">
+        /// Optional entity metadata resolver used for metadata-driven joins.
+        /// </param>
         public QueryCommandBuilder(IQueryCompiler queryCompiler, 
             string tableName, 
             string? tableAlias = null, 
-            IReadOnlyDictionary<string, string>? columnMappings = null)
+            IReadOnlyDictionary<string, string>? columnMappings = null,
+            IEntityMetadataResolver? metadataResolver = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
@@ -51,6 +59,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
 
             _queryCompiler = queryCompiler;
+            _metadataResolver = metadataResolver;
 
             _queryDefinition = new CompiledQueryDefinition
             {
@@ -58,6 +67,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 TableAlias = tableAlias,
                 ColumnMappings = columnMappings ?? new Dictionary<string, string>()
             };
+
+            if (!string.IsNullOrWhiteSpace(tableAlias))
+                _registeredAliases.Add(tableAlias);
         }
 
         /// <summary>
@@ -81,6 +93,105 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             _queryDefinition.SelectDefinitions.AddRange(selectedProperties);
 
             return this;
+        }
+
+
+        /// <summary>
+        /// Adds an INNER JOIN using resolved metadata for the joined entity.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Source entity type participating in the join condition.
+        /// </typeparam>
+        /// <typeparam name="TJoin">
+        /// Joined entity type.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional alias assigned to the joined table.
+        /// </param>
+        /// <param name="on">
+        /// Join condition expression.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> InnerJoin<TSource, TJoin>(string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        {
+            return AddJoin(QueryJoinType.Inner, alias, on);
+        }
+
+        /// <summary>
+        /// Adds a LEFT JOIN using resolved metadata for the joined entity.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Source entity type participating in the join condition.
+        /// </typeparam>
+        /// <typeparam name="TJoin">
+        /// Joined entity type.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional alias assigned to the joined table.
+        /// </param>
+        /// <param name="on">
+        /// Join condition expression.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> LeftJoin<TSource, TJoin>(string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        {
+            return AddJoin(QueryJoinType.Left, alias, on);
+        }
+
+        /// <summary>
+        /// Adds an INNER JOIN using an explicit joined table name.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Source entity type participating in the join condition.
+        /// </typeparam>
+        /// <typeparam name="TJoin">
+        /// Joined entity type.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Explicit database table name associated with the joined entity.
+        /// </param>
+        /// <param name="alias">
+        /// Optional alias assigned to the joined table.
+        /// </param>
+        /// <param name="on">
+        /// Join condition expression.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> InnerJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        {
+            return AddJoin(QueryJoinType.Inner, tableName, alias, on);
+        }
+
+        /// <summary>
+        /// Adds a LEFT JOIN using an explicit joined table name.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Source entity type participating in the join condition.
+        /// </typeparam>
+        /// <typeparam name="TJoin">
+        /// Joined entity type.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Explicit database table name associated with the joined entity.
+        /// </param>
+        /// <param name="alias">
+        /// Optional alias assigned to the joined table.
+        /// </param>
+        /// <param name="on">
+        /// Join condition expression.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> LeftJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        {
+            return AddJoin(QueryJoinType.Left, tableName, alias, on);
         }
 
         /// <summary>
@@ -320,6 +431,108 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 _ => throw new NotSupportedException(
                     $"Expression '{expression}' is not supported as an ordering selector.")
             };
+        }
+
+        // Adds a metadata-driven join definition.
+        private IQueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        {
+            ArgumentNullException.ThrowIfNull(on);
+
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<TJoin>(out var joinMetadata))
+                throw new InvalidOperationException($"Metadata for entity type '{typeof(TJoin).Name}' could not be resolved.");
+
+            return AddJoin(joinType, joinMetadata!.TableName, alias, on);
+        }
+
+        // Adds an explicit table join definition.
+        private IQueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType,string tableName,string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+            ArgumentNullException.ThrowIfNull(on);
+
+            var joinAlias = ResolveJoinAlias(alias);
+            var sourceAlias = ResolveSourceAlias<TSource>();
+
+            var sourceColumnMappings = ResolveColumnMappings<TSource>();
+            var joinColumnMappings = ResolveColumnMappings<TJoin>();
+
+            _queryDefinition.JoinDefinitions.Add(
+                new QueryJoinDefinition
+                {
+                    JoinType = joinType,
+                    TableName = tableName,
+                    TableAlias = joinAlias,
+                    SourceType = typeof(TSource),
+                    SourceAlias = sourceAlias,
+                    SourceColumnMappings = sourceColumnMappings,
+                    JoinTypeEntity = typeof(TJoin),
+                    JoinColumnMappings = joinColumnMappings,
+                    JoinExpression = on
+                });
+
+            return this;
+        }
+
+        // Resolves column mappings for an entity participating in the query.
+        private IReadOnlyDictionary<string, string> ResolveColumnMappings<TEntity>()
+        {
+            if (typeof(TEntity) == typeof(T))
+                return _queryDefinition.ColumnMappings;
+
+            if (_metadataResolver is not null && _metadataResolver.TryResolve<TEntity>(out var metadata))
+            {
+                return metadata!.Properties.ToDictionary(
+                    property => property.Key,
+                    property => property.Value.ColumnName);
+            }
+
+            return new Dictionary<string, string>();
+        }
+
+        // Resolves or generates a SQL alias for joined tables.
+        private string ResolveJoinAlias(string? alias)
+        {
+            var resolvedAlias = string.IsNullOrWhiteSpace(alias)
+                ? QueryAliasGeneratorHelper.Generate(_registeredAliases.Count)
+                : alias;
+
+            if (!_registeredAliases.Add(resolvedAlias))
+                throw new InvalidOperationException($"Alias '{resolvedAlias}' is already registered.");
+
+            return resolvedAlias;
+        }
+
+        // Resolves the alias associated with a previously registered query entity.
+        private string ResolveSourceAlias<TSource>()
+        {
+            if (typeof(TSource) == typeof(T))
+                return EnsureRootAlias();
+
+            var joinDefinition = _queryDefinition.JoinDefinitions
+                .LastOrDefault(join => join.JoinTypeEntity == typeof(TSource));
+
+            if (joinDefinition is null)
+                throw new InvalidOperationException($"Entity type '{typeof(TSource).Name}' is not available in the current query scope.");
+
+            return joinDefinition.TableAlias;
+        }
+
+        // Ensures the root query source has a deterministic alias when joins exist.
+        private string EnsureRootAlias()
+        {
+            if (!string.IsNullOrWhiteSpace(_queryDefinition.TableAlias))
+                return _queryDefinition.TableAlias;
+
+            var alias = QueryAliasGeneratorHelper.Generate(0);
+
+            _queryDefinition.TableAlias = alias;
+
+            _registeredAliases.Add(alias);
+
+            return alias;
         }
 
     }

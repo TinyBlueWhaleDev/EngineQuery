@@ -21,6 +21,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public string? TableAlias { get; set; }
 
         /// <summary>
+        /// Gets the SQL join definitions associated with the query.
+        /// </summary>
+        public List<QueryJoinDefinition> JoinDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets or sets the property-to-column mapping used during SQL generation.
         /// </summary>
         public IReadOnlyDictionary<string, string> ColumnMappings { get; set; } = new Dictionary<string, string>();

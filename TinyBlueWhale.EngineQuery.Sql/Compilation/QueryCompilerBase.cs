@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
@@ -44,6 +45,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 BuildFromClause(queryDefinition)
             };
 
+            AddJoinClausesIfNeeded(queryDefinition, sqlLines);
+
             AddWhereClauseIfNeeded(queryDefinition, sqlParameters, sqlLines);
 
             AddOrderByClauseIfNeeded(queryDefinition, sqlLines);
@@ -68,6 +71,89 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             return string.IsNullOrWhiteSpace(queryDefinition.TableAlias)
                 ? $"FROM {tableName}"
                 : $"FROM {tableName} AS {_databaseDialect.EscapeIdentifier(queryDefinition.TableAlias)}";
+        }
+
+        // Adds SQL JOIN clauses when join definitions are configured.
+        protected virtual void AddJoinClausesIfNeeded(CompiledQueryDefinition queryDefinition,List<string> sqlLines)
+        {
+            if (queryDefinition.JoinDefinitions.Count == 0)
+                return;
+
+            foreach (var joinDefinition in queryDefinition.JoinDefinitions)
+                sqlLines.Add(BuildJoinClause(joinDefinition));
+        }
+        
+        // Builds a SQL JOIN clause from a join definition.
+        protected virtual string BuildJoinClause(QueryJoinDefinition joinDefinition)
+        {
+            var joinKeyword = joinDefinition.JoinType switch
+            {
+                QueryJoinType.Inner => "INNER JOIN",
+                QueryJoinType.Left => "LEFT JOIN",
+                _ => throw new NotSupportedException($"Join type '{joinDefinition.JoinType}' is not supported.")
+            };
+
+            var tableName = _databaseDialect.EscapeIdentifier(joinDefinition.TableName);
+            var tableAlias = _databaseDialect.EscapeIdentifier(joinDefinition.TableAlias);
+            var joinCondition = BuildJoinCondition(joinDefinition);
+
+            return $"{joinKeyword} {tableName} AS {tableAlias} ON {joinCondition}";
+        }
+
+        // Builds the SQL ON condition associated with a JOIN clause.
+        protected virtual string BuildJoinCondition(QueryJoinDefinition joinDefinition)
+        {
+            if (joinDefinition.JoinExpression.Body is not BinaryExpression binaryExpression)
+                throw new NotSupportedException($"Join expression '{joinDefinition.JoinExpression}' is not supported.");
+
+            if (binaryExpression.NodeType != ExpressionType.Equal)
+                throw new NotSupportedException($"Join operator '{binaryExpression.NodeType}' is not supported.");
+
+            var leftColumn = BuildJoinColumnReference(
+                binaryExpression.Left,
+                joinDefinition);
+
+            var rightColumn = BuildJoinColumnReference(
+                binaryExpression.Right,
+                joinDefinition);
+
+            return $"({leftColumn} = {rightColumn})";
+        }
+
+        // Builds a qualified SQL column reference from a join expression member access.
+        private string BuildJoinColumnReference(Expression expression, QueryJoinDefinition joinDefinition)
+        {
+            if (expression is not MemberExpression memberExpression)
+                throw new NotSupportedException($"Join expression member '{expression}' is not supported.");
+
+            if (memberExpression.Expression is not ParameterExpression parameterExpression)
+                throw new NotSupportedException($"Join expression source '{expression}' is not supported.");
+
+            var propertyName = memberExpression.Member.Name;
+
+            if (parameterExpression.Type == joinDefinition.SourceType)
+            {
+                var columnName = ResolveMappedColumnName(joinDefinition.SourceColumnMappings, propertyName);
+
+                return _databaseDialect.BuildQualifiedIdentifier(joinDefinition.SourceAlias, columnName);
+            }
+
+            if (parameterExpression.Type == joinDefinition.JoinTypeEntity)
+            {
+                var columnName = ResolveMappedColumnName(joinDefinition.JoinColumnMappings, propertyName);
+
+                return _databaseDialect.BuildQualifiedIdentifier(joinDefinition.TableAlias, columnName);
+            }
+
+            throw new NotSupportedException($"Join expression parameter type '{parameterExpression.Type.Name}' is not available in this join.");
+        }
+
+        // Resolves mapped column names for join expressions.
+        private static string ResolveMappedColumnName(IReadOnlyDictionary<string, string> columnMappings, string propertyName)
+        {
+            return columnMappings.TryGetValue(propertyName, out var columnName)
+                ? columnName
+                : propertyName;
         }
 
         // Builds the SQL SELECT clause from query projections.

@@ -40,7 +40,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (alias is not null)
                 ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
-            return new QueryCommandBuilder<T>(_queryCompiler, tableName, alias);
+            return new QueryCommandBuilder<T>(_queryCompiler, tableName, alias, metadataResolver: _metadataResolver);
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             var columnMappings = metadata!.Properties
                 .ToDictionary(property => property.Key, property => property.Value.ColumnName);
 
-            return new QueryCommandBuilder<T>(_queryCompiler, metadata!.TableName, alias, columnMappings);
+            return new QueryCommandBuilder<T>(_queryCompiler, metadata!.TableName, alias, columnMappings, metadataResolver: _metadataResolver);
         }
     }
 }
