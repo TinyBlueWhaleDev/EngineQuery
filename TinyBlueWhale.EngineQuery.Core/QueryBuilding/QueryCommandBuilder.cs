@@ -32,16 +32,30 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="tableName">
         /// Database table name associated with the query.
         /// </param>
-        public QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null)
+        /// <param name="tableAlias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
+        /// <param name="columnMappings">
+        /// Optional property-to-column mappings used during SQL generation.
+        /// </param>
+        public QueryCommandBuilder(IQueryCompiler queryCompiler, 
+            string tableName, 
+            string? tableAlias = null, 
+            IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+
+            if(tableAlias is not null && string.IsNullOrWhiteSpace(tableAlias))
+                ArgumentException.ThrowIfNullOrWhiteSpace(tableAlias);
+
 
             _queryCompiler = queryCompiler;
 
             _queryDefinition = new CompiledQueryDefinition
             {
                 TableName = tableName,
+                TableAlias = tableAlias,
                 ColumnMappings = columnMappings ?? new Dictionary<string, string>()
             };
         }

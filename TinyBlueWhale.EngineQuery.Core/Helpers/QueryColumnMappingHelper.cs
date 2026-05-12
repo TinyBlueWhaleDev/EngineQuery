@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
 namespace TinyBlueWhale.EngineQuery.Core.Helpers
@@ -34,6 +30,34 @@ namespace TinyBlueWhale.EngineQuery.Core.Helpers
                 out var columnName)
                     ? columnName
                     : propertyName;
+        }
+
+        /// <summary>
+        /// Resolves the database column reference associated with the specified CLR property name.
+        /// </summary>
+        /// <param name="queryDefinition">
+        /// Query definition containing configured table alias and column mappings.
+        /// </param>
+        /// <param name="databaseDialect">
+        /// Database dialect used to generate provider-specific identifiers.
+        /// </param>
+        /// <param name="propertyName">
+        /// CLR property name.
+        /// </param>
+        /// <returns>
+        /// Resolved SQL column reference.
+        /// </returns>
+        public static string ResolveColumnReference(CompiledQueryDefinition queryDefinition,ISqlDatabaseDialect databaseDialect,string propertyName)
+        {
+            ArgumentNullException.ThrowIfNull(queryDefinition);
+            ArgumentNullException.ThrowIfNull(databaseDialect);
+            ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
+
+            var columnName = ResolveColumnName(queryDefinition, propertyName);
+
+            return string.IsNullOrWhiteSpace(queryDefinition.TableAlias)
+                ? databaseDialect.EscapeIdentifier(columnName)
+                : databaseDialect.BuildQualifiedIdentifier(queryDefinition.TableAlias, columnName);
         }
     }
 }

@@ -25,5 +25,25 @@ namespace TinyBlueWhale.EngineQuery.MySql.Dialects
 
             return $"OFFSET {skip!.Value}";
         }
+
+        /// <summary>
+        /// Builds a MySQL qualified identifier using backtick syntax.
+        /// </summary>
+        /// <param name="qualifier">
+        /// Table name or alias used to qualify the identifier.
+        /// </param>
+        /// <param name="identifier">
+        /// Database identifier to qualify.
+        /// </param>
+        /// <returns>
+        /// MySQL qualified identifier.
+        /// </returns>
+        public string BuildQualifiedIdentifier(string qualifier, string identifier)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(qualifier);
+            ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
+
+            return $"{EscapeIdentifier(qualifier)}.{EscapeIdentifier(identifier)}";
+        }
     }
 }
