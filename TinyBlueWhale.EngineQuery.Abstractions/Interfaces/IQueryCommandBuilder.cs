@@ -24,6 +24,41 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> Select(Expression<Func<T, object>> selector);
 
         /// <summary>
+        /// Adds an INNER JOIN using resolved metadata for the joined entity.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Source entity type used in the join condition.
+        /// </typeparam>
+        /// <typeparam name="TJoin">
+        /// Joined entity type.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional alias assigned to the joined table.
+        /// </param>
+        /// <param name="on">
+        /// Join condition between the source entity and the joined entity.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> InnerJoin<TSource, TJoin>(string? alias, Expression<Func<TSource, TJoin, bool>> on);
+
+        /// <summary>
+        /// Adds a LEFT JOIN using resolved metadata for the joined entity.
+        /// </summary>
+        IQueryCommandBuilder<T> LeftJoin<TSource, TJoin>(string? alias, Expression<Func<TSource, TJoin, bool>> on);
+
+        /// <summary>
+        /// Adds an INNER JOIN using an explicit joined table name.
+        /// </summary>
+        IQueryCommandBuilder<T> InnerJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
+
+        /// <summary>
+        /// Adds a LEFT JOIN using an explicit joined table name.
+        /// </summary>
+        IQueryCommandBuilder<T> LeftJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
+
+        /// <summary>
         /// Adds a filtering condition to the query.
         /// </summary>
         /// <param name="predicate">
