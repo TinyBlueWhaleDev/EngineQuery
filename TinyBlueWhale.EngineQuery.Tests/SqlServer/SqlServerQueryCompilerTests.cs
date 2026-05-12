@@ -3,7 +3,7 @@ using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 using TinyBlueWhale.EngineQuery.Tests.Core;
 
-namespace TinyBlueWhale.EngineQuery.Tests.Sql
+namespace TinyBlueWhale.EngineQuery.Tests.SqlServer
 {
     [TestFixture]
     public sealed class SqlServerQueryCompilerTests : QueryCompilerTestBase
@@ -14,7 +14,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Sql
         protected override QueryBuilder CreateQueryBuilder()
         {
             return new QueryBuilder(
-                new QuerySqlServerCompiler(new SqlServerDatabaseDialect()));
+                new SqlServerQueryCompiler(new SqlServerDatabaseDialect()));
         }
     }
 }

@@ -3,7 +3,7 @@ using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
-namespace TinyBlueWhale.EngineQuery.Core.ExpressionParsing
+namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
 {
     /// <summary>
     /// Parses LINQ expression trees into SQL WHERE clause conditions.

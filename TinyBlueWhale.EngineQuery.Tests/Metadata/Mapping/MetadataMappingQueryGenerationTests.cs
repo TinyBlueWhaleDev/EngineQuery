@@ -187,7 +187,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Metadata.Mapping
         private static QueryBuilder CreateQueryBuilder(IEntityMetadataResolver? metadataResolver = null)
         {
             return new QueryBuilder(
-                new QuerySqlServerCompiler(new SqlServerDatabaseDialect()),
+                new SqlServerQueryCompiler(new SqlServerDatabaseDialect()),
                 metadataResolver);
         }
 

@@ -54,7 +54,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
         private static QueryBuilder CreateQueryBuilder(IEntityMetadataResolver metadataResolver)
         {
             return new QueryBuilder(
-                new QuerySqlServerCompiler(
+                new SqlServerQueryCompiler(
                     new SqlServerDatabaseDialect()),
                 metadataResolver);
         }

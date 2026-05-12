@@ -36,7 +36,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         private static GeneratedSqlQuery BuildSqlServerQuery(FluentEntityMetadataResolver metadataResolver)
         {
             var queryBuilder = new QueryBuilder(
-                new QuerySqlServerCompiler(
+                new SqlServerQueryCompiler(
                     new SqlServerDatabaseDialect()),
                 metadataResolver);
 
