@@ -1,6 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Tests.Core;
 
-namespace TinyBlueWhale.EngineQuery.Tests.Sql
+namespace TinyBlueWhale.EngineQuery.Tests.SqlServer
 {
     public class SqlServerExpectedSqlSyntax : IQueryCompilerExpectedSyntax
     {

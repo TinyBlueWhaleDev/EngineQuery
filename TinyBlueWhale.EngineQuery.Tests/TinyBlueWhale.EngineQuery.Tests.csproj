@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Abstractions\TinyBlueWhale.EngineQuery.Abstractions.csproj" />
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.MySql\TinyBlueWhale.EngineQuery.MySql.csproj" />
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.PostgreSql\TinyBlueWhale.EngineQuery.PostgreSql.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.SqlServer\TinyBlueWhale.EngineQuery.SqlServer.csproj" />
   </ItemGroup>
 
