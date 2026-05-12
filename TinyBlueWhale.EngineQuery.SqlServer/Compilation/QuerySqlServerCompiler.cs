@@ -1,6 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionParsing;
+using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
@@ -60,8 +61,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
                 return "SELECT *";
 
             var selectedColumns = queryDefinition.SelectDefinitions
-                .Select(selectDefinition => _databaseDialect.EscapeIdentifier(
-                        ResolveColumnName(queryDefinition,selectDefinition.PropertyName)));
+                .Select(selectDefinition => BuildSelectColumn(queryDefinition,selectDefinition));
 
             return "SELECT " + string.Join(", ", selectedColumns);
         }
@@ -95,7 +95,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
                 {
                     var sqlDirection = orderingDefinition.Direction == QueryOrderingDirection.Ascending? "ASC" : "DESC";
 
-                    return $"{_databaseDialect.EscapeIdentifier(ResolveColumnName(queryDefinition, orderingDefinition.PropertyName))} {sqlDirection}";
+                    return $"{_databaseDialect.EscapeIdentifier(QueryColumnMappingHelper.ResolveColumnName(queryDefinition, orderingDefinition.PropertyName))} {sqlDirection}";
                 });
 
             sqlLines.Add("ORDER BY " + string.Join(", ", orderingClauses));
@@ -115,10 +115,20 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
             sqlLines.Add(paginationClause);
         }
 
-        // Resolves the database column name associated with a CLR property.
-        private string ResolveColumnName(CompiledQueryDefinition queryDefinition,string propertyName)
+        // Builds a SQL SELECT column fragment including optional alias projection.
+        private string BuildSelectColumn(
+            CompiledQueryDefinition queryDefinition,
+            QuerySelectColumnDefinition selectDefinition)
         {
-            return queryDefinition.ColumnMappings.TryGetValue(propertyName,out var columnName) ? columnName : propertyName;
+            var columnName = _databaseDialect.EscapeIdentifier(
+                QueryColumnMappingHelper.ResolveColumnName(
+                    queryDefinition,
+                    selectDefinition.PropertyName));
+
+            if (string.IsNullOrWhiteSpace(selectDefinition.Alias))
+                return columnName;
+
+            return $"{columnName} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
         }
     }
 }
