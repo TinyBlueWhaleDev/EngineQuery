@@ -24,5 +24,26 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
 
             return $"OFFSET {skip!.Value}";
         }
+
+        /// <summary>
+        /// Builds a PostgreSQL qualified identifier using double quote syntax.
+        /// </summary>
+        /// <param name="qualifier">
+        /// Table name or alias used to qualify the identifier.
+        /// </param>
+        /// <param name="identifier">
+        /// Database identifier to qualify.
+        /// </param>
+        /// <returns>
+        /// PostgreSQL qualified identifier.
+        /// </returns>
+        public string BuildQualifiedIdentifier(string qualifier, string identifier)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(qualifier);
+            ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
+
+            return $"{EscapeIdentifier(qualifier)}.{EscapeIdentifier(identifier)}";
+        }
+
     }
 }

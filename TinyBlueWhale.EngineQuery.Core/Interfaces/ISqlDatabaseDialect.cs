@@ -22,6 +22,20 @@ namespace TinyBlueWhale.EngineQuery.Core.Interfaces
         string EscapeIdentifier(string identifier);
 
         /// <summary>
+        /// Builds a provider-specific qualified identifier using the specified qualifier and identifier.
+        /// </summary>
+        /// <param name="qualifier">
+        /// Table name or alias used to qualify the identifier.
+        /// </param>
+        /// <param name="identifier">
+        /// Database identifier to qualify.
+        /// </param>
+        /// <returns>
+        /// Provider-specific qualified identifier.
+        /// </returns>
+        string BuildQualifiedIdentifier(string qualifier, string identifier);
+
+        /// <summary>
         /// Builds a provider-specific SQL pagination clause.
         /// </summary>
         /// <param name="skip">

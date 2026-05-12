@@ -11,13 +11,16 @@
         /// <typeparam name="T">
         /// Entity type used as the source of the query.
         /// </typeparam>
-        /// <param name="tableName">
+        /// <param name="tableName">      
         /// Database table name associated with the query.
+        /// </param>
+        /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
         /// </param>
         /// <returns>
         /// A fluent query command builder for composing and generating SQL queries.
         /// </returns>
-        IQueryCommandBuilder<T> From<T>(string tableName);
+        IQueryCommandBuilder<T> From<T>(string tableName, string? alias = null);
 
         /// <summary>
         /// Creates a new query builder using resolved entity metadata.
@@ -25,9 +28,12 @@
         /// <typeparam name="T">
         /// Entity type used as the source of the query.
         /// </typeparam>
+        /// /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
         /// <returns>
         /// Fluent query command builder.
         /// </returns>
-        IQueryCommandBuilder<T> From<T>();
+        IQueryCommandBuilder<T> From<T>(string? alias = null);
     }
 }

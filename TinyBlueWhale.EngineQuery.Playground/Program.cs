@@ -7,5 +7,7 @@ using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
 //AttributeMappingValidator.Run();
 //CompositeMappingValidator.Run();
 
-MultiProviderQueryValidator.Run();
+//MultiProviderQueryValidator.Run();
+
+TableAliasQueryValidator.Run();
 

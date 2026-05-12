@@ -16,10 +16,14 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public required string TableName { get; set; }
 
         /// <summary>
+        /// Gets or sets the optional table alias used to qualify generated SQL column references.
+        /// </summary>
+        public string? TableAlias { get; set; }
+
+        /// <summary>
         /// Gets or sets the property-to-column mapping used during SQL generation.
         /// </summary>
-        public IReadOnlyDictionary<string, string> ColumnMappings { get; set; } =
-            new Dictionary<string, string>();
+        public IReadOnlyDictionary<string, string> ColumnMappings { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Gets the selected columns included in the query projection.

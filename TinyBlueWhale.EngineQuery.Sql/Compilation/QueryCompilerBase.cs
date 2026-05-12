@@ -63,7 +63,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds the SQL FROM clause.
         protected virtual string BuildFromClause(CompiledQueryDefinition queryDefinition)
         {
-            return $"FROM {_databaseDialect.EscapeIdentifier(queryDefinition.TableName)}";
+            var tableName = _databaseDialect.EscapeIdentifier(queryDefinition.TableName);
+
+            return string.IsNullOrWhiteSpace(queryDefinition.TableAlias)
+                ? $"FROM {tableName}"
+                : $"FROM {tableName} AS {_databaseDialect.EscapeIdentifier(queryDefinition.TableAlias)}";
         }
 
         // Builds the SQL SELECT clause from query projections.
@@ -81,12 +85,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a SQL SELECT column fragment including optional alias projection.
         protected virtual string BuildSelectColumn(CompiledQueryDefinition queryDefinition, QuerySelectColumnDefinition selectDefinition)
         {
-            var columnName = _databaseDialect.EscapeIdentifier(QueryColumnMappingHelper.ResolveColumnName(queryDefinition,selectDefinition.PropertyName));
+            var columnName = QueryColumnMappingHelper.ResolveColumnReference(queryDefinition,_databaseDialect,selectDefinition.PropertyName);
 
-            if (string.IsNullOrWhiteSpace(selectDefinition.Alias))
-                return columnName;
-
-            return $"{columnName} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
+            return string.IsNullOrWhiteSpace(selectDefinition.Alias)
+                ? columnName
+                : $"{columnName} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
         }
 
         // Adds SQL WHERE conditions when filters are defined.
@@ -109,7 +112,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Creates a SQL WHERE clause expression parser instance.
         protected virtual QueryWhereClauseExpressionParser CreateWhereClauseExpressionParser(List<QuerySqlParameter> sqlParameters,CompiledQueryDefinition queryDefinition)
         {
-            return new QueryWhereClauseExpressionParser(_databaseDialect, sqlParameters, queryDefinition.ColumnMappings);
+            return new QueryWhereClauseExpressionParser(_databaseDialect, sqlParameters, queryDefinition.ColumnMappings, queryDefinition.TableAlias);
         }
 
         // Adds SQL ORDER BY clauses preserving fluent ordering sequence.
@@ -121,11 +124,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var orderingClauses = queryDefinition.OrderingDefinitions
                 .Select(orderingDefinition =>
                 {
-                    var columnName = QueryColumnMappingHelper.ResolveColumnName(queryDefinition, orderingDefinition.PropertyName);
+                    var columnReference = QueryColumnMappingHelper.ResolveColumnReference(queryDefinition, _databaseDialect, orderingDefinition.PropertyName);
 
-                    var sqlDirection = orderingDefinition.Direction == QueryOrderingDirection.Ascending ? "ASC" : "DESC";
+                    var sqlDirection = orderingDefinition.Direction == QueryOrderingDirection.Ascending
+                        ? "ASC"
+                        : "DESC";
 
-                    return $"{_databaseDialect.EscapeIdentifier(columnName)} {sqlDirection}";
+                    return $"{columnReference} {sqlDirection}";
                 });
 
             sqlLines.Add("ORDER BY " + string.Join(", ", orderingClauses));

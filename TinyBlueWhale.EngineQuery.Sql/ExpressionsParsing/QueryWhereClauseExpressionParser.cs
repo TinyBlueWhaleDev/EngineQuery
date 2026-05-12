@@ -14,11 +14,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
     /// </remarks>
     public sealed class QueryWhereClauseExpressionParser(ISqlDatabaseDialect databaseDialect, 
         List<QuerySqlParameter> sqlParameters, 
-        IReadOnlyDictionary<string, string> columnMappings)
+        IReadOnlyDictionary<string, string> columnMappings,
+        string? tableAlias = null)
     {
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
         private readonly List<QuerySqlParameter> _sqlParameters = sqlParameters;
         private readonly IReadOnlyDictionary<string, string> _columnMappings = columnMappings;
+        private readonly string? _tableAlias = tableAlias;
 
         /// <summary>
         /// Parses the specified expression into a SQL WHERE condition fragment.
@@ -47,6 +49,18 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
                 _ => throw new NotSupportedException(
                     $"Expression '{expression}' is not supported in WHERE clauses.")
             };
+        }
+
+        // Resolves the SQL column reference associated with a CLR property.
+        private string ResolveColumnReference(string propertyName)
+        {
+            var columnName = _columnMappings.TryGetValue(propertyName, out var mappedColumnName)
+                ? mappedColumnName
+                : propertyName;
+
+            return string.IsNullOrWhiteSpace(_tableAlias)
+                ? _databaseDialect.EscapeIdentifier(columnName)
+                : _databaseDialect.BuildQualifiedIdentifier(_tableAlias, columnName);
         }
 
         // Parses binary expressions such as ==, !=, >, <, && and ||.
@@ -81,7 +95,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
                 MemberExpression memberExpression when memberExpression.Expression?.NodeType == ExpressionType.Parameter => 
                     memberExpression.Type == typeof(bool)
                         ? ParseBooleanPropertyToSqlCondition(memberExpression)
-                        : _databaseDialect.EscapeIdentifier(ResolveColumnName(memberExpression.Member.Name)),
+                        : ResolveColumnReference(memberExpression.Member.Name),
 
                 ConstantExpression constantExpression => AddSqlParameter(constantExpression.Value),
 
@@ -103,7 +117,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
             if (memberExpression.Expression?.NodeType != ExpressionType.Parameter)
                 return AddSqlParameter(RuntimeExpressionValueExtractor.ExtractValue(memberExpression));
 
-            var columnName = _databaseDialect.EscapeIdentifier(ResolveColumnName(memberExpression.Member.Name));
+            var columnName = ResolveColumnReference(memberExpression.Member.Name);
 
             var parameterName = AddSqlParameter(true);
 
@@ -115,7 +129,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         {
             if (unaryExpression.Operand is MemberExpression memberExpression &&memberExpression.Expression?.NodeType == ExpressionType.Parameter)
             {
-                var columnName = _databaseDialect.EscapeIdentifier(ResolveColumnName(memberExpression.Member.Name));
+                var columnName = ResolveColumnReference(memberExpression.Member.Name);
 
                 var parameterName = AddSqlParameter(false);
 
@@ -131,7 +145,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
             if (methodCallExpression.Object is not MemberExpression memberExpression ||memberExpression.Expression?.NodeType != ExpressionType.Parameter)
                 throw new NotSupportedException($"Method call '{methodCallExpression}' is not supported in WHERE clauses.");
 
-            var columnName = _databaseDialect.EscapeIdentifier(ResolveColumnName(memberExpression.Member.Name));
+            var columnName = ResolveColumnReference(memberExpression.Member.Name);
 
             return methodCallExpression.Method.Name switch
             {
@@ -177,16 +191,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
             });
 
             return parameterName;
-        }
-
-        // Resolves the database column name associated with a CLR property.
-        private string ResolveColumnName(string propertyName)
-        {
-            return _columnMappings.TryGetValue(
-                propertyName,
-                out var columnName)
-                    ? columnName
-                    : propertyName;
         }
 
         // Represents supported SQL LIKE search patterns.

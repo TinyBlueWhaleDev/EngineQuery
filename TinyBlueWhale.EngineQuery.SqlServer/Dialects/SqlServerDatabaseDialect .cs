@@ -46,5 +46,25 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Dialects
 
             return $"OFFSET {offset} ROWS";
         }
+
+        /// <summary>
+        /// Builds a SQL Server qualified identifier using bracket syntax.
+        /// </summary>
+        /// <param name="qualifier">
+        /// Table name or alias used to qualify the identifier.
+        /// </param>
+        /// <param name="identifier">
+        /// Database identifier to qualify.
+        /// </param>
+        /// <returns>
+        /// SQL Server qualified identifier.
+        /// </returns>
+        public string BuildQualifiedIdentifier(string qualifier, string identifier)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(qualifier);
+            ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
+
+            return $"{EscapeIdentifier(qualifier)}.{EscapeIdentifier(identifier)}";
+        }
     }
 }

@@ -19,19 +19,28 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         private readonly IEntityMetadataResolver? _metadataResolver = metadataResolver;
 
         /// <summary>
-        /// Creates a new fluent query command builder for the specified entity type.
+        /// Creates a new query builder using an explicit table name.
         /// </summary>
         /// <typeparam name="T">
         /// Entity type used as the source of the query.
         /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the query.
+        /// </param>
+        /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
         /// <returns>
-        /// Query command builder instance.
+        /// Fluent query command builder.
         /// </returns>
-        public IQueryCommandBuilder<T> From<T>(string tableName)
+        public IQueryCommandBuilder<T> From<T>(string tableName, string? alias = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            return new QueryCommandBuilder<T>(_queryCompiler, tableName);
+            if (alias is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            return new QueryCommandBuilder<T>(_queryCompiler, tableName, alias);
         }
 
         /// <summary>
@@ -40,14 +49,17 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <typeparam name="T">
         /// Entity type used as the source of the query.
         /// </typeparam>
+        /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
         /// <returns>
         /// Fluent query command builder.
         /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when metadata cannot be resolved for the specified entity type.
-        /// </exception>
-        public IQueryCommandBuilder<T> From<T>()
+        public IQueryCommandBuilder<T> From<T>(string? alias = null)
         {
+            if (alias is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
             if (_metadataResolver is null)
                 throw new InvalidOperationException("No entity metadata resolver is configured.");
             
@@ -58,7 +70,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             var columnMappings = metadata!.Properties
                 .ToDictionary(property => property.Key, property => property.Value.ColumnName);
 
-            return new QueryCommandBuilder<T>(_queryCompiler, metadata!.TableName, columnMappings);
+            return new QueryCommandBuilder<T>(_queryCompiler, metadata!.TableName, alias, columnMappings);
         }
     }
 }
