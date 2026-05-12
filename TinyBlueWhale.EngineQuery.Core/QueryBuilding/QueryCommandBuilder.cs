@@ -62,16 +62,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentNullException.ThrowIfNull(selector);
 
-            var selectedProperties = ExtractSelectedProperties(selector);
+            var selectedProperties = SelectedPropertyExpressionExtractor.ExtractSelectedProperties(selector);
 
-            foreach (var propertyName in selectedProperties)
-            {
-                _queryDefinition.SelectDefinitions.Add(
-                    new QuerySelectColumnDefinition
-                    {
-                        PropertyName = propertyName
-                    });
-            }
+            _queryDefinition.SelectDefinitions.AddRange(selectedProperties);
 
             return this;
         }
@@ -315,9 +308,5 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             };
         }
 
-        private static IReadOnlyList<string> ExtractSelectedProperties(Expression<Func<T, object>> selector)
-        {
-            return SelectedPropertyExpressionExtractor.ExtractSelectedProperties(selector);
-        }
     }
 }

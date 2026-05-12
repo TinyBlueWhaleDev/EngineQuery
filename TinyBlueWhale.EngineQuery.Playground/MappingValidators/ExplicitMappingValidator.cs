@@ -22,7 +22,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
                 .From<ExplicitLogEntry>("system_logs")
                 .Select(x => new
                 {
-                    x.LogIdentifier,
+                    testId = x.LogIdentifier,
                     x.MessageContent,
                     x.RegisteredAt,
                     x.Enabled

@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
 namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
 {
@@ -26,25 +27,54 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
         /// <exception cref="NotSupportedException">
         /// Thrown when the projection expression is not supported.
         /// </exception>
-        public static IReadOnlyList<string> ExtractSelectedProperties<T>(
+        public static IReadOnlyList<QuerySelectColumnDefinition> ExtractSelectedProperties<T>(
             Expression<Func<T, object>> selector)
         {
             return selector.Body switch
             {
                 NewExpression newExpression => ExtractFromNewExpression(newExpression),
 
-                MemberExpression memberExpression => [memberExpression.Member.Name],
+                MemberExpression memberExpression => [
+                    new QuerySelectColumnDefinition
+                    {
+                        PropertyName = memberExpression.Member.Name
+                    }
+                ],
 
-                UnaryExpression unaryExpression when unaryExpression.Operand is MemberExpression memberExpression => [memberExpression.Member.Name],
+                UnaryExpression unaryExpression when unaryExpression.Operand is MemberExpression memberExpression => 
+                [
+                    new QuerySelectColumnDefinition
+                    {
+                        PropertyName = memberExpression.Member.Name
+                    }
+                ],
 
                 _ => throw new NotSupportedException($"Select expression '{selector}' is not supported.")
             };
         }
-
-        // Extracts property names from anonymous object projections.
-        private static IReadOnlyList<string> ExtractFromNewExpression(NewExpression newExpression)
+        // Extracts selected properties and aliases from anonymous object projections.
+        private static IReadOnlyList<QuerySelectColumnDefinition> ExtractFromNewExpression(NewExpression newExpression)
         {
-            return [.. newExpression.Arguments.OfType<MemberExpression>().Select(x => x.Member.Name)];
+            return [.. newExpression.Arguments
+                .Select((argument, index) =>
+                    CreateSelectColumnDefinition(
+                        argument,
+                        newExpression.Members?[index].Name))];
+        }
+
+        // Creates a selected column definition from a projection argument.
+        private static QuerySelectColumnDefinition CreateSelectColumnDefinition(Expression argument, string? projectedMemberName)
+        {
+            if (argument is not MemberExpression memberExpression)
+                throw new NotSupportedException($"Select argument '{argument}' is not supported.");
+
+            return new QuerySelectColumnDefinition
+            {
+                PropertyName = memberExpression.Member.Name,
+                Alias = projectedMemberName == memberExpression.Member.Name
+                    ? null
+                    : projectedMemberName
+            };
         }
     }
 }
