@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Fluent;
@@ -75,6 +76,14 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     o.UserId,
                     o.Total
                 })
+                .SelectAggregate<JoinOrder>(
+                    QueryAggregateFunction.Sum,
+                    o => o.Total,
+                    alias: "TotalAmount")
+                .SelectAggregate<JoinOrder>(
+                    QueryAggregateFunction.Count,
+                    o => o.Id,
+                    alias: "OrderCount")
                 .Where<JoinUser>(u => u.IsActive)
                 .Where<JoinOrder>(o => o.Total > 100)
                 .GroupBy<JoinUser>(u => new

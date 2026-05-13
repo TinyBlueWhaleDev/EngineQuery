@@ -9,11 +9,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
     /// It is not exposed to consumers of the public API.
     /// </remarks>
     public sealed class CompiledQueryDefinition
-    {
-        /// <summary>
-        /// Gets the query sources available in the current SQL generation scope.
-        /// </summary>
-        public Dictionary<Type, QuerySourceDefinition> SourceDefinitions { get; } = [];
+    {        
 
         /// <summary>
         /// Gets or sets the source table name associated with the query.
@@ -39,6 +35,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the selected columns included in the query projection.
         /// </summary>
         public List<QuerySelectColumnDefinition> SelectDefinitions { get; } = [];
+
+        /// <summary>
+        /// Gets the query sources available in the current SQL generation scope.
+        /// </summary>
+        public Dictionary<Type, QuerySourceDefinition> SourceDefinitions { get; } = [];
+
+        /// <summary>
+        /// Gets the SQL aggregate SELECT definitions associated with the query.
+        /// </summary>
+        public List<QueryAggregateDefinition> AggregateDefinitions { get; } = [];
 
         /// <summary>
         /// Gets the filtering definitions used to generate SQL WHERE clauses.

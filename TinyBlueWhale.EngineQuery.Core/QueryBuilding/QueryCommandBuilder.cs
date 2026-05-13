@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Enums;
@@ -127,6 +128,49 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                         SourceColumnMappings = sourceDefinition.ColumnMappings
                     });
             }
+
+            return this;
+        }
+
+        #endregion
+
+        #region Aggregate Overloads
+        /// <summary>
+        /// Adds an aggregate SELECT expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the aggregated column.
+        /// </typeparam>
+        /// <param name="function">
+        /// Aggregate function applied to the selected column.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the aggregated property.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the aggregate result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> SelectAggregate<TEntity>(QueryAggregateFunction function, Expression<Func<TEntity, object>> selector, string alias)
+        {
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+            var propertyName = QueryColumnExpressionExtractor.ExtractColumns(selector).Single().PropertyName;
+
+            _queryDefinition.AggregateDefinitions.Add(
+                new QueryAggregateDefinition
+                {
+                    Function = function,
+                    PropertyName = propertyName,
+                    Alias = alias,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
 
             return this;
         }
