@@ -24,6 +24,20 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> Select(Expression<Func<T, object>> selector);
 
         /// <summary>
+        /// Adds selected columns for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected columns.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Projection expression describing the selected columns for the entity.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> Select<TEntity>(Expression<Func<TEntity, object>> selector);
+
+        /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
         /// <typeparam name="TSource">

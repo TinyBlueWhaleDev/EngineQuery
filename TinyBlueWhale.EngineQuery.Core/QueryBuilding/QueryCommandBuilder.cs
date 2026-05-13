@@ -54,7 +54,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            if(tableAlias is not null && string.IsNullOrWhiteSpace(tableAlias))
+            if(tableAlias is not null)
                 ArgumentException.ThrowIfNullOrWhiteSpace(tableAlias);
 
 
@@ -68,8 +68,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 ColumnMappings = columnMappings ?? new Dictionary<string, string>()
             };
 
-            if (!string.IsNullOrWhiteSpace(tableAlias))
-                _registeredAliases.Add(tableAlias);
+            RegisterRootSource(tableName, tableAlias);
         }
 
         /// <summary>
@@ -94,6 +93,41 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return this;
         }
+
+        /// <summary>
+        /// Adds selected columns for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected columns.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Projection expression describing the selected columns for the entity.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> Select<TEntity>(
+            Expression<Func<TEntity, object>> selector)
+        {
+            ArgumentNullException.ThrowIfNull(selector);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+            var selectedColumns = SelectedPropertyExpressionExtractor.ExtractSelectedProperties(selector);
+
+            foreach (var selectedColumn in selectedColumns)
+            {
+                _queryDefinition.SelectDefinitions.Add(
+                    selectedColumn with
+                    {
+                        SourceType = typeof(TEntity),
+                        SourceAlias = sourceDefinition.TableAlias,
+                        SourceColumnMappings = sourceDefinition.ColumnMappings
+                    });
+            }
+
+            return this;
+        }
+
 
 
         /// <summary>
@@ -434,7 +468,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Adds a metadata-driven join definition.
-        private IQueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
             ArgumentNullException.ThrowIfNull(on);
 
@@ -448,7 +482,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Adds an explicit table join definition.
-        private IQueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType,string tableName,string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType,string tableName,string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
             ArgumentNullException.ThrowIfNull(on);
@@ -472,6 +506,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     JoinColumnMappings = joinColumnMappings,
                     JoinExpression = on
                 });
+
+            RegisterJoinSource<TJoin>(tableName, joinAlias, joinColumnMappings);
 
             return this;
         }
@@ -514,10 +550,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             var joinDefinition = _queryDefinition.JoinDefinitions
                 .LastOrDefault(join => join.JoinTypeEntity == typeof(TSource));
 
-            if (joinDefinition is null)
-                throw new InvalidOperationException($"Entity type '{typeof(TSource).Name}' is not available in the current query scope.");
-
-            return joinDefinition.TableAlias;
+            return joinDefinition is null
+                ? throw new InvalidOperationException($"Entity type '{typeof(TSource).Name}' is not available in the current query scope.")
+                : joinDefinition.TableAlias;
         }
 
         // Ensures the root query source has a deterministic alias when joins exist.
@@ -535,5 +570,47 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return alias;
         }
 
+        // Registers the root query source in the current query scope.
+        private void RegisterRootSource(string tableName,string? tableAlias)
+        {
+            var resolvedAlias = string.IsNullOrWhiteSpace(tableAlias)
+                ? QueryAliasGeneratorHelper.Generate(0)
+                : tableAlias;
+
+            _queryDefinition.SourceDefinitions[typeof(T)] =
+                new QuerySourceDefinition
+                {
+                    EntityType = typeof(T),
+                    TableName = tableName,
+                    TableAlias = resolvedAlias,
+                    ColumnMappings = _queryDefinition.ColumnMappings
+                };
+
+            _queryDefinition.TableAlias = resolvedAlias;
+            _registeredAliases.Add(resolvedAlias);
+        }
+
+        // Registers a joined query source in the current query scope.
+        private void RegisterJoinSource<TEntity>(string tableName, string tableAlias, IReadOnlyDictionary<string, string> columnMappings)
+        {
+            _queryDefinition.SourceDefinitions[typeof(TEntity)] =
+                new QuerySourceDefinition
+                {
+                    EntityType = typeof(TEntity),
+                    TableName = tableName,
+                    TableAlias = tableAlias,
+                    ColumnMappings = columnMappings
+                };
+        }
+
+        // Resolves a query source previously registered in the current query scope.
+        private QuerySourceDefinition ResolveQuerySource<TEntity>()
+        {
+            if (_queryDefinition.SourceDefinitions.TryGetValue(typeof(TEntity), out var sourceDefinition))
+                return sourceDefinition;
+
+            throw new InvalidOperationException(
+                $"Entity type '{typeof(TEntity).Name}' is not available in the current query scope.");
+        }
     }
 }

@@ -60,7 +60,21 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             return queryBuilder
                 .From<JoinUser>(alias: "u")
                 .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (u, o) => u.Id == o.UserId)
-                .LeftJoin<JoinOrder, JoinOrderItem>(alias: "oi", on: (o, oi) => o.Id == oi.OrderId)                
+                .LeftJoin<JoinOrder, JoinOrderItem>(alias: "oi", on: (o, oi) => o.Id == oi.OrderId)
+                .Select<JoinUser>(u => new
+                {
+                    UserId = u.Id
+                })
+                .Select<JoinOrder>(o => new
+                {
+                    OrderId = o.Id,
+                    OrderUserId = o.UserId
+                })
+                .Select<JoinOrderItem>(oi => new
+                {
+                    OrderItemId = oi.Id,
+                    ItemOrderId = oi.OrderId
+                })
                 .Build();
         }
 
