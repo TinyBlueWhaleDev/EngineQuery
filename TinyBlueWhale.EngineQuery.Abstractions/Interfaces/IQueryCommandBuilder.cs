@@ -59,6 +59,26 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> SelectAggregate<TEntity>(QueryAggregateFunction function, Expression<Func<TEntity, object>> selector, string alias);
 
         /// <summary>
+        /// Adds a scalar SQL function projection for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected column.
+        /// </typeparam>
+        /// <param name="function">
+        /// Scalar SQL function applied to the selected column.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the entity property used by the scalar function.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the scalar function result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, string alias);
+
+        /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
         /// <typeparam name="TSource">

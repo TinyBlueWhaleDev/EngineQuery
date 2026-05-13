@@ -66,5 +66,25 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Dialects
 
             return $"{EscapeIdentifier(qualifier)}.{EscapeIdentifier(identifier)}";
         }
+
+        /// <summary>
+        /// Resolves the SQL Server scalar function name.
+        /// </summary>
+        /// <param name="functionName">
+        /// Canonical scalar function name.
+        /// </param>
+        /// <returns>
+        /// SQL Server scalar function name.
+        /// </returns>
+        public string ResolveScalarFunctionName(string functionName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(functionName);
+
+            return functionName switch
+            {
+                "LENGTH" => "LEN",
+                _ => functionName
+            };
+        }
     }
 }

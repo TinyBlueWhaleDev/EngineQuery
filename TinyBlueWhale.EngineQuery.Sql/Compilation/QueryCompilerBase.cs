@@ -70,20 +70,23 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
 
         #region Select Clause Building        
-        // Builds the SQL SELECT clause from query projections and aggregate expressions.
+        // Builds the SQL SELECT clause from query projections, aggregate expressions and scalar function expressions.
         protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition)
         {
             if (queryDefinition.SelectDefinitions.Count == 0 &&
-                queryDefinition.AggregateDefinitions.Count == 0)
+                queryDefinition.AggregateDefinitions.Count == 0 &&
+                queryDefinition.ScalarFunctionDefinitions.Count == 0)
                 return "SELECT *";
 
             var selectedColumns = queryDefinition.SelectDefinitions
                 .Select(selectDefinition => BuildSelectColumn(queryDefinition, selectDefinition));
 
             var aggregateColumns = queryDefinition.AggregateDefinitions
-                .Select(aggregateDefinition => BuildAggregateColumn(aggregateDefinition));
+                .Select(BuildAggregateColumn);
 
-            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns))}";
+            var scalarFunctionColumns = queryDefinition.ScalarFunctionDefinitions.Select(BuildScalarFunctionColumn);
+
+            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns))}";
         }
 
         // Builds a SQL SELECT column fragment including optional alias projection.
@@ -108,6 +111,20 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             return $"{ResolveAggregateFunctionName(aggregateDefinition.Function)}({columnReference}) AS {_databaseDialect.EscapeIdentifier(aggregateDefinition.Alias)}";
         }
 
+        // Builds a scalar SQL function projection.
+        protected virtual string BuildScalarFunctionColumn(QueryScalarFunctionDefinition functionDefinition)
+        {
+            var columnName = ResolveMappedColumnName(functionDefinition.SourceColumnMappings, functionDefinition.PropertyName);
+
+            var columnReference = string.IsNullOrWhiteSpace(functionDefinition.SourceAlias)
+                ? _databaseDialect.EscapeIdentifier(columnName)
+                : _databaseDialect.BuildQualifiedIdentifier(
+                    functionDefinition.SourceAlias,
+                    columnName);
+
+            return $"{ResolveScalarFunctionName(functionDefinition.Function)}({columnReference}) AS {_databaseDialect.EscapeIdentifier(functionDefinition.Alias)}";
+        }
+
         // Resolves the SQL aggregate function name.
         private static string ResolveAggregateFunctionName(
             QueryAggregateFunction function)
@@ -121,6 +138,22 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 QueryAggregateFunction.Maximum => "MAX",
                 _ => throw new NotSupportedException($"Aggregate function '{function}' is not supported.")
             };
+        }
+
+        // Resolves SQL scalar function names.
+        protected virtual string ResolveScalarFunctionName(QueryScalarFunction function)
+        {
+            var canonicalFunctionName = function switch
+            {
+                QueryScalarFunction.Lower => "LOWER",
+                QueryScalarFunction.Upper => "UPPER",
+                QueryScalarFunction.Length => "LENGTH",
+                QueryScalarFunction.Trim => "TRIM",
+                QueryScalarFunction.Coalesce => "COALESCE",
+                _ => throw new NotSupportedException($"Scalar function '{function}' is not supported.")
+            };
+
+            return _databaseDialect.ResolveScalarFunctionName(canonicalFunctionName);
         }
 
         // Builds a SQL column reference for single-source and multi-source projections.

@@ -48,5 +48,16 @@ namespace TinyBlueWhale.EngineQuery.Core.Interfaces
         /// Provider-specific pagination SQL fragment.
         /// </returns>
         string BuildPaginationClause(int? skip, int? take);
+
+        /// <summary>
+        /// Resolves the provider-specific SQL scalar function name.
+        /// </summary>
+        /// <param name="functionName">
+        /// Canonical scalar function name.
+        /// </param>
+        /// <returns>
+        /// Provider-specific scalar function name.
+        /// </returns>
+        string ResolveScalarFunctionName(string functionName);
     }
 }

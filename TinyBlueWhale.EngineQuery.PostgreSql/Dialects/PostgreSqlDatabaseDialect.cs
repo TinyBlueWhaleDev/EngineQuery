@@ -45,5 +45,21 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
             return $"{EscapeIdentifier(qualifier)}.{EscapeIdentifier(identifier)}";
         }
 
+        /// <summary>
+        /// Resolves the provider-specific scalar function name.
+        /// </summary>
+        /// <param name="functionName">
+        /// Canonical scalar function name.
+        /// </param>
+        /// <returns>
+        /// Provider-specific scalar function name.
+        /// </returns>
+        public string ResolveScalarFunctionName(string functionName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(functionName);
+
+            return functionName;
+        }
+
     }
 }
