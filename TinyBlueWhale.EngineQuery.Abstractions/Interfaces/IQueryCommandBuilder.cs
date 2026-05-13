@@ -113,31 +113,53 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 
         /// <summary>
         /// Adds an ascending ordering expression to the query.
-        /// </summary>
-        /// <typeparam name="TKey">
-        /// Type of the selected ordering property.
-        /// </typeparam>
+        /// </summary>        
         /// <param name="keySelector">
         /// Expression that selects the property used for ordering.
         /// </param>
         /// <returns>
         /// Ordered query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> OrderBy<TKey>(Expression<Func<T, TKey>> keySelector);
+        IOrderedQueryCommandBuilder<T> OrderBy(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds an ascending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>        
+        /// <param name="keySelector">
+        /// Expression describing the ordered property.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IOrderedQueryCommandBuilder<T> OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
 
         /// <summary>
         /// Adds a descending ordering expression to the query.
-        /// </summary>
-        /// <typeparam name="TKey">
-        /// Type of the selected ordering property.
-        /// </typeparam>
+        /// </summary>        
         /// <param name="keySelector">
         /// Expression that selects the property used for ordering.
         /// </param>
         /// <returns>
         /// Ordered query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> keySelector);
+        IOrderedQueryCommandBuilder<T> OrderByDescending(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds a descending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression describing the ordered property.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IOrderedQueryCommandBuilder<T> OrderByDescending<TEntity>(Expression<Func<TEntity, object>> selector);
 
         /// <summary>
         /// Skips the specified number of rows when generating paginated SQL.
