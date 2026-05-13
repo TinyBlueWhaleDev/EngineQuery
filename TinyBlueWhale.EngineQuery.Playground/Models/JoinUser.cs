@@ -9,6 +9,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.Models
     public sealed class JoinUser
     {
         public int Id { get; set; }
+
+        public bool IsActive { get; set; }
     }
 
     public sealed class JoinOrder
@@ -16,6 +18,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.Models
         public int Id { get; set; }
 
         public int UserId { get; set; }
+
+        public decimal Total { get; set; }
     }
 
     public sealed class JoinOrderItem
@@ -23,5 +27,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Models
         public int Id { get; set; }
 
         public int OrderId { get; set; }
+
+        public int Quantity { get; set; }
     }
 }

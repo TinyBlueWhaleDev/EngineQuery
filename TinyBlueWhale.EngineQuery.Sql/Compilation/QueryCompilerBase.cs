@@ -203,7 +203,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var whereConditions = queryDefinition.WhereDefinitions
                 .Select(whereDefinition =>
                 {
-                    var parser = CreateWhereClauseExpressionParser(sqlParameters,queryDefinition);
+                    var parser = CreateWhereClauseExpressionParser(sqlParameters,queryDefinition, whereDefinition);
 
                     return parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
                 });
@@ -212,9 +212,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Creates a SQL WHERE clause expression parser instance.
-        protected virtual QueryWhereClauseExpressionParser CreateWhereClauseExpressionParser(List<QuerySqlParameter> sqlParameters,CompiledQueryDefinition queryDefinition)
+        protected virtual QueryWhereClauseExpressionParser CreateWhereClauseExpressionParser(List<QuerySqlParameter> sqlParameters, CompiledQueryDefinition queryDefinition, QueryWhereDefinition whereDefinition)
         {
-            return new QueryWhereClauseExpressionParser(_databaseDialect, sqlParameters, queryDefinition.ColumnMappings, queryDefinition.TableAlias);
+            return new QueryWhereClauseExpressionParser(
+                _databaseDialect,
+                sqlParameters,
+                whereDefinition.SourceColumnMappings ?? queryDefinition.ColumnMappings,
+                whereDefinition.SourceAlias ?? queryDefinition.TableAlias);
         }
 
         // Adds SQL ORDER BY clauses preserving fluent ordering sequence.

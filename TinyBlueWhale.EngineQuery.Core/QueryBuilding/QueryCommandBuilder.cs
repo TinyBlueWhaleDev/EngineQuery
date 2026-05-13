@@ -106,8 +106,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        public IQueryCommandBuilder<T> Select<TEntity>(
-            Expression<Func<TEntity, object>> selector)
+        public IQueryCommandBuilder<T> Select<TEntity>(Expression<Func<TEntity, object>> selector)
         {
             ArgumentNullException.ThrowIfNull(selector);
 
@@ -229,26 +228,51 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         /// <summary>
-        /// Adds a filtering expression to the query definition.
+        /// Adds a WHERE predicate for the root entity.
         /// </summary>
         /// <param name="predicate">
-        /// Predicate expression used later to generate the SQL WHERE clause.
+        /// Predicate expression describing the SQL filter condition.
         /// </param>
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="predicate"/> is null.
-        /// </exception>
-        public IQueryCommandBuilder<T> Where(
-            Expression<Func<T, bool>> predicate)
+        public IQueryCommandBuilder<T> Where(Expression<Func<T, bool>> predicate)
+        {
+            return AddWhere(predicate);
+        }
+
+        /// <summary>
+        /// Adds a WHERE predicate for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Entity type associated with the filtered columns.
+        /// </typeparam>
+        /// <param name="predicate">
+        /// Predicate expression describing the SQL filter condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> Where<TSource>(Expression<Func<TSource, bool>> predicate)
+        {
+            return AddWhere(predicate);
+        }
+
+        // Adds a WHERE definition using the metadata of the specified query source.
+        private QueryCommandBuilder<T> AddWhere<TEntity>(Expression<Func<TEntity, bool>> predicate)
         {
             ArgumentNullException.ThrowIfNull(predicate);
 
-            _queryDefinition.WhereDefinitions.Add(new QueryWhereDefinition
-            {
-                PredicateExpression = predicate
-            });
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+
+            _queryDefinition.WhereDefinitions.Add(
+                new QueryWhereDefinition
+                {
+                    PredicateExpression = predicate,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
 
             return this;
         }
@@ -268,15 +292,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="predicate"/> is null.
         /// </exception>
-        public IQueryCommandBuilder<T> WhereIf(
-            bool condition,
-            Expression<Func<T, bool>> predicate)
+        public IQueryCommandBuilder<T> WhereIf(bool condition, Expression<Func<T, bool>> predicate)
         {
             ArgumentNullException.ThrowIfNull(predicate);
 
-            return condition
-                ? Where(predicate)
-                : this;
+            return condition ? Where(predicate) : this;
         }
 
         /// <summary>
@@ -294,14 +314,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="keySelector"/> is null.
         /// </exception>
-        public IOrderedQueryCommandBuilder<T> OrderBy<TKey>(
-            Expression<Func<T, TKey>> keySelector)
+        public IOrderedQueryCommandBuilder<T> OrderBy<TKey>(Expression<Func<T, TKey>> keySelector)
         {
             ArgumentNullException.ThrowIfNull(keySelector);
 
-            AddOrderingDefinition(
-                keySelector,
-                QueryOrderingDirection.Ascending);
+            AddOrderingDefinition(keySelector, QueryOrderingDirection.Ascending);
 
             return this;
         }
@@ -321,14 +338,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="keySelector"/> is null.
         /// </exception>
-        public IOrderedQueryCommandBuilder<T> OrderByDescending<TKey>(
-            Expression<Func<T, TKey>> keySelector)
+        public IOrderedQueryCommandBuilder<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> keySelector)
         {
             ArgumentNullException.ThrowIfNull(keySelector);
 
-            AddOrderingDefinition(
-                keySelector,
-                QueryOrderingDirection.Descending);
+            AddOrderingDefinition(keySelector, QueryOrderingDirection.Descending);
 
             return this;
         }
@@ -336,14 +350,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an additional ascending ordering expression to the query definition.
         /// </summary>
-        public IOrderedQueryCommandBuilder<T> ThenBy<TKey>(
-            Expression<Func<T, TKey>> keySelector)
+        public IOrderedQueryCommandBuilder<T> ThenBy<TKey>(Expression<Func<T, TKey>> keySelector)
         {
             ArgumentNullException.ThrowIfNull(keySelector);
 
-            AddOrderingDefinition(
-                keySelector,
-                QueryOrderingDirection.Ascending);
+            AddOrderingDefinition(keySelector, QueryOrderingDirection.Ascending);
 
             return this;
         }
@@ -351,14 +362,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an additional descending ordering expression to the query definition.
         /// </summary>
-        public IOrderedQueryCommandBuilder<T> ThenByDescending<TKey>(
-            Expression<Func<T, TKey>> keySelector)
+        public IOrderedQueryCommandBuilder<T> ThenByDescending<TKey>(Expression<Func<T, TKey>> keySelector)
         {
             ArgumentNullException.ThrowIfNull(keySelector);
 
-            AddOrderingDefinition(
-                keySelector,
-                QueryOrderingDirection.Descending);
+            AddOrderingDefinition(keySelector, QueryOrderingDirection.Descending);
 
             return this;
         }
@@ -378,11 +386,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public IQueryCommandBuilder<T> Skip(int count)
         {
             if (count < 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(count),
-                    "Skip count cannot be negative.");
-            }
+                throw new ArgumentOutOfRangeException(nameof(count), "Skip count cannot be negative.");
 
             _queryDefinition.Pagination =
                 _queryDefinition.Pagination with
@@ -408,11 +412,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public IQueryCommandBuilder<T> Take(int count)
         {
             if (count <= 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(count),
-                    "Take count must be greater than zero.");
-            }
+                throw new ArgumentOutOfRangeException(nameof(count), "Take count must be greater than zero.");
 
             _queryDefinition.Pagination =
                 _queryDefinition.Pagination with
@@ -435,9 +435,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Registers an ordering definition preserving the fluent ordering sequence.
-        private void AddOrderingDefinition<TKey>(
-            Expression<Func<T, TKey>> keySelector,
-            QueryOrderingDirection orderingDirection)
+        private void AddOrderingDefinition<TKey>(Expression<Func<T, TKey>> keySelector, QueryOrderingDirection orderingDirection)
         {
             var propertyName = ExtractPropertyNameFromExpression(keySelector);
 
@@ -450,8 +448,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Extracts property names from direct or converted member access expressions.
-        private static string ExtractPropertyNameFromExpression<TKey>(
-            Expression<Func<T, TKey>> expression)
+        private static string ExtractPropertyNameFromExpression<TKey>(Expression<Func<T, TKey>> expression)
         {
             return expression.Body switch
             {
@@ -612,5 +609,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             throw new InvalidOperationException(
                 $"Entity type '{typeof(TEntity).Name}' is not available in the current query scope.");
         }
+
+       
     }
 }
