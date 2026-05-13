@@ -582,12 +582,12 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Adds an ORDER BY definition using the metadata of the specified query source.
-        private IOrderedQueryCommandBuilder<T> AddOrderingDefinition<TEntity>(Expression<Func<TEntity, object>> keySelector, QueryOrderingDirection orderingDirection)
+        private QueryCommandBuilder<T> AddOrderingDefinition<TEntity>(Expression<Func<TEntity, object>> keySelector, QueryOrderingDirection orderingDirection)
         {
             ArgumentNullException.ThrowIfNull(keySelector);
 
             var sourceDefinition = ResolveQuerySource<TEntity>();
-            var orderingColumns = ExtractOrderingColumns(keySelector);
+            var orderingColumns = QueryColumnExpressionExtractor.ExtractColumns(keySelector);
 
             _queryDefinition.OrderingDefinitions.Add(
                 new QueryOrderingDefinition
@@ -600,42 +600,52 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 });
 
             return this;
-        }
-
-        // Extracts property names from single-property or anonymous object ordering expressions.
-        private static List<QueryOrderingColumnDefinition> ExtractOrderingColumns<TEntity>(Expression<Func<TEntity, object>> expression)
-        {
-            return expression.Body switch
-            {
-                MemberExpression memberExpression => [ new QueryOrderingColumnDefinition { PropertyName = memberExpression.Member.Name }],
-
-                UnaryExpression unaryExpression when unaryExpression.Operand is MemberExpression memberExpression => [
-                    new QueryOrderingColumnDefinition { PropertyName = memberExpression.Member.Name }],
-
-                NewExpression newExpression => newExpression.Arguments.Select(CreateOrderingColumnDefinition).ToList(),
-
-                _ => throw new NotSupportedException(
-                    $"Expression '{expression}' is not supported as an ordering selector.")
-            };
-        }
-
-        // Creates an ordering column definition from a projection argument.
-        private static QueryOrderingColumnDefinition CreateOrderingColumnDefinition(Expression expression)
-        {
-            if (expression is UnaryExpression unaryExpression)
-                expression = unaryExpression.Operand;
-
-            if (expression is not MemberExpression memberExpression)
-                throw new NotSupportedException($"Ordering expression '{expression}' is not supported.");
-
-            return new QueryOrderingColumnDefinition
-            {
-                PropertyName = memberExpression.Member.Name
-            };
-        }
+        }     
 
         #endregion
 
+        #region GroupBy Overloads
+
+        /// <summary>
+        /// Adds a GROUP BY clause for the root entity.
+        /// </summary>
+        public IQueryCommandBuilder<T> GroupBy(Expression<Func<T, object>> selector)
+        {
+            return AddGroupByDefinition(selector);
+        }
+
+        /// <summary>
+        /// Adds a GROUP BY clause for an entity available in the current query scope.
+        /// </summary>
+        public IQueryCommandBuilder<T> GroupBy<TEntity>(Expression<Func<TEntity, object>> selector)
+        {
+            return AddGroupByDefinition(selector);
+        }
+
+        // Adds a GROUP BY definition using the metadata of the specified query source.
+        private QueryCommandBuilder<T> AddGroupByDefinition<TEntity>(Expression<Func<TEntity, object>> selector)
+        {
+            ArgumentNullException.ThrowIfNull(selector);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+            var groupByColumns = QueryColumnExpressionExtractor.ExtractColumns(selector);
+
+            _queryDefinition.GroupByDefinitions.Add(
+                new QueryGroupByDefinition
+                {
+                    Columns = groupByColumns,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
+
+            return this;
+        }
+        
+        #endregion
+
+
+        #region Pagination Methods
         /// <summary>
         /// Sets the number of rows to skip during SQL pagination.
         /// </summary>
@@ -687,6 +697,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return this;
         }
+
+        #endregion
 
         /// <summary>
         /// Compiles the current query definition into SQL command text and parameters.

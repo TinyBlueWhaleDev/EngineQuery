@@ -72,25 +72,27 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 })
                 .Select<JoinOrder>(o => new
                 {
-                    OrderId = o.Id,
                     o.UserId,
                     o.Total
                 })
-                .Select<JoinOrderItem>(oi => new
+                .Where<JoinUser>(u => u.IsActive)
+                .Where<JoinOrder>(o => o.Total > 100)
+                .GroupBy<JoinUser>(u => new
                 {
-                    OrderItemId = oi.Id,
-                    oi.Quantity
+                    u.Id,
+                    u.Email
                 })
-                .WhereIf<JoinUser>(true, u => u.IsActive)
-                .WhereIf<JoinOrder>(true, o => o.Total > 100 && o.Total < 200)
-                .WhereIf<JoinOrderItem>(false, oi => oi.Quantity > 2)
+                .GroupBy<JoinOrder>(o => new
+                {
+                    o.UserId,
+                    o.Total
+                })
                 .OrderByDescending<JoinOrder>(o => new
                 {
                     o.Total,
                     o.UserId
                 })
-                .ThenBy<JoinUser>(u => new { u.Email, u.Id })
-                .ThenByDescending<JoinOrderItem>(oi => new { oi.Quantity, oi.OrderId })
+                .ThenBy<JoinUser>(u => u.Email)
                 .Build();
         }
 

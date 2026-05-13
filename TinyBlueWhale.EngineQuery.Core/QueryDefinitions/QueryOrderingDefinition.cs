@@ -10,7 +10,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// <summary>
         /// Gets the ordered columns included in this ordering group.
         /// </summary>
-        public required IReadOnlyList<QueryOrderingColumnDefinition> Columns { get; init; }
+        public required IReadOnlyList<QueryColumnDefinition> Columns { get; init; }
 
         /// <summary>
         /// Gets the ordering direction applied to the property.
@@ -32,15 +32,4 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// </summary>
         public IReadOnlyDictionary<string, string>? SourceColumnMappings { get; init; }
     };
-
-    /// <summary>
-    /// Represents a single column used inside an ORDER BY definition.
-    /// </summary>
-    public sealed record QueryOrderingColumnDefinition
-    {
-        /// <summary>
-        /// Gets the entity property name used for ordering.
-        /// </summary>
-        public required string PropertyName { get; init; }
-    }
 }

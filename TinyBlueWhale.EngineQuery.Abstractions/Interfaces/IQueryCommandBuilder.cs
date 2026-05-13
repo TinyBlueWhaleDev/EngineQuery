@@ -201,6 +201,16 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> Take(int count);
 
         /// <summary>
+        /// Adds a GROUP BY clause for the root entity.
+        /// </summary>
+        IQueryCommandBuilder<T> GroupBy(Expression<Func<T, object>> selector);
+
+        /// <summary>
+        /// Adds a GROUP BY clause for an entity available in the current query scope.
+        /// </summary>
+        IQueryCommandBuilder<T> GroupBy<TEntity>(Expression<Func<TEntity, object>> selector);
+
+        /// <summary>
         /// Builds the current query definition into SQL command text and parameters.
         /// </summary>
         /// <returns>
