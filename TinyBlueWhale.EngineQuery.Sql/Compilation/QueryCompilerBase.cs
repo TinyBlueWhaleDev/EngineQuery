@@ -62,7 +62,47 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 Parameters = sqlParameters
             };
         }
+                   
 
+        #region Select Clause Building
+        // Builds the SQL SELECT clause from query projections.
+        protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition)
+        {
+            if (queryDefinition.SelectDefinitions.Count == 0)
+                return "SELECT *";
+
+            var selectedColumns = queryDefinition.SelectDefinitions
+                .Select(selectDefinition => BuildSelectColumn(queryDefinition,selectDefinition));
+
+            return $"SELECT {string.Join(", ", selectedColumns)}";
+        }
+
+        // Builds a SQL SELECT column fragment including optional alias projection.
+        protected virtual string BuildSelectColumn(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
+        {
+            var columnReference = BuildSelectColumnReference(queryDefinition, selectDefinition);
+
+            return string.IsNullOrWhiteSpace(selectDefinition.Alias)
+                ? columnReference
+                : $"{columnReference} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
+        }
+
+        // Builds a SQL column reference for single-source and multi-source projections.
+        private string BuildSelectColumnReference(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
+        {
+            if (!string.IsNullOrWhiteSpace(selectDefinition.SourceAlias))
+            {
+                var columnName = ResolveMappedColumnName(selectDefinition.SourceColumnMappings,selectDefinition.PropertyName);
+
+                return _databaseDialect.BuildQualifiedIdentifier(selectDefinition.SourceAlias,columnName);
+            }
+
+            return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition,_databaseDialect,selectDefinition.PropertyName);
+        }
+
+        #endregion
+
+        #region From Clause Building
         // Builds the SQL FROM clause.
         protected virtual string BuildFromClause(CompiledQueryDefinition queryDefinition)
         {
@@ -72,9 +112,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 ? $"FROM {tableName}"
                 : $"FROM {tableName} AS {_databaseDialect.EscapeIdentifier(queryDefinition.TableAlias)}";
         }
+        #endregion
 
+        #region Join Clause Building
         // Adds SQL JOIN clauses when join definitions are configured.
-        protected virtual void AddJoinClausesIfNeeded(CompiledQueryDefinition queryDefinition,List<string> sqlLines)
+        protected virtual void AddJoinClausesIfNeeded(CompiledQueryDefinition queryDefinition, List<string> sqlLines)
         {
             if (queryDefinition.JoinDefinitions.Count == 0)
                 return;
@@ -82,7 +124,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             foreach (var joinDefinition in queryDefinition.JoinDefinitions)
                 sqlLines.Add(BuildJoinClause(joinDefinition));
         }
-        
+
         // Builds a SQL JOIN clause from a join definition.
         protected virtual string BuildJoinClause(QueryJoinDefinition joinDefinition)
         {
@@ -148,52 +190,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             throw new NotSupportedException($"Join expression parameter type '{parameterExpression.Type.Name}' is not available in this join.");
         }
 
-        // Resolves mapped column names for select projections.
-        private static string ResolveMappedColumnName(IReadOnlyDictionary<string, string>? columnMappings, string propertyName)
-        {
-            if (columnMappings is null)
-                return propertyName;
+        #endregion
 
-            return columnMappings.TryGetValue(propertyName, out var columnName)
-                ? columnName
-                : propertyName;
-        }
-
-        // Builds the SQL SELECT clause from query projections.
-        protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition)
-        {
-            if (queryDefinition.SelectDefinitions.Count == 0)
-                return "SELECT *";
-
-            var selectedColumns = queryDefinition.SelectDefinitions
-                .Select(selectDefinition => BuildSelectColumn(queryDefinition,selectDefinition));
-
-            return $"SELECT {string.Join(", ", selectedColumns)}";
-        }
-
-        // Builds a SQL SELECT column fragment including optional alias projection.
-        protected virtual string BuildSelectColumn(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
-        {
-            var columnReference = BuildSelectColumnReference(queryDefinition, selectDefinition);
-
-            return string.IsNullOrWhiteSpace(selectDefinition.Alias)
-                ? columnReference
-                : $"{columnReference} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
-        }
-
-        // Builds a SQL column reference for single-source and multi-source projections.
-        private string BuildSelectColumnReference(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
-        {
-            if (!string.IsNullOrWhiteSpace(selectDefinition.SourceAlias))
-            {
-                var columnName = ResolveMappedColumnName(selectDefinition.SourceColumnMappings,selectDefinition.PropertyName);
-
-                return _databaseDialect.BuildQualifiedIdentifier(selectDefinition.SourceAlias,columnName);
-            }
-
-            return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition,_databaseDialect,selectDefinition.PropertyName);
-        }
-
+        #region Where Clause Building
         // Adds SQL WHERE conditions when filters are defined.
         protected virtual void AddWhereClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
         {
@@ -221,26 +220,56 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 whereDefinition.SourceAlias ?? queryDefinition.TableAlias);
         }
 
+        #endregion
+
+        #region Order By Clause Building
+
         // Adds SQL ORDER BY clauses preserving fluent ordering sequence.
-        protected virtual void AddOrderByClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<string> sqlLines)
+        protected virtual void AddOrderByClauseIfNeeded(
+            CompiledQueryDefinition queryDefinition,
+            List<string> sqlLines)
         {
             if (queryDefinition.OrderingDefinitions.Count == 0)
                 return;
 
             var orderingClauses = queryDefinition.OrderingDefinitions
-                .Select(orderingDefinition =>
-                {
-                    var columnReference = QueryColumnMappingHelper.ResolveColumnReference(queryDefinition, _databaseDialect, orderingDefinition.PropertyName);
-
-                    var sqlDirection = orderingDefinition.Direction == QueryOrderingDirection.Ascending
-                        ? "ASC"
-                        : "DESC";
-
-                    return $"{columnReference} {sqlDirection}";
-                });
+                .SelectMany(orderingDefinition =>
+                    BuildOrderingColumnReferences(queryDefinition, orderingDefinition)
+                        .Select(columnReference =>
+                            $"{columnReference} {ResolveSqlOrderingDirection(orderingDefinition.Direction)}"));
 
             sqlLines.Add("ORDER BY " + string.Join(", ", orderingClauses));
         }
+
+        // Builds SQL column references for all columns contained in an ordering group.
+        private IEnumerable<string> BuildOrderingColumnReferences(CompiledQueryDefinition queryDefinition, QueryOrderingDefinition orderingDefinition)
+        {
+            foreach (var orderingColumn in orderingDefinition.Columns)
+                yield return BuildOrderingColumnReference(queryDefinition, orderingDefinition, orderingColumn);
+        }
+
+        // Builds a SQL column reference for a single ordering column.
+        private string BuildOrderingColumnReference(CompiledQueryDefinition queryDefinition, QueryOrderingDefinition orderingDefinition, QueryOrderingColumnDefinition orderingColumn)
+        {
+            if (!string.IsNullOrWhiteSpace(orderingDefinition.SourceAlias))
+            {
+                var columnName = ResolveMappedColumnName(orderingDefinition.SourceColumnMappings, orderingColumn.PropertyName);
+
+                return _databaseDialect.BuildQualifiedIdentifier(orderingDefinition.SourceAlias, columnName);
+            }
+
+            return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition, _databaseDialect, orderingColumn.PropertyName);
+        }
+
+        // Resolves the SQL ordering direction keyword.
+        private static string ResolveSqlOrderingDirection(QueryOrderingDirection direction)
+        {
+            return direction == QueryOrderingDirection.Ascending ? "ASC" : "DESC";
+        }
+
+        #endregion
+
+        #region Pagination Clause Building
 
         // Adds provider-specific pagination syntax when pagination is enabled.
         protected virtual void AddPaginationClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<string> sqlLines)
@@ -252,6 +281,19 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 throw new InvalidOperationException("Pagination requires at least one ORDER BY clause.");
 
             sqlLines.Add(_databaseDialect.BuildPaginationClause(queryDefinition.Pagination.Skip, queryDefinition.Pagination.Take));
+        }
+
+        #endregion
+
+        // Resolves mapped column names for select projections.
+        private static string ResolveMappedColumnName(IReadOnlyDictionary<string, string>? columnMappings, string propertyName)
+        {
+            if (columnMappings is null)
+                return propertyName;
+
+            return columnMappings.TryGetValue(propertyName, out var columnName)
+                ? columnName
+                : propertyName;
         }
     }
 }

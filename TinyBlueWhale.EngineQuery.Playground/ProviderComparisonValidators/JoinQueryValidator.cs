@@ -59,25 +59,38 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
-                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (u, o) => u.Id == o.UserId)
-                .LeftJoin<JoinOrder, JoinOrderItem>(alias: "oi", on: (o, oi) => o.Id == oi.OrderId)
+                .InnerJoin<JoinUser, JoinOrder>(
+                    alias: "o",
+                    on: (u, o) => u.Id == o.UserId)
+                .LeftJoin<JoinOrder, JoinOrderItem>(
+                    alias: "oi",
+                    on: (o, oi) => o.Id == oi.OrderId)
                 .Select<JoinUser>(u => new
                 {
-                    UserId = u.Id
+                    UserId = u.Id,
+                    u.Email
                 })
                 .Select<JoinOrder>(o => new
                 {
                     OrderId = o.Id,
-                    OrderUserId = o.UserId
+                    o.UserId,
+                    o.Total
                 })
                 .Select<JoinOrderItem>(oi => new
                 {
                     OrderItemId = oi.Id,
-                    ItemOrderId = oi.OrderId
+                    oi.Quantity
                 })
-                .Where<JoinUser>(u => u.IsActive)
+                .Where<JoinUser>(u => u.IsActive && u.Email.Contains("test") )
                 .Where<JoinOrder>(o => o.Total > 100)
                 .Where<JoinOrderItem>(oi => oi.Quantity > 2)
+                .OrderByDescending<JoinOrder>(o => new
+                {
+                    o.Total,
+                    o.UserId
+                })
+                .ThenBy<JoinUser>(u => new { u.Email, u.Id })
+                .ThenByDescending<JoinOrderItem>(oi => new { oi.Quantity, oi.OrderId })
                 .Build();
         }
 

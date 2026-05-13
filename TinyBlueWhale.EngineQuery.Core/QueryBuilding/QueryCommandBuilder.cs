@@ -27,6 +27,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         private readonly IEntityMetadataResolver? _metadataResolver;
         private readonly HashSet<string> _registeredAliases = [];
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryCommandBuilder{T}"/> class.
         /// </summary>
@@ -71,6 +72,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             RegisterRootSource(tableName, tableAlias);
         }
 
+        #endregion
+
+        #region Select Overloads
         /// <summary>
         /// Adds selected entity properties to the query projection definition.
         /// </summary>
@@ -127,8 +131,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        #endregion
 
-
+        #region Join Overloads
         /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
@@ -227,6 +232,127 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return AddJoin(QueryJoinType.Left, tableName, alias, on);
         }
 
+        // Adds a metadata-driven join definition.
+        private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        {
+            ArgumentNullException.ThrowIfNull(on);
+
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<TJoin>(out var joinMetadata))
+                throw new InvalidOperationException($"Metadata for entity type '{typeof(TJoin).Name}' could not be resolved.");
+
+            return AddJoin(joinType, joinMetadata!.TableName, alias, on);
+        }
+
+        // Adds an explicit table join definition.
+        private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+            ArgumentNullException.ThrowIfNull(on);
+
+            var joinAlias = ResolveJoinAlias(alias);
+            var sourceAlias = ResolveSourceAlias<TSource>();
+
+            var sourceColumnMappings = ResolveColumnMappings<TSource>();
+            var joinColumnMappings = ResolveColumnMappings<TJoin>();
+
+            _queryDefinition.JoinDefinitions.Add(
+                new QueryJoinDefinition
+                {
+                    JoinType = joinType,
+                    TableName = tableName,
+                    TableAlias = joinAlias,
+                    SourceType = typeof(TSource),
+                    SourceAlias = sourceAlias,
+                    SourceColumnMappings = sourceColumnMappings,
+                    JoinTypeEntity = typeof(TJoin),
+                    JoinColumnMappings = joinColumnMappings,
+                    JoinExpression = on
+                });
+
+            RegisterJoinSource<TJoin>(tableName, joinAlias, joinColumnMappings);
+
+            return this;
+        }
+
+
+        // Registers a joined query source in the current query scope.
+        private void RegisterJoinSource<TEntity>(string tableName, string tableAlias, IReadOnlyDictionary<string, string> columnMappings)
+        {
+            _queryDefinition.SourceDefinitions[typeof(TEntity)] =
+                new QuerySourceDefinition
+                {
+                    EntityType = typeof(TEntity),
+                    TableName = tableName,
+                    TableAlias = tableAlias,
+                    ColumnMappings = columnMappings
+                };
+        }
+
+        // Resolves column mappings for an entity participating in the query.
+        private IReadOnlyDictionary<string, string> ResolveColumnMappings<TEntity>()
+        {
+            if (typeof(TEntity) == typeof(T))
+                return _queryDefinition.ColumnMappings;
+
+            if (_metadataResolver is not null && _metadataResolver.TryResolve<TEntity>(out var metadata))
+            {
+                return metadata!.Properties.ToDictionary(
+                    property => property.Key,
+                    property => property.Value.ColumnName);
+            }
+
+            return new Dictionary<string, string>();
+        }
+
+        // Resolves or generates a SQL alias for joined tables.
+        private string ResolveJoinAlias(string? alias)
+        {
+            var resolvedAlias = string.IsNullOrWhiteSpace(alias)
+                ? QueryAliasGeneratorHelper.Generate(_registeredAliases.Count)
+                : alias;
+
+            if (!_registeredAliases.Add(resolvedAlias))
+                throw new InvalidOperationException($"Alias '{resolvedAlias}' is already registered.");
+
+            return resolvedAlias;
+        }
+
+
+        // Resolves the alias associated with a previously registered query entity.
+        private string ResolveSourceAlias<TSource>()
+        {
+            if (typeof(TSource) == typeof(T))
+                return EnsureRootAlias();
+
+            var joinDefinition = _queryDefinition.JoinDefinitions
+                .LastOrDefault(join => join.JoinTypeEntity == typeof(TSource));
+
+            return joinDefinition is null
+                ? throw new InvalidOperationException($"Entity type '{typeof(TSource).Name}' is not available in the current query scope.")
+                : joinDefinition.TableAlias;
+        }
+
+        // Ensures the root query source has a deterministic alias when joins exist.
+        private string EnsureRootAlias()
+        {
+            if (!string.IsNullOrWhiteSpace(_queryDefinition.TableAlias))
+                return _queryDefinition.TableAlias;
+
+            var alias = QueryAliasGeneratorHelper.Generate(0);
+
+            _queryDefinition.TableAlias = alias;
+
+            _registeredAliases.Add(alias);
+
+            return alias;
+        }
+
+        #endregion
+
+        #region Where Overloads
         /// <summary>
         /// Adds a WHERE predicate for the root entity.
         /// </summary>
@@ -299,12 +425,12 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return condition ? Where(predicate) : this;
         }
 
+        #endregion
+
+        #region Ordering Overloads
         /// <summary>
         /// Adds an ascending ordering expression to the query definition.
-        /// </summary>
-        /// <typeparam name="TKey">
-        /// Type of the selected ordering property.
-        /// </typeparam>
+        /// </summary>      
         /// <param name="keySelector">
         /// Expression that selects the property used for ordering.
         /// </param>
@@ -314,21 +440,32 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="keySelector"/> is null.
         /// </exception>
-        public IOrderedQueryCommandBuilder<T> OrderBy<TKey>(Expression<Func<T, TKey>> keySelector)
+        public IOrderedQueryCommandBuilder<T> OrderBy(Expression<Func<T, object>> keySelector)
         {
-            ArgumentNullException.ThrowIfNull(keySelector);
-
-            AddOrderingDefinition(keySelector, QueryOrderingDirection.Ascending);
-
-            return this;
+            return AddOrderingDefinition<T>(keySelector, QueryOrderingDirection.Ascending);
         }
+
+        /// <summary>
+        /// Adds an ascending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>        
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Ordered query command builder instance.
+        /// </returns>
+        public IOrderedQueryCommandBuilder<T> OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        {
+            return AddOrderingDefinition<TEntity>(keySelector, QueryOrderingDirection.Ascending);
+        }
+
 
         /// <summary>
         /// Adds a descending ordering expression to the query definition.
-        /// </summary>
-        /// <typeparam name="TKey">
-        /// Type of the selected ordering property.
-        /// </typeparam>
+        /// </summary>   
         /// <param name="keySelector">
         /// Expression that selects the property used for ordering.
         /// </param>
@@ -338,38 +475,144 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="keySelector"/> is null.
         /// </exception>
-        public IOrderedQueryCommandBuilder<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> keySelector)
+        public IOrderedQueryCommandBuilder<T> OrderByDescending(Expression<Func<T, object>> keySelector)
         {
-            ArgumentNullException.ThrowIfNull(keySelector);
-
-            AddOrderingDefinition(keySelector, QueryOrderingDirection.Descending);
-
-            return this;
+            return AddOrderingDefinition<T>(keySelector, QueryOrderingDirection.Descending);
         }
 
         /// <summary>
-        /// Adds an additional ascending ordering expression to the query definition.
+        /// Adds a descending ORDER BY clause for an entity already available in the current query scope.
         /// </summary>
-        public IOrderedQueryCommandBuilder<T> ThenBy<TKey>(Expression<Func<T, TKey>> keySelector)
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>   
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Ordered query command builder instance.
+        /// </returns>
+        public IOrderedQueryCommandBuilder<T> OrderByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
-            ArgumentNullException.ThrowIfNull(keySelector);
-
-            AddOrderingDefinition(keySelector, QueryOrderingDirection.Ascending);
-
-            return this;
+            return AddOrderingDefinition<TEntity>(keySelector, QueryOrderingDirection.Descending);
         }
 
         /// <summary>
-        /// Adds an additional descending ordering expression to the query definition.
+        /// Adds an additional ascending ordering expression for the root entity.
+        /// </summary>       
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        public IOrderedQueryCommandBuilder<T> ThenBy(Expression<Func<T, object>> keySelector)
+        {
+            return AddOrderingDefinition<T>(keySelector, QueryOrderingDirection.Ascending);
+        }
+
+        /// <summary>
+        /// Adds an additional ascending ordering expression for an entity available in the current query scope.
         /// </summary>
-        public IOrderedQueryCommandBuilder<T> ThenByDescending<TKey>(Expression<Func<T, TKey>> keySelector)
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>       
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        public IOrderedQueryCommandBuilder<T> ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        {
+            return AddOrderingDefinition<TEntity>(keySelector, QueryOrderingDirection.Ascending);
+        }
+
+        /// <summary>
+        /// Adds an additional descending ordering expression for the root entity.
+        /// </summary>    
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        public IOrderedQueryCommandBuilder<T> ThenByDescending(Expression<Func<T, object>> keySelector)
+        {
+            return AddOrderingDefinition<T>(keySelector, QueryOrderingDirection.Descending);
+        }
+
+        /// <summary>
+        /// Adds an additional descending ordering expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>       
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        public IOrderedQueryCommandBuilder<T> ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        {
+            return AddOrderingDefinition<TEntity>(keySelector, QueryOrderingDirection.Descending);
+        }
+
+        // Adds an ORDER BY definition using the metadata of the specified query source.
+        private IOrderedQueryCommandBuilder<T> AddOrderingDefinition<TEntity>(Expression<Func<TEntity, object>> keySelector, QueryOrderingDirection orderingDirection)
         {
             ArgumentNullException.ThrowIfNull(keySelector);
 
-            AddOrderingDefinition(keySelector, QueryOrderingDirection.Descending);
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+            var orderingColumns = ExtractOrderingColumns(keySelector);
+
+            _queryDefinition.OrderingDefinitions.Add(
+                new QueryOrderingDefinition
+                {
+                    Columns = orderingColumns,
+                    Direction = orderingDirection,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
 
             return this;
         }
+
+        // Extracts property names from single-property or anonymous object ordering expressions.
+        private static IReadOnlyList<QueryOrderingColumnDefinition> ExtractOrderingColumns<TEntity>(Expression<Func<TEntity, object>> expression)
+        {
+            return expression.Body switch
+            {
+                MemberExpression memberExpression => [ new QueryOrderingColumnDefinition { PropertyName = memberExpression.Member.Name }],
+
+                UnaryExpression unaryExpression when unaryExpression.Operand is MemberExpression memberExpression => [
+                    new QueryOrderingColumnDefinition { PropertyName = memberExpression.Member.Name }],
+
+                NewExpression newExpression => newExpression.Arguments.Select(CreateOrderingColumnDefinition).ToList(),
+
+                _ => throw new NotSupportedException(
+                    $"Expression '{expression}' is not supported as an ordering selector.")
+            };
+        }
+
+        // Creates an ordering column definition from a projection argument.
+        private static QueryOrderingColumnDefinition CreateOrderingColumnDefinition(Expression expression)
+        {
+            if (expression is UnaryExpression unaryExpression)
+                expression = unaryExpression.Operand;
+
+            if (expression is not MemberExpression memberExpression)
+                throw new NotSupportedException($"Ordering expression '{expression}' is not supported.");
+
+            return new QueryOrderingColumnDefinition
+            {
+                PropertyName = memberExpression.Member.Name
+            };
+        }
+
+        #endregion
 
         /// <summary>
         /// Sets the number of rows to skip during SQL pagination.
@@ -433,139 +676,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             return _queryCompiler.Compile(_queryDefinition);
         }
-
-        // Registers an ordering definition preserving the fluent ordering sequence.
-        private void AddOrderingDefinition<TKey>(Expression<Func<T, TKey>> keySelector, QueryOrderingDirection orderingDirection)
-        {
-            var propertyName = ExtractPropertyNameFromExpression(keySelector);
-
-            _queryDefinition.OrderingDefinitions.Add(
-                new QueryOrderingDefinition
-                {
-                    PropertyName = propertyName,
-                    Direction = orderingDirection
-                });
-        }
-
-        // Extracts property names from direct or converted member access expressions.
-        private static string ExtractPropertyNameFromExpression<TKey>(Expression<Func<T, TKey>> expression)
-        {
-            return expression.Body switch
-            {
-                MemberExpression memberExpression =>
-                    memberExpression.Member.Name,
-
-                UnaryExpression unaryExpression
-                    when unaryExpression.Operand is MemberExpression memberExpression =>
-                    memberExpression.Member.Name,
-
-                _ => throw new NotSupportedException(
-                    $"Expression '{expression}' is not supported as an ordering selector.")
-            };
-        }
-
-        // Adds a metadata-driven join definition.
-        private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string? alias, Expression<Func<TSource, TJoin, bool>> on)
-        {
-            ArgumentNullException.ThrowIfNull(on);
-
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<TJoin>(out var joinMetadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TJoin).Name}' could not be resolved.");
-
-            return AddJoin(joinType, joinMetadata!.TableName, alias, on);
-        }
-
-        // Adds an explicit table join definition.
-        private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType,string tableName,string? alias, Expression<Func<TSource, TJoin, bool>> on)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
-            ArgumentNullException.ThrowIfNull(on);
-
-            var joinAlias = ResolveJoinAlias(alias);
-            var sourceAlias = ResolveSourceAlias<TSource>();
-
-            var sourceColumnMappings = ResolveColumnMappings<TSource>();
-            var joinColumnMappings = ResolveColumnMappings<TJoin>();
-
-            _queryDefinition.JoinDefinitions.Add(
-                new QueryJoinDefinition
-                {
-                    JoinType = joinType,
-                    TableName = tableName,
-                    TableAlias = joinAlias,
-                    SourceType = typeof(TSource),
-                    SourceAlias = sourceAlias,
-                    SourceColumnMappings = sourceColumnMappings,
-                    JoinTypeEntity = typeof(TJoin),
-                    JoinColumnMappings = joinColumnMappings,
-                    JoinExpression = on
-                });
-
-            RegisterJoinSource<TJoin>(tableName, joinAlias, joinColumnMappings);
-
-            return this;
-        }
-
-        // Resolves column mappings for an entity participating in the query.
-        private IReadOnlyDictionary<string, string> ResolveColumnMappings<TEntity>()
-        {
-            if (typeof(TEntity) == typeof(T))
-                return _queryDefinition.ColumnMappings;
-
-            if (_metadataResolver is not null && _metadataResolver.TryResolve<TEntity>(out var metadata))
-            {
-                return metadata!.Properties.ToDictionary(
-                    property => property.Key,
-                    property => property.Value.ColumnName);
-            }
-
-            return new Dictionary<string, string>();
-        }
-
-        // Resolves or generates a SQL alias for joined tables.
-        private string ResolveJoinAlias(string? alias)
-        {
-            var resolvedAlias = string.IsNullOrWhiteSpace(alias)
-                ? QueryAliasGeneratorHelper.Generate(_registeredAliases.Count)
-                : alias;
-
-            if (!_registeredAliases.Add(resolvedAlias))
-                throw new InvalidOperationException($"Alias '{resolvedAlias}' is already registered.");
-
-            return resolvedAlias;
-        }
-
-        // Resolves the alias associated with a previously registered query entity.
-        private string ResolveSourceAlias<TSource>()
-        {
-            if (typeof(TSource) == typeof(T))
-                return EnsureRootAlias();
-
-            var joinDefinition = _queryDefinition.JoinDefinitions
-                .LastOrDefault(join => join.JoinTypeEntity == typeof(TSource));
-
-            return joinDefinition is null
-                ? throw new InvalidOperationException($"Entity type '{typeof(TSource).Name}' is not available in the current query scope.")
-                : joinDefinition.TableAlias;
-        }
-
-        // Ensures the root query source has a deterministic alias when joins exist.
-        private string EnsureRootAlias()
-        {
-            if (!string.IsNullOrWhiteSpace(_queryDefinition.TableAlias))
-                return _queryDefinition.TableAlias;
-
-            var alias = QueryAliasGeneratorHelper.Generate(0);
-
-            _queryDefinition.TableAlias = alias;
-
-            _registeredAliases.Add(alias);
-
-            return alias;
-        }
+              
 
         // Registers the root query source in the current query scope.
         private void RegisterRootSource(string tableName,string? tableAlias)
@@ -585,19 +696,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _queryDefinition.TableAlias = resolvedAlias;
             _registeredAliases.Add(resolvedAlias);
-        }
-
-        // Registers a joined query source in the current query scope.
-        private void RegisterJoinSource<TEntity>(string tableName, string tableAlias, IReadOnlyDictionary<string, string> columnMappings)
-        {
-            _queryDefinition.SourceDefinitions[typeof(TEntity)] =
-                new QuerySourceDefinition
-                {
-                    EntityType = typeof(TEntity),
-                    TableName = tableName,
-                    TableAlias = tableAlias,
-                    ColumnMappings = columnMappings
-                };
         }
 
         // Resolves a query source previously registered in the current query scope.
