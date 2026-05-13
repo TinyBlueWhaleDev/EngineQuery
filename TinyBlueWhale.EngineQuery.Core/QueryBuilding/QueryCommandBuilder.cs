@@ -175,6 +175,59 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        /// <summary>
+        /// Adds a scalar SQL function projection for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected column.
+        /// </typeparam>
+        /// <param name="function">
+        /// Scalar SQL function applied to the selected column.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the entity property used by the scalar function.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the scalar function result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="selector"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="alias"/> is null, empty or whitespace.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <typeparamref name="TEntity"/> is not available in the current query scope.
+        /// </exception>
+        public IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, string alias)
+        {
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+
+            var propertyName = QueryColumnExpressionExtractor
+                .ExtractColumns(selector)
+                .Single()
+                .PropertyName;
+
+            _queryDefinition.ScalarFunctionDefinitions.Add(
+                new QueryScalarFunctionDefinition
+                {
+                    Function = function,
+                    PropertyName = propertyName,
+                    Alias = alias,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
+
+            return this;
+        }
+
         #endregion
 
         #region Join Overloads

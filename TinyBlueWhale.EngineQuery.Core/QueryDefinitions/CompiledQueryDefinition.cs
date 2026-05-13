@@ -47,6 +47,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryAggregateDefinition> AggregateDefinitions { get; } = [];
 
         /// <summary>
+        /// Gets scalar SQL function projections associated with the query.
+        /// </summary>
+        public List<QueryScalarFunctionDefinition> ScalarFunctionDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets the filtering definitions used to generate SQL WHERE clauses.
         /// </summary>
         public List<QueryWhereDefinition> WhereDefinitions { get; } = [];
