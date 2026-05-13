@@ -685,9 +685,53 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return this;
         }
-        
+
         #endregion
 
+        #region Having Overloads
+        /// <summary>
+        /// Adds a HAVING condition based on an aggregate expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the aggregated column.
+        /// </typeparam>
+        /// <param name="function">
+        /// Aggregate function evaluated by the HAVING condition.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the aggregated property.
+        /// </param>
+        /// <param name="comparisonOperator">
+        /// Comparison operator applied to the aggregate result.
+        /// </param>
+        /// <param name="value">
+        /// Comparison value used by the HAVING condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> HavingAggregate<TEntity>(QueryAggregateFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value)
+        {
+            ArgumentNullException.ThrowIfNull(selector);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+            var propertyName = QueryColumnExpressionExtractor.ExtractColumns(selector).Single().PropertyName;
+
+            _queryDefinition.HavingAggregateDefinitions.Add(
+                new QueryHavingAggregateDefinition
+                {
+                    Function = function,
+                    PropertyName = propertyName,
+                    ComparisonOperator = comparisonOperator,
+                    Value = value,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
+
+            return this;
+        }
+        #endregion
 
         #region Pagination Methods
         /// <summary>

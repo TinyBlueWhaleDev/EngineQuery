@@ -232,6 +232,29 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> GroupBy<TEntity>(Expression<Func<TEntity, object>> selector);
 
         /// <summary>
+        /// Adds a HAVING condition based on an aggregate expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the aggregated column.
+        /// </typeparam>
+        /// <param name="function">
+        /// Aggregate function evaluated by the HAVING condition.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the aggregated property.
+        /// </param>
+        /// <param name="comparisonOperator">
+        /// Comparison operator applied to the aggregate result.
+        /// </param>
+        /// <param name="value">
+        /// Comparison value used by the HAVING condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> HavingAggregate<TEntity>(QueryAggregateFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value);
+
+        /// <summary>
         /// Builds the current query definition into SQL command text and parameters.
         /// </summary>
         /// <returns>
