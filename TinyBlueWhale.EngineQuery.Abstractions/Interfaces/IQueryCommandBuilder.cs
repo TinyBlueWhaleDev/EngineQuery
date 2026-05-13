@@ -112,6 +112,23 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> WhereIf(bool condition, Expression<Func<T, bool>> predicate);
 
         /// <summary>
+        /// Adds a WHERE predicate for an entity available in the current query scope only when the specified condition is true.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the filtered columns.
+        /// </typeparam>
+        /// <param name="condition">
+        /// Condition that determines whether the predicate is added.
+        /// </param>
+        /// <param name="predicate">
+        /// Predicate expression describing the SQL filter condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> WhereIf<TEntity>(bool condition,Expression<Func<TEntity, bool>> predicate);
+
+        /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
         /// <param name="keySelector">

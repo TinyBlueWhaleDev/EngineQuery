@@ -422,8 +422,30 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentNullException.ThrowIfNull(predicate);
 
-            return condition ? Where(predicate) : this;
+            return condition ? AddWhere(predicate) : this;
         }
+
+
+        /// <summary>
+        /// Adds a WHERE predicate for an entity available in the current query scope only when the specified condition is true.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the filtered columns.
+        /// </typeparam>
+        /// <param name="condition">
+        /// Condition that determines whether the predicate is added.
+        /// </param>
+        /// <param name="predicate">
+        /// Predicate expression describing the SQL filter condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> WhereIf<TEntity>(bool condition,Expression<Func<TEntity, bool>> predicate)
+        {
+            return condition ? AddWhere(predicate) : this;
+        }
+
 
         #endregion
 
@@ -581,7 +603,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Extracts property names from single-property or anonymous object ordering expressions.
-        private static IReadOnlyList<QueryOrderingColumnDefinition> ExtractOrderingColumns<TEntity>(Expression<Func<TEntity, object>> expression)
+        private static List<QueryOrderingColumnDefinition> ExtractOrderingColumns<TEntity>(Expression<Func<TEntity, object>> expression)
         {
             return expression.Body switch
             {
