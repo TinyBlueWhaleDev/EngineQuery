@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
@@ -36,6 +37,26 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Current query command builder instance.
         /// </returns>
         public IQueryCommandBuilder<T> Select<TEntity>(Expression<Func<TEntity, object>> selector);
+
+        /// <summary>
+        /// Adds an aggregate SELECT expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the aggregated column.
+        /// </typeparam>
+        /// <param name="function">
+        /// Aggregate function applied to the selected column.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the aggregated property.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the aggregate result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> SelectAggregate<TEntity>(QueryAggregateFunction function, Expression<Func<TEntity, object>> selector, string alias);
 
         /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.

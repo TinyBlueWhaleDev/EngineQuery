@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
@@ -64,19 +65,23 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 Parameters = sqlParameters
             };
         }
-                   
 
-        #region Select Clause Building
-        // Builds the SQL SELECT clause from query projections.
+
+        #region Select Clause Building        
+        // Builds the SQL SELECT clause from query projections and aggregate expressions.
         protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition)
         {
-            if (queryDefinition.SelectDefinitions.Count == 0)
+            if (queryDefinition.SelectDefinitions.Count == 0 &&
+                queryDefinition.AggregateDefinitions.Count == 0)
                 return "SELECT *";
 
             var selectedColumns = queryDefinition.SelectDefinitions
-                .Select(selectDefinition => BuildSelectColumn(queryDefinition,selectDefinition));
+                .Select(selectDefinition => BuildSelectColumn(queryDefinition, selectDefinition));
 
-            return $"SELECT {string.Join(", ", selectedColumns)}";
+            var aggregateColumns = queryDefinition.AggregateDefinitions
+                .Select(aggregateDefinition => BuildAggregateColumn(aggregateDefinition));
+
+            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns))}";
         }
 
         // Builds a SQL SELECT column fragment including optional alias projection.
@@ -87,6 +92,33 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             return string.IsNullOrWhiteSpace(selectDefinition.Alias)
                 ? columnReference
                 : $"{columnReference} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
+        }
+
+        // Builds a SQL aggregate SELECT expression.
+        protected virtual string BuildAggregateColumn(QueryAggregateDefinition aggregateDefinition)
+        {
+            var columnName = ResolveMappedColumnName(aggregateDefinition.SourceColumnMappings, aggregateDefinition.PropertyName);
+
+            var columnReference = string.IsNullOrWhiteSpace(aggregateDefinition.SourceAlias)
+                ? _databaseDialect.EscapeIdentifier(columnName)
+                : _databaseDialect.BuildQualifiedIdentifier(aggregateDefinition.SourceAlias, columnName);
+
+            return $"{ResolveAggregateFunctionName(aggregateDefinition.Function)}({columnReference}) AS {_databaseDialect.EscapeIdentifier(aggregateDefinition.Alias)}";
+        }
+
+        // Resolves the SQL aggregate function name.
+        private static string ResolveAggregateFunctionName(
+            QueryAggregateFunction function)
+        {
+            return function switch
+            {
+                QueryAggregateFunction.Count => "COUNT",
+                QueryAggregateFunction.Sum => "SUM",
+                QueryAggregateFunction.Average => "AVG",
+                QueryAggregateFunction.Minimum => "MIN",
+                QueryAggregateFunction.Maximum => "MAX",
+                _ => throw new NotSupportedException($"Aggregate function '{function}' is not supported.")
+            };
         }
 
         // Builds a SQL column reference for single-source and multi-source projections.
