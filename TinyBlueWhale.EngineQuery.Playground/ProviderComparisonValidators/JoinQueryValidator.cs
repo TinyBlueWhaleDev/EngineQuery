@@ -81,9 +81,9 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     OrderItemId = oi.Id,
                     oi.Quantity
                 })
-                .Where<JoinUser>(u => u.IsActive && u.Email.Contains("test") )
-                .Where<JoinOrder>(o => o.Total > 100)
-                .Where<JoinOrderItem>(oi => oi.Quantity > 2)
+                .WhereIf<JoinUser>(true, u => u.IsActive)
+                .WhereIf<JoinOrder>(true, o => o.Total > 100 && o.Total < 200)
+                .WhereIf<JoinOrderItem>(false, oi => oi.Quantity > 2)
                 .OrderByDescending<JoinOrder>(o => new
                 {
                     o.Total,
