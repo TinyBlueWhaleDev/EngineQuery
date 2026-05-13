@@ -49,6 +49,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             AddWhereClauseIfNeeded(queryDefinition, sqlParameters, sqlLines);
 
+            AddGroupByClauseIfNeeded(queryDefinition, sqlLines);
+
             AddOrderByClauseIfNeeded(queryDefinition, sqlLines);
 
             AddPaginationClauseIfNeeded(queryDefinition, sqlLines);
@@ -222,6 +224,43 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #endregion
 
+        #region Group By Clause Building
+
+        // Adds SQL GROUP BY clauses when grouping definitions are configured.
+        protected virtual void AddGroupByClauseIfNeeded(CompiledQueryDefinition queryDefinition,List<string> sqlLines)
+        {
+            if (queryDefinition.GroupByDefinitions.Count == 0)
+                return;
+
+            var groupByClauses = queryDefinition.GroupByDefinitions
+                .SelectMany(groupByDefinition =>
+                    BuildGroupByColumnReferences(queryDefinition, groupByDefinition));
+
+            sqlLines.Add("GROUP BY " + string.Join(", ", groupByClauses));
+        }
+
+        // Builds SQL column references for all columns contained in a GROUP BY definition.
+        private IEnumerable<string> BuildGroupByColumnReferences(CompiledQueryDefinition queryDefinition, QueryGroupByDefinition groupByDefinition)
+        {
+            foreach (var groupByColumn in groupByDefinition.Columns)
+                yield return BuildGroupByColumnReference(queryDefinition, groupByDefinition, groupByColumn);
+        }
+
+        // Builds a SQL column reference for a single GROUP BY column.
+        private string BuildGroupByColumnReference(CompiledQueryDefinition queryDefinition, QueryGroupByDefinition groupByDefinition, QueryColumnDefinition groupByColumn)
+        {
+            if (!string.IsNullOrWhiteSpace(groupByDefinition.SourceAlias))
+            {
+                var columnName = ResolveMappedColumnName(groupByDefinition.SourceColumnMappings, groupByColumn.PropertyName);
+
+                return _databaseDialect.BuildQualifiedIdentifier(groupByDefinition.SourceAlias, columnName);
+            }
+
+            return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition, _databaseDialect, groupByColumn.PropertyName);
+        }
+        #endregion
+
+
         #region Order By Clause Building
 
         // Adds SQL ORDER BY clauses preserving fluent ordering sequence.
@@ -249,7 +288,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL column reference for a single ordering column.
-        private string BuildOrderingColumnReference(CompiledQueryDefinition queryDefinition, QueryOrderingDefinition orderingDefinition, QueryOrderingColumnDefinition orderingColumn)
+        private string BuildOrderingColumnReference(CompiledQueryDefinition queryDefinition, QueryOrderingDefinition orderingDefinition, QueryColumnDefinition orderingColumn)
         {
             if (!string.IsNullOrWhiteSpace(orderingDefinition.SourceAlias))
             {
