@@ -11,6 +11,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
     public sealed class CompiledQueryDefinition
     {
         /// <summary>
+        /// Gets the query sources available in the current SQL generation scope.
+        /// </summary>
+        public Dictionary<Type, QuerySourceDefinition> SourceDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets or sets the source table name associated with the query.
         /// </summary>
         public required string TableName { get; set; }

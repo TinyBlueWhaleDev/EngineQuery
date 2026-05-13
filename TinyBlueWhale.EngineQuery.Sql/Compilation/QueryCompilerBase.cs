@@ -148,9 +148,12 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             throw new NotSupportedException($"Join expression parameter type '{parameterExpression.Type.Name}' is not available in this join.");
         }
 
-        // Resolves mapped column names for join expressions.
-        private static string ResolveMappedColumnName(IReadOnlyDictionary<string, string> columnMappings, string propertyName)
+        // Resolves mapped column names for select projections.
+        private static string ResolveMappedColumnName(IReadOnlyDictionary<string, string>? columnMappings, string propertyName)
         {
+            if (columnMappings is null)
+                return propertyName;
+
             return columnMappings.TryGetValue(propertyName, out var columnName)
                 ? columnName
                 : propertyName;
@@ -169,13 +172,26 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL SELECT column fragment including optional alias projection.
-        protected virtual string BuildSelectColumn(CompiledQueryDefinition queryDefinition, QuerySelectColumnDefinition selectDefinition)
+        protected virtual string BuildSelectColumn(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
         {
-            var columnName = QueryColumnMappingHelper.ResolveColumnReference(queryDefinition,_databaseDialect,selectDefinition.PropertyName);
+            var columnReference = BuildSelectColumnReference(queryDefinition, selectDefinition);
 
             return string.IsNullOrWhiteSpace(selectDefinition.Alias)
-                ? columnName
-                : $"{columnName} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
+                ? columnReference
+                : $"{columnReference} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
+        }
+
+        // Builds a SQL column reference for single-source and multi-source projections.
+        private string BuildSelectColumnReference(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
+        {
+            if (!string.IsNullOrWhiteSpace(selectDefinition.SourceAlias))
+            {
+                var columnName = ResolveMappedColumnName(selectDefinition.SourceColumnMappings,selectDefinition.PropertyName);
+
+                return _databaseDialect.BuildQualifiedIdentifier(selectDefinition.SourceAlias,columnName);
+            }
+
+            return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition,_databaseDialect,selectDefinition.PropertyName);
         }
 
         // Adds SQL WHERE conditions when filters are defined.
