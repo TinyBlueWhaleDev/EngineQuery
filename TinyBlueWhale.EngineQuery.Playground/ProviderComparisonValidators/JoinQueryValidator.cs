@@ -75,6 +75,9 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     OrderItemId = oi.Id,
                     ItemOrderId = oi.OrderId
                 })
+                .Where<JoinUser>(u => u.IsActive)
+                .Where<JoinOrder>(o => o.Total > 100)
+                .Where<JoinOrderItem>(oi => oi.Quantity > 2)
                 .Build();
         }
 
@@ -103,6 +106,12 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         {
             Console.WriteLine($"--- {providerName} ---");
             Console.WriteLine(sql.CommandText);
+
+            foreach(var parameter in sql.Parameters)
+            {
+                Console.WriteLine($"{parameter.Name}: {parameter.Value}");
+            }            
+
             Console.WriteLine();
         }
     }
