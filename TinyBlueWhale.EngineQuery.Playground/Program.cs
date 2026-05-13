@@ -1,13 +1,12 @@
-﻿//using TinyBlueWhale.EngineQuery.Playground.MappingValidators;
-using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
+﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
 
-//ExplicitMappingValidator.Run();
-//ConventionMappingValidator.Run();
-//FluentMappingValidator.Run();
-//AttributeMappingValidator.Run();
-//CompositeMappingValidator.Run();
-
-//MultiProviderQueryValidator.Run();
-//TableAliasQueryValidator.Run();
+BasicSelectQueryValidator.Run();
+TableAliasQueryValidator.Run();
 JoinQueryValidator.Run();
-
+JoinProjectionQueryValidator.Run();
+MultiSourceWhereQueryValidator.Run();
+MultiSourceWhereIfQueryValidator.Run();
+MultiSourceOrderByQueryValidator.Run();
+GroupByQueryValidator.Run();
+AggregateQueryValidator.Run();
+HavingQueryValidator.Run();
