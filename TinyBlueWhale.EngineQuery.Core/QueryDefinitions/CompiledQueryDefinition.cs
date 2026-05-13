@@ -57,6 +57,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryGroupByDefinition> GroupByDefinitions { get; } = [];
 
         /// <summary>
+        /// Gets the SQL HAVING aggregate definitions associated with the query.
+        /// </summary>
+        public List<QueryHavingAggregateDefinition> HavingAggregateDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets the ordering definitions used to generate SQL ORDER BY clauses.
         /// </summary>
         public List<QueryOrderingDefinition> OrderingDefinitions { get; } = [];

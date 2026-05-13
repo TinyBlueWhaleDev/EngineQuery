@@ -52,6 +52,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             AddGroupByClauseIfNeeded(queryDefinition, sqlLines);
 
+            AddHavingClauseIfNeeded(queryDefinition, sqlParameters, sqlLines);
+
             AddOrderByClauseIfNeeded(queryDefinition, sqlLines);
 
             AddPaginationClauseIfNeeded(queryDefinition, sqlLines);
@@ -292,6 +294,66 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
         #endregion
 
+        #region Having Clause Building
+
+        // Adds SQL HAVING conditions when aggregate filters are configured.
+        protected virtual void AddHavingClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
+        {
+            if (queryDefinition.HavingAggregateDefinitions.Count == 0)
+                return;
+
+            var havingConditions = queryDefinition.HavingAggregateDefinitions
+                .Select(havingDefinition => BuildHavingAggregateCondition(havingDefinition, sqlParameters));
+
+            sqlLines.Add("HAVING " + string.Join(" AND ", havingConditions));
+        }
+
+        // Builds a SQL HAVING aggregate condition.
+        private string BuildHavingAggregateCondition(QueryHavingAggregateDefinition havingDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            var columnName = ResolveMappedColumnName(havingDefinition.SourceColumnMappings, havingDefinition.PropertyName);
+
+            var columnReference = string.IsNullOrWhiteSpace(havingDefinition.SourceAlias)
+                ? _databaseDialect.EscapeIdentifier(columnName)
+                : _databaseDialect.BuildQualifiedIdentifier(havingDefinition.SourceAlias, columnName);
+
+            var parameterName = AddSqlParameter(sqlParameters, havingDefinition.Value);
+
+            return $"{ResolveAggregateFunctionName(havingDefinition.Function)}({columnReference}) {ResolveComparisonOperator(havingDefinition.ComparisonOperator)} {parameterName}";
+        }
+
+        // Resolves the SQL comparison operator.
+        private static string ResolveComparisonOperator(
+            QueryComparisonOperator comparisonOperator)
+        {
+            return comparisonOperator switch
+            {
+                QueryComparisonOperator.Equal => "=",
+                QueryComparisonOperator.NotEqual => "<>",
+                QueryComparisonOperator.GreaterThan => ">",
+                QueryComparisonOperator.GreaterThanOrEqual => ">=",
+                QueryComparisonOperator.LessThan => "<",
+                QueryComparisonOperator.LessThanOrEqual => "<=",
+                _ => throw new NotSupportedException($"Comparison operator '{comparisonOperator}' is not supported.")
+            };
+        }
+
+        // Adds a SQL parameter and returns the generated parameter name.
+        private static string AddSqlParameter(List<QuerySqlParameter> sqlParameters,object? value)
+        {
+            var parameterName = $"@p{sqlParameters.Count}";
+
+            sqlParameters.Add(
+                new QuerySqlParameter
+                {
+                    Name = parameterName,
+                    Value = value
+                });
+
+            return parameterName;
+        }
+
+        #endregion
 
         #region Order By Clause Building
 
