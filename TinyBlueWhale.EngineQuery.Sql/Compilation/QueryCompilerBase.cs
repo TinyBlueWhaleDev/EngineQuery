@@ -106,8 +106,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var parser = new SqlComputedExpressionParser(
                 _databaseDialect,
                 sqlParameters,
-                caseWhenDefinition.SourceColumnMappings,
-                caseWhenDefinition.SourceAlias);
+                caseWhenDefinition.Source.ColumnMappings,
+                caseWhenDefinition.Source.TableAlias);
 
             var conditionSql = parser.Parse(caseWhenDefinition.ConditionExpression.Body);
             var whenTrueParameter = AddSqlParameter(sqlParameters, caseWhenDefinition.WhenTrueValue);
@@ -119,8 +119,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a computed SQL expression projection.
         protected virtual string BuildComputedExpressionColumn(QueryComputedExpressionDefinition computedDefinition, List<QuerySqlParameter> sqlParameters)
         {
-            var parser = new SqlComputedExpressionParser(_databaseDialect, sqlParameters, computedDefinition.SourceColumnMappings, computedDefinition.SourceAlias);
-
+            var parser = new SqlComputedExpressionParser(_databaseDialect, sqlParameters, computedDefinition.Source.ColumnMappings, computedDefinition.Source.TableAlias);
+                
             var sqlExpression = parser.Parse(computedDefinition.Expression.Body);
 
             return $"{sqlExpression} AS {_databaseDialect.EscapeIdentifier(computedDefinition.Alias)}";
@@ -139,11 +139,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a SQL aggregate SELECT expression.
         protected virtual string BuildAggregateColumn(QueryAggregateDefinition aggregateDefinition)
         {
-            var columnName = ResolveMappedColumnName(aggregateDefinition.SourceColumnMappings, aggregateDefinition.PropertyName);
+            var columnName = ResolveMappedColumnName(aggregateDefinition.Source.ColumnMappings, aggregateDefinition.PropertyName);
 
-            var columnReference = string.IsNullOrWhiteSpace(aggregateDefinition.SourceAlias)
+            var columnReference = string.IsNullOrWhiteSpace(aggregateDefinition.Source.TableAlias)
                 ? _databaseDialect.EscapeIdentifier(columnName)
-                : _databaseDialect.BuildQualifiedIdentifier(aggregateDefinition.SourceAlias, columnName);
+                : _databaseDialect.BuildQualifiedIdentifier(aggregateDefinition.Source.TableAlias, columnName);
 
             var functionName = SqlFunctionNameResolver.ResolveAggregateFunctionName(aggregateDefinition.Function);
 
@@ -173,11 +173,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         {
             if (argumentDefinition.IsColumn)
             {
-                var columnName = ResolveMappedColumnName(functionDefinition.SourceColumnMappings, argumentDefinition.PropertyName!);
+                var columnName = ResolveMappedColumnName(functionDefinition.Source.ColumnMappings, argumentDefinition.PropertyName!);
 
-                return string.IsNullOrWhiteSpace(functionDefinition.SourceAlias)
+                return string.IsNullOrWhiteSpace(functionDefinition.Source.TableAlias)
                     ? _databaseDialect.EscapeIdentifier(columnName)
-                    : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.SourceAlias, columnName);
+                    : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.Source.TableAlias, columnName);
             }
 
             return AddSqlParameter(sqlParameters, argumentDefinition.ConstantValue);
@@ -189,25 +189,28 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             if (string.IsNullOrWhiteSpace(functionDefinition.PropertyName))
                 throw new InvalidOperationException("Scalar function property name is required for single-column function projections.");
 
-            var columnName = ResolveMappedColumnName(functionDefinition.SourceColumnMappings, functionDefinition.PropertyName);
+            var columnName = ResolveMappedColumnName(functionDefinition.Source.ColumnMappings, functionDefinition.PropertyName);
 
-            return string.IsNullOrWhiteSpace(functionDefinition.SourceAlias)
+            return string.IsNullOrWhiteSpace(functionDefinition.Source.TableAlias)
                 ? _databaseDialect.EscapeIdentifier(columnName)
-                : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.SourceAlias,columnName);
+                : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.Source.TableAlias,columnName);
         }
 
 
         // Builds a SQL column reference for single-source and multi-source projections.
-        private string BuildSelectColumnReference(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
+        // Builds a SQL column reference for single-source and multi-source projections.
+        private string BuildSelectColumnReference(
+            CompiledQueryDefinition queryDefinition,
+            QuerySelectColumnDefinition selectDefinition)
         {
-            if (!string.IsNullOrWhiteSpace(selectDefinition.SourceAlias))
+            if (selectDefinition.Source is not null)
             {
-                var columnName = ResolveMappedColumnName(selectDefinition.SourceColumnMappings,selectDefinition.PropertyName);
+                var columnName = ResolveMappedColumnName(selectDefinition.Source.ColumnMappings, selectDefinition.PropertyName);
 
-                return _databaseDialect.BuildQualifiedIdentifier(selectDefinition.SourceAlias,columnName);
+                return _databaseDialect.BuildQualifiedIdentifier(selectDefinition.Source.TableAlias, columnName);
             }
 
-            return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition,_databaseDialect,selectDefinition.PropertyName);
+            return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition, _databaseDialect, selectDefinition.PropertyName);
         }
 
         #endregion
@@ -347,8 +350,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var parser = new SqlComputedExpressionParser(
                 _databaseDialect,
                 sqlParameters,
-                computedDefinition.SourceColumnMappings,
-                computedDefinition.SourceAlias);
+                computedDefinition.Source.ColumnMappings,
+                computedDefinition.Source.TableAlias);
 
             return parser.Parse(computedDefinition.Expression.Body);
         }
@@ -359,20 +362,20 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             return new QueryWhereClauseExpressionParser(
                 _databaseDialect,
                 sqlParameters,
-                whereDefinition.SourceColumnMappings ?? queryDefinition.ColumnMappings,
-                whereDefinition.SourceAlias ?? queryDefinition.TableAlias);
+                whereDefinition.Source.ColumnMappings ?? queryDefinition.ColumnMappings,
+                whereDefinition.Source.TableAlias ?? queryDefinition.TableAlias);
         }
 
         // Builds a SQL WHERE scalar function condition.
         private string BuildWhereScalarFunctionCondition(QueryWhereScalarFunctionDefinition functionDefinition, List<QuerySqlParameter> sqlParameters)
         {
             var columnName = ResolveMappedColumnName(
-                functionDefinition.SourceColumnMappings,
+                functionDefinition.Source.ColumnMappings,
                 functionDefinition.PropertyName);
 
-            var columnReference = string.IsNullOrWhiteSpace(functionDefinition.SourceAlias)
+            var columnReference = string.IsNullOrWhiteSpace(functionDefinition.Source.TableAlias)
                 ? _databaseDialect.EscapeIdentifier(columnName)
-                : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.SourceAlias, columnName);
+                : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.Source.TableAlias, columnName);
 
             var parameterName = AddSqlParameter(sqlParameters, functionDefinition.Value);
 
@@ -408,11 +411,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a SQL column reference for a single GROUP BY column.
         private string BuildGroupByColumnReference(CompiledQueryDefinition queryDefinition, QueryGroupByDefinition groupByDefinition, QueryColumnDefinition groupByColumn)
         {
-            if (!string.IsNullOrWhiteSpace(groupByDefinition.SourceAlias))
+            if (!string.IsNullOrWhiteSpace(groupByDefinition.Source.TableAlias))
             {
-                var columnName = ResolveMappedColumnName(groupByDefinition.SourceColumnMappings, groupByColumn.PropertyName);
+                var columnName = ResolveMappedColumnName(groupByDefinition.Source.ColumnMappings, groupByColumn.PropertyName);
 
-                return _databaseDialect.BuildQualifiedIdentifier(groupByDefinition.SourceAlias, columnName);
+                return _databaseDialect.BuildQualifiedIdentifier(groupByDefinition.Source.TableAlias, columnName);
             }
 
             return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition, _databaseDialect, groupByColumn.PropertyName);
@@ -436,11 +439,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a SQL HAVING aggregate condition.
         private string BuildHavingAggregateCondition(QueryHavingAggregateDefinition havingDefinition, List<QuerySqlParameter> sqlParameters)
         {
-            var columnName = ResolveMappedColumnName(havingDefinition.SourceColumnMappings, havingDefinition.PropertyName);
+            var columnName = ResolveMappedColumnName(havingDefinition.Source.ColumnMappings, havingDefinition.PropertyName);
 
-            var columnReference = string.IsNullOrWhiteSpace(havingDefinition.SourceAlias)
+            var columnReference = string.IsNullOrWhiteSpace(havingDefinition.Source.TableAlias)
                 ? _databaseDialect.EscapeIdentifier(columnName)
-                : _databaseDialect.BuildQualifiedIdentifier(havingDefinition.SourceAlias, columnName);
+                : _databaseDialect.BuildQualifiedIdentifier(havingDefinition.Source.TableAlias, columnName);
 
             var parameterName = AddSqlParameter(sqlParameters, havingDefinition.Value);
 
@@ -511,11 +514,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a SQL column reference for a single ordering column.
         private string BuildOrderingColumnReference(CompiledQueryDefinition queryDefinition, QueryOrderingDefinition orderingDefinition, QueryColumnDefinition orderingColumn)
         {
-            if (!string.IsNullOrWhiteSpace(orderingDefinition.SourceAlias))
+            if (!string.IsNullOrWhiteSpace(orderingDefinition.Source.TableAlias))
             {
-                var columnName = ResolveMappedColumnName(orderingDefinition.SourceColumnMappings, orderingColumn.PropertyName);
+                var columnName = ResolveMappedColumnName(orderingDefinition.Source.ColumnMappings, orderingColumn.PropertyName);
 
-                return _databaseDialect.BuildQualifiedIdentifier(orderingDefinition.SourceAlias, columnName);
+                return _databaseDialect.BuildQualifiedIdentifier(orderingDefinition.Source.TableAlias, columnName);
             }
 
             return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition, _databaseDialect, orderingColumn.PropertyName);

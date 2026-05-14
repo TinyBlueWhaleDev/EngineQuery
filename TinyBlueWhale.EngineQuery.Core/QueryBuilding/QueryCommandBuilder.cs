@@ -123,9 +123,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 _queryDefinition.SelectDefinitions.Add(
                     selectedColumn with
                     {
-                        SourceType = typeof(TEntity),
-                        SourceAlias = sourceDefinition.TableAlias,
-                        SourceColumnMappings = sourceDefinition.ColumnMappings
+                        Source = sourceDefinition
                     });
             }
 
@@ -171,9 +169,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 {
                     Expression = expression,
                     Alias = alias,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -213,9 +209,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     Function = function,
                     PropertyName = propertyName,
                     Alias = alias,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -266,9 +260,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     Function = function,
                     PropertyName = propertyName,
                     Alias = alias,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -311,9 +303,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     Function = function,
                     Arguments = ExtractScalarFunctionArguments(argumentsSelector),
                     Alias = alias,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -363,9 +353,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     WhenTrueValue = whenTrue,
                     WhenFalseValue = whenFalse,
                     Alias = alias,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -670,9 +658,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 new QueryWhereDefinition
                 {
                     PredicateExpression = predicate,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -756,9 +742,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     PropertyName = propertyName,
                     ComparisonOperator = comparisonOperator,
                     Value = value,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -792,9 +776,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 new QueryWhereComputedExpressionDefinition
                 {
                     Expression = expression,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -947,9 +929,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 {
                     Columns = orderingColumns,
                     Direction = orderingDirection,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -987,9 +967,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 new QueryGroupByDefinition
                 {
                     Columns = groupByColumns,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
@@ -1033,9 +1011,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     PropertyName = propertyName,
                     ComparisonOperator = comparisonOperator,
                     Value = value,
-                    SourceType = typeof(TEntity),
-                    SourceAlias = sourceDefinition.TableAlias,
-                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                    Source = sourceDefinition
                 });
 
             return this;
