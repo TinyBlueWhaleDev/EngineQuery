@@ -11,6 +11,7 @@ using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing;
+using TinyBlueWhale.EngineQuery.Sql.Helpers;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 {
@@ -42,7 +43,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             var sqlLines = new List<string>
             {
-                BuildSelectClause(queryDefinition),
+                BuildSelectClause(queryDefinition, sqlParameters),
                 BuildFromClause(queryDefinition)
             };
 
@@ -71,7 +72,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region Select Clause Building        
         // Builds the SQL SELECT clause from query projections, aggregate expressions and scalar function expressions.
-        protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition)
+        protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters)
         {
             if (queryDefinition.SelectDefinitions.Count == 0 &&
                 queryDefinition.AggregateDefinitions.Count == 0 &&
@@ -81,10 +82,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var selectedColumns = queryDefinition.SelectDefinitions
                 .Select(selectDefinition => BuildSelectColumn(queryDefinition, selectDefinition));
 
-            var aggregateColumns = queryDefinition.AggregateDefinitions
-                .Select(BuildAggregateColumn);
+            var aggregateColumns = queryDefinition.AggregateDefinitions.Select(BuildAggregateColumn);
 
-            var scalarFunctionColumns = queryDefinition.ScalarFunctionDefinitions.Select(BuildScalarFunctionColumn);
+            var scalarFunctionColumns = queryDefinition.ScalarFunctionDefinitions
+                .Select(functionDefinition => BuildScalarFunctionColumn(functionDefinition, sqlParameters));
 
             return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns))}";
         }
@@ -108,53 +109,57 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 ? _databaseDialect.EscapeIdentifier(columnName)
                 : _databaseDialect.BuildQualifiedIdentifier(aggregateDefinition.SourceAlias, columnName);
 
-            return $"{ResolveAggregateFunctionName(aggregateDefinition.Function)}({columnReference}) AS {_databaseDialect.EscapeIdentifier(aggregateDefinition.Alias)}";
+            var functionName = SqlFunctionNameResolver.ResolveAggregateFunctionName(aggregateDefinition.Function);
+
+            return $"{functionName}({columnReference}) AS {_databaseDialect.EscapeIdentifier(aggregateDefinition.Alias)}";
         }
 
         // Builds a scalar SQL function projection.
-        protected virtual string BuildScalarFunctionColumn(QueryScalarFunctionDefinition functionDefinition)
+        protected virtual string BuildScalarFunctionColumn(QueryScalarFunctionDefinition functionDefinition, List<QuerySqlParameter> sqlParameters)
         {
+            var arguments = functionDefinition.Arguments.Count > 0
+                ? BuildScalarFunctionArguments(functionDefinition, sqlParameters)
+                : [BuildScalarFunctionSingleColumnArgument(functionDefinition)];
+
+            var functionName = SqlFunctionNameResolver.ResolveScalarFunctionName(functionDefinition.Function, _databaseDialect);
+
+            return $"{functionName}({string.Join(", ", arguments)}) AS {_databaseDialect.EscapeIdentifier(functionDefinition.Alias)}";
+        }
+
+        // Builds all scalar SQL function arguments.
+        private List<string> BuildScalarFunctionArguments(QueryScalarFunctionDefinition functionDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            return [.. functionDefinition.Arguments.Select(argument => BuildScalarFunctionArgument(functionDefinition,argument,sqlParameters))];
+        }
+
+        // Builds a scalar SQL function argument.
+        private string BuildScalarFunctionArgument(QueryScalarFunctionDefinition functionDefinition, QueryScalarFunctionArgumentDefinition argumentDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            if (argumentDefinition.IsColumn)
+            {
+                var columnName = ResolveMappedColumnName(functionDefinition.SourceColumnMappings, argumentDefinition.PropertyName!);
+
+                return string.IsNullOrWhiteSpace(functionDefinition.SourceAlias)
+                    ? _databaseDialect.EscapeIdentifier(columnName)
+                    : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.SourceAlias, columnName);
+            }
+
+            return AddSqlParameter(sqlParameters, argumentDefinition.ConstantValue);
+        }
+
+        // Builds the single-column argument used by single-property scalar SQL function projections.
+        private string BuildScalarFunctionSingleColumnArgument(QueryScalarFunctionDefinition functionDefinition)
+        {
+            if (string.IsNullOrWhiteSpace(functionDefinition.PropertyName))
+                throw new InvalidOperationException("Scalar function property name is required for single-column function projections.");
+
             var columnName = ResolveMappedColumnName(functionDefinition.SourceColumnMappings, functionDefinition.PropertyName);
 
-            var columnReference = string.IsNullOrWhiteSpace(functionDefinition.SourceAlias)
+            return string.IsNullOrWhiteSpace(functionDefinition.SourceAlias)
                 ? _databaseDialect.EscapeIdentifier(columnName)
-                : _databaseDialect.BuildQualifiedIdentifier(
-                    functionDefinition.SourceAlias,
-                    columnName);
-
-            return $"{ResolveScalarFunctionName(functionDefinition.Function)}({columnReference}) AS {_databaseDialect.EscapeIdentifier(functionDefinition.Alias)}";
+                : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.SourceAlias,columnName);
         }
 
-        // Resolves the SQL aggregate function name.
-        private static string ResolveAggregateFunctionName(
-            QueryAggregateFunction function)
-        {
-            return function switch
-            {
-                QueryAggregateFunction.Count => "COUNT",
-                QueryAggregateFunction.Sum => "SUM",
-                QueryAggregateFunction.Average => "AVG",
-                QueryAggregateFunction.Minimum => "MIN",
-                QueryAggregateFunction.Maximum => "MAX",
-                _ => throw new NotSupportedException($"Aggregate function '{function}' is not supported.")
-            };
-        }
-
-        // Resolves SQL scalar function names.
-        protected virtual string ResolveScalarFunctionName(QueryScalarFunction function)
-        {
-            var canonicalFunctionName = function switch
-            {
-                QueryScalarFunction.Lower => "LOWER",
-                QueryScalarFunction.Upper => "UPPER",
-                QueryScalarFunction.Length => "LENGTH",
-                QueryScalarFunction.Trim => "TRIM",
-                QueryScalarFunction.Coalesce => "COALESCE",
-                _ => throw new NotSupportedException($"Scalar function '{function}' is not supported.")
-            };
-
-            return _databaseDialect.ResolveScalarFunctionName(canonicalFunctionName);
-        }
 
         // Builds a SQL column reference for single-source and multi-source projections.
         private string BuildSelectColumnReference(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
@@ -306,7 +311,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             var parameterName = AddSqlParameter(sqlParameters, functionDefinition.Value);
 
-            return $"{ResolveScalarFunctionName(functionDefinition.Function)}({columnReference}) {ResolveComparisonOperator(functionDefinition.ComparisonOperator)} {parameterName}";
+            var functionName = SqlFunctionNameResolver.ResolveScalarFunctionName(functionDefinition.Function, _databaseDialect);
+
+            return $"{functionName}({columnReference}) {ResolveComparisonOperator(functionDefinition.ComparisonOperator)} {parameterName}";
         }
 
         #endregion
@@ -372,7 +379,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             var parameterName = AddSqlParameter(sqlParameters, havingDefinition.Value);
 
-            return $"{ResolveAggregateFunctionName(havingDefinition.Function)}({columnReference}) {ResolveComparisonOperator(havingDefinition.ComparisonOperator)} {parameterName}";
+            var functionName = SqlFunctionNameResolver.ResolveAggregateFunctionName(havingDefinition.Function);
+
+            return $"{functionName}({columnReference}) {ResolveComparisonOperator(havingDefinition.ComparisonOperator)} {parameterName}";
         }
 
         // Resolves the SQL comparison operator.

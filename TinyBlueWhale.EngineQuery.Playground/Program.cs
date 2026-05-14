@@ -11,4 +11,5 @@
 //AggregateQueryValidator.Run();
 //HavingQueryValidator.Run();
 //ScalarFunctionQueryValidator.Run();
-WhereScalarFunctionQueryValidator.Run();
+//WhereScalarFunctionQueryValidator.Run();
+MultiArgumentScalarFunctionQueryValidator.Run();

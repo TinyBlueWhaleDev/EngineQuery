@@ -20,7 +20,12 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// <summary>
         /// Gets the entity property name used by the scalar function.
         /// </summary>
-        public required string PropertyName { get; init; }
+        public string? PropertyName { get; init; }
+
+        /// <summary>
+        /// Gets the scalar function arguments.
+        /// </summary>
+        public IReadOnlyList<QueryScalarFunctionArgumentDefinition> Arguments { get; init; } = [];
 
         /// <summary>
         /// Gets the SQL alias assigned to the function result.
