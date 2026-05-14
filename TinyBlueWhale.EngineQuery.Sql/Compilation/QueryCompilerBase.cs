@@ -103,15 +103,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             {
                 var unionQuery = Compile(unionDefinition.Query);
 
-                var unionCommandText = ReindexSubqueryParameters(
-                    unionQuery,
-                    sqlParameters);
+                var unionCommandText = ReindexSubqueryParameters(unionQuery,sqlParameters);
 
-                commandText +=
-                    Environment.NewLine +
-                    "UNION" +
-                    Environment.NewLine +
-                    unionCommandText;
+                var unionKeyword = unionDefinition.IncludeDuplicates? "UNION ALL" : "UNION";
+
+                commandText += Environment.NewLine +
+                               unionKeyword +
+                               Environment.NewLine +
+                               unionCommandText;
             }
 
             return commandText;

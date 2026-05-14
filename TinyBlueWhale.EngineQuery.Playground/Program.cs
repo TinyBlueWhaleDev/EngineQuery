@@ -24,4 +24,5 @@
 //NotExistsQueryValidator.Run();
 //DerivedTableQueryValidator.Run();
 //CommonTableExpressionQueryValidator.Run();
-UnionQueryValidator.Run();
+//UnionQueryValidator.Run();
+UnionAllQueryValidator.Run();

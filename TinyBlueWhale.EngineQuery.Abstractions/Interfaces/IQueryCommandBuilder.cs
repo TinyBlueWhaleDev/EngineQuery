@@ -361,6 +361,20 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> Union<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder);
 
         /// <summary>
+        /// Adds a UNION ALL query to the current query.
+        /// </summary>
+        /// <typeparam name="TUnion">
+        /// Root entity type used by the UNION ALL query.
+        /// </typeparam>
+        /// <param name="unionBuilder">
+        /// Function used to build the UNION ALL query.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> UnionAll<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder);
+
+        /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
         /// <param name="keySelector">
