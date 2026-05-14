@@ -130,7 +130,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 queryDefinition.AggregateDefinitions.Count == 0 &&
                 queryDefinition.ScalarFunctionDefinitions.Count == 0 &&
                 queryDefinition.ComputedExpressionDefinitions.Count == 0 &&
-                queryDefinition.CaseWhenDefinitions.Count == 0)
+                queryDefinition.CaseWhenDefinitions.Count == 0 &&
+                queryDefinition.RowNumberDefinitions.Count == 0)
                 return "SELECT *";            
 
             var selectedColumns = queryDefinition.SelectDefinitions
@@ -148,7 +149,56 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var caseWhenColumns = queryDefinition.CaseWhenDefinitions
                 .Select(caseWhenDefinition => BuildCaseWhenColumn(caseWhenDefinition, sqlParameters));
 
-            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns).Concat(computedColumns).Concat(caseWhenColumns))}";
+            var rowNumberColumns = queryDefinition.RowNumberDefinitions.Select(BuildRowNumberColumn);
+
+            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns).Concat(computedColumns).Concat(caseWhenColumns).Concat(rowNumberColumns))}";
+        }
+
+        // Builds a ROW_NUMBER window function projection.
+        protected virtual string BuildRowNumberColumn(QueryRowNumberDefinition rowNumberDefinition)
+        {
+            var windowClauses = new List<string>();
+
+            if (rowNumberDefinition.Partitions.Count > 0)
+            {
+                var partitionColumns = rowNumberDefinition.Partitions
+                    .Select(BuildWindowPartitionColumn);
+
+                windowClauses.Add("PARTITION BY " + string.Join(", ", partitionColumns));
+            }
+
+            var orderingColumns = rowNumberDefinition.Orderings.Select(BuildWindowOrderingColumn);
+
+            windowClauses.Add("ORDER BY " + string.Join(", ", orderingColumns));
+
+            return $"ROW_NUMBER() OVER ({string.Join(" ", windowClauses)}) AS {_databaseDialect.EscapeIdentifier(rowNumberDefinition.Alias)}";
+        }
+
+        // Builds a PARTITION BY column reference for a window function.
+        private string BuildWindowPartitionColumn(QueryWindowPartitionDefinition partitionDefinition)
+        {
+            var columnName = ResolveMappedColumnName(partitionDefinition.Source.ColumnMappings, partitionDefinition.Column.PropertyName);
+
+            return _databaseDialect.BuildQualifiedIdentifier(partitionDefinition.Source.TableAlias, columnName);
+        }
+
+        // Builds an ORDER BY column reference for a window function.
+        private string BuildWindowOrderingColumn(
+            QueryWindowOrderingDefinition orderingDefinition)
+        {
+            var columnName = ResolveMappedColumnName(
+                orderingDefinition.Source.ColumnMappings,
+                orderingDefinition.Column.PropertyName);
+
+            var columnReference = _databaseDialect.BuildQualifiedIdentifier(
+                orderingDefinition.Source.TableAlias,
+                columnName);
+
+            var direction = orderingDefinition.Direction == QueryOrderingDirection.Ascending
+                ? "ASC"
+                : "DESC";
+
+            return $"{columnReference} {direction}";
         }
 
         // Builds a CASE WHEN SQL projection.

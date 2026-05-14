@@ -57,6 +57,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public bool UseConstantSelectProjection { get; set; }
 
         /// <summary>
+        /// Gets ROW_NUMBER window function projections associated with the query.
+        /// </summary>
+        public List<QueryRowNumberDefinition> RowNumberDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets the UNION query definitions associated with the query.
         /// </summary>
         public List<QueryUnionDefinition> UnionDefinitions { get; } = [];
