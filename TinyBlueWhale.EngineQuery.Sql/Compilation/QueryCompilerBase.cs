@@ -103,11 +103,16 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a CASE WHEN SQL projection.
         protected virtual string BuildCaseWhenColumn(QueryCaseWhenDefinition caseWhenDefinition, List<QuerySqlParameter> sqlParameters)
         {
+            var expressionScope = new QueryExpressionScope();
+
+            expressionScope.Register((ParameterExpression)caseWhenDefinition.ConditionExpression.Parameters.Single(), caseWhenDefinition.Source);
+
             var parser = new SqlComputedExpressionParser(
                 _databaseDialect,
                 sqlParameters,
                 caseWhenDefinition.Source.ColumnMappings,
-                caseWhenDefinition.Source.TableAlias);
+                caseWhenDefinition.Source.TableAlias,
+                expressionScope);
 
             var conditionSql = parser.Parse(caseWhenDefinition.ConditionExpression.Body);
             var whenTrueParameter = AddSqlParameter(sqlParameters, caseWhenDefinition.WhenTrueValue);
@@ -119,12 +124,16 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a computed SQL expression projection.
         protected virtual string BuildComputedExpressionColumn(QueryComputedExpressionDefinition computedDefinition, List<QuerySqlParameter> sqlParameters)
         {
-            var parser = new SqlComputedExpressionParser(_databaseDialect, sqlParameters, computedDefinition.Source.ColumnMappings, computedDefinition.Source.TableAlias);
-                
+            var expressionScope = new QueryExpressionScope();
+
+            expressionScope.Register((ParameterExpression)computedDefinition.Expression.Parameters.Single(), computedDefinition.Source);
+
+            var parser = new SqlComputedExpressionParser(_databaseDialect, sqlParameters, computedDefinition.Source.ColumnMappings, computedDefinition.Source.TableAlias, expressionScope);
+
             var sqlExpression = parser.Parse(computedDefinition.Expression.Body);
 
             return $"{sqlExpression} AS {_databaseDialect.EscapeIdentifier(computedDefinition.Alias)}";
-        }
+        }        
 
         // Builds a SQL SELECT column fragment including optional alias projection.
         protected virtual string BuildSelectColumn(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
@@ -347,11 +356,16 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds a SQL WHERE computed expression condition.
         protected virtual string BuildWhereComputedExpressionCondition(QueryWhereComputedExpressionDefinition computedDefinition, List<QuerySqlParameter> sqlParameters)
         {
+            var expressionScope = new QueryExpressionScope();
+
+            expressionScope.Register((ParameterExpression)computedDefinition.Expression.Parameters.Single(), computedDefinition.Source);
+
             var parser = new SqlComputedExpressionParser(
                 _databaseDialect,
                 sqlParameters,
                 computedDefinition.Source.ColumnMappings,
-                computedDefinition.Source.TableAlias);
+                computedDefinition.Source.TableAlias,
+                expressionScope);
 
             return parser.Parse(computedDefinition.Expression.Body);
         }

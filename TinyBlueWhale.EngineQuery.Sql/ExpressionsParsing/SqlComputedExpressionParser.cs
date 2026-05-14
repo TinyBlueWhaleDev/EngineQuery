@@ -1,6 +1,8 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Sql.Helpers;
 
 
 namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
@@ -8,18 +10,25 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
     /// <summary>
     /// Parses computed expression trees into SQL expressions.
     /// </summary>
-    public sealed class SqlComputedExpressionParser(ISqlDatabaseDialect databaseDialect, List<QuerySqlParameter> sqlParameters, IReadOnlyDictionary<string, string>? columnMappings, string? sourceAlias)
+    public sealed class SqlComputedExpressionParser(ISqlDatabaseDialect databaseDialect, 
+        List<QuerySqlParameter> sqlParameters, 
+        IReadOnlyDictionary<string, string>? columnMappings, 
+        string? sourceAlias,
+        QueryExpressionScope? expressionScope = null)
     {
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
         private readonly List<QuerySqlParameter> _sqlParameters = sqlParameters;
         private readonly IReadOnlyDictionary<string, string>? _columnMappings = columnMappings;
         private readonly string? _sourceAlias = sourceAlias;
+        private readonly QueryExpressionScope? _expressionScope = expressionScope;
 
         /// <summary>
         /// Parses the specified expression into a SQL computed expression.
         /// </summary>
         public string Parse(Expression expression)
         {
+            ArgumentNullException.ThrowIfNull(expression);
+
             return ParseExpression(UnwrapConvertExpression(expression));
         }
 
@@ -45,9 +54,16 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
             return $"({left} {sqlOperator} {right})";
         }
 
-        // Parses member access expressions as SQL column references.
+        // Parses member access expressions as SQL column references or captured values.
         private string ParseMemberExpression(MemberExpression memberExpression)
         {
+            if (_expressionScope is not null && memberExpression.Expression is ParameterExpression)
+            {
+                var resolver = new ScopedColumnReferenceResolver(_databaseDialect, _expressionScope);
+
+                return resolver.Resolve(memberExpression);
+            }
+
             if (memberExpression.Expression is not ParameterExpression)
                 return AddSqlParameter(Expression.Lambda(memberExpression).Compile().DynamicInvoke());
 
@@ -58,6 +74,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
                 ? _databaseDialect.EscapeIdentifier(columnName)
                 : _databaseDialect.BuildQualifiedIdentifier(_sourceAlias, columnName);
         }
+
 
         // Resolves the SQL operator associated with the expression type.
         public static string ResolveSqlOperator(ExpressionType expressionType)
