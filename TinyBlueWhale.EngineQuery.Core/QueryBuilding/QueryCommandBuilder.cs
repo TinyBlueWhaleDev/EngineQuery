@@ -805,12 +805,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="expression"/> is null.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when <typeparamref name="TEntity"/> is not available in the current query scope.
-        /// </exception>
         public IQueryCommandBuilder<T> WhereComputed<TEntity>(Expression<Func<TEntity, bool>> expression)
         {
             ArgumentNullException.ThrowIfNull(expression);
@@ -821,7 +815,46 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 new QueryWhereComputedExpressionDefinition
                 {
                     Expression = expression,
-                    Source = sourceDefinition
+                    Sources = new Dictionary<ParameterExpression, QuerySourceDefinition>
+                    {
+                        [expression.Parameters.Single()] = sourceDefinition
+                    }
+                });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a WHERE condition based on a computed expression involving two entities available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TLeft">
+        /// Left entity type associated with the computed expression.
+        /// </typeparam>
+        /// <typeparam name="TRight">
+        /// Right entity type associated with the computed expression.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Computed boolean expression used to generate the SQL WHERE condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> WhereComputed<TLeft, TRight>(Expression<Func<TLeft, TRight, bool>> expression)
+        {
+            ArgumentNullException.ThrowIfNull(expression);
+
+            var leftSource = ResolveQuerySource<TLeft>();
+            var rightSource = ResolveQuerySource<TRight>();
+
+            _queryDefinition.WhereComputedExpressionDefinitions.Add(
+                new QueryWhereComputedExpressionDefinition
+                {
+                    Expression = expression,
+                    Sources = new Dictionary<ParameterExpression, QuerySourceDefinition>
+                    {
+                        [expression.Parameters[0]] = leftSource,
+                        [expression.Parameters[1]] = rightSource
+                    }
                 });
 
             return this;

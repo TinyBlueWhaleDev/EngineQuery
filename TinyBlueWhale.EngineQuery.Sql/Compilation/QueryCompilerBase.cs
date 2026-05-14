@@ -380,13 +380,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         {
             var expressionScope = new QueryExpressionScope();
 
-            expressionScope.Register((ParameterExpression)computedDefinition.Expression.Parameters.Single(), computedDefinition.Source);
+            foreach (var source in computedDefinition.Sources)
+                expressionScope.Register(source.Key, source.Value);
 
             var parser = new SqlComputedExpressionParser(
                 _databaseDialect,
                 sqlParameters,
-                computedDefinition.Source.ColumnMappings,
-                computedDefinition.Source.TableAlias,
+                null,
+                null,
                 expressionScope);
 
             return parser.Parse(computedDefinition.Expression.Body);

@@ -17,4 +17,5 @@
 //WhereComputedExpressionQueryValidator.Run();
 //LogicalExpressionQueryValidator.Run();
 //CaseWhenQueryValidator.Run();
-ExistsQueryValidator.Run();
+//ExistsQueryValidator.Run();
+MultiSourceComputedWhereQueryValidator.Run();
