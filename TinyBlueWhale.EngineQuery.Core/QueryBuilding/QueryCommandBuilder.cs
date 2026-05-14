@@ -134,6 +134,52 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         #endregion
 
+        #region Computed Expression Overloads
+        /// <summary>
+        /// Adds a computed SELECT expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the computed expression.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Expression used to generate the computed SQL expression.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the computed expression result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="expression"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="alias"/> is null, empty or whitespace.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <typeparamref name="TEntity"/> is not available in the current query scope.
+        /// </exception>
+        public IQueryCommandBuilder<T> SelectComputed<TEntity>(Expression<Func<TEntity, object>> expression, string alias)
+        {
+            ArgumentNullException.ThrowIfNull(expression);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+
+            _queryDefinition.ComputedExpressionDefinitions.Add(
+                new QueryComputedExpressionDefinition
+                {
+                    Expression = expression,
+                    Alias = alias,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
+
+            return this;
+        }
+        #endregion
+
         #region Aggregate Overloads
         /// <summary>
         /// Adds an aggregate SELECT expression for an entity available in the current query scope.
