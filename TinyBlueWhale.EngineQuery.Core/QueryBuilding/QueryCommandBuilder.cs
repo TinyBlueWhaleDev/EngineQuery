@@ -1307,6 +1307,29 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> Union<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder)
         {
+            return AddUnion(unionBuilder, includeDuplicates: false);
+        }
+
+        /// <summary>
+        /// Adds a UNION ALL query to the current query.
+        /// </summary>
+        /// <typeparam name="TUnion">
+        /// Root entity type used by the UNION ALL query.
+        /// </typeparam>
+        /// <param name="unionBuilder">
+        /// Function used to build the UNION ALL query.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> UnionAll<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder)
+        {
+            return AddUnion(unionBuilder, includeDuplicates: true);
+        }
+
+        // Adds a UNION or UNION ALL query to the current query.
+        private QueryCommandBuilder<T> AddUnion<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder, bool includeDuplicates)
+        {
             ArgumentNullException.ThrowIfNull(unionBuilder);
 
             var nestedQueryBuilder = new QueryBuilder(
@@ -1327,7 +1350,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             _queryDefinition.UnionDefinitions.Add(
                 new QueryUnionDefinition
                 {
-                    Query = unionQueryDefinition
+                    Query = unionQueryDefinition,
+                    IncludeDuplicates = includeDuplicates
                 });
 
             return this;
