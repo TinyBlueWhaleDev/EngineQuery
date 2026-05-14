@@ -151,7 +151,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             var rowNumberColumns = queryDefinition.RowNumberDefinitions.Select(BuildRowNumberColumn);
 
-            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns).Concat(computedColumns).Concat(caseWhenColumns).Concat(rowNumberColumns))}";
+            var distinctKeyword = queryDefinition.IsDistinct ? "DISTINCT " : string.Empty;
+
+            return $"SELECT {distinctKeyword}{string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns).Concat(computedColumns).Concat(caseWhenColumns).Concat(rowNumberColumns))}";
         }
 
         // Builds a ROW_NUMBER window function projection.

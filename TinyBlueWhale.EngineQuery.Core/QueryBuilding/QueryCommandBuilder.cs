@@ -110,6 +110,21 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         #endregion
 
+        #region Distinct Overloads
+        /// <summary>
+        /// Applies DISTINCT projection semantics to the query.
+        /// </summary>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> Distinct()
+        {
+            _queryDefinition.IsDistinct = true;
+
+            return this;
+        }
+        #endregion
+
         #region Select Overloads
         /// <summary>
         /// Adds selected entity properties to the query projection definition.

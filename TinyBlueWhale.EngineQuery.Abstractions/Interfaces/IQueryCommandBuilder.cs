@@ -39,6 +39,14 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         public IQueryCommandBuilder<T> Select<TEntity>(Expression<Func<TEntity, object>> selector);
 
         /// <summary>
+        /// Applies DISTINCT projection semantics to the query.
+        /// </summary>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> Distinct();
+
+        /// <summary>
         /// Adds an aggregate SELECT expression for an entity available in the current query scope.
         /// </summary>
         /// <typeparam name="TEntity">
