@@ -18,9 +18,14 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public required Type EntityType { get; init; }
 
         /// <summary>
-        /// Gets the database table name associated with the query source.
+        /// Gets the physical database table name associated with the query source.
         /// </summary>
-        public required string TableName { get; init; }
+        public string? TableName { get; init; }
+
+        /// <summary>
+        /// Gets the derived table subquery associated with the query source.
+        /// </summary>
+        public CompiledQueryDefinition? Subquery { get; init; }
 
         /// <summary>
         /// Gets the table alias associated with the query source.
@@ -31,5 +36,15 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the property-to-column mappings associated with the query source.
         /// </summary>
         public required IReadOnlyDictionary<string, string> ColumnMappings { get; init; }
+
+        /// <summary>
+        /// Gets a value indicating whether the source represents a physical table.
+        /// </summary>
+        public bool IsTable => !string.IsNullOrWhiteSpace(TableName);
+
+        /// <summary>
+        /// Gets a value indicating whether the source represents a derived table.
+        /// </summary>
+        public bool IsDerivedTable => Subquery is not null;
     }
 }

@@ -230,14 +230,39 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region From Clause Building
         // Builds the SQL FROM clause.
-        protected virtual string BuildFromClause(CompiledQueryDefinition queryDefinition)
+        protected virtual string BuildFromClause(
+            CompiledQueryDefinition queryDefinition)
         {
+            var rootSource = queryDefinition.SourceDefinitions.TryGetValue(queryDefinition.EntityType, out var sourceDefinition)
+                ? sourceDefinition
+                : null;
+
+            if (rootSource is not null)
+                return $"FROM {BuildQuerySourceReference(rootSource)}";
+
             var tableName = _databaseDialect.EscapeIdentifier(queryDefinition.TableName);
 
             return string.IsNullOrWhiteSpace(queryDefinition.TableAlias)
                 ? $"FROM {tableName}"
                 : $"FROM {tableName} AS {_databaseDialect.EscapeIdentifier(queryDefinition.TableAlias)}";
         }
+
+        // Builds a SQL reference for a physical table or derived table query source.
+        protected virtual string BuildQuerySourceReference(QuerySourceDefinition sourceDefinition)
+        {
+            if (sourceDefinition.IsDerivedTable)
+            {
+                var subquery = Compile(sourceDefinition.Subquery!);
+
+                return $"({subquery.CommandText}) AS {_databaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+            }
+
+            if (sourceDefinition.IsTable)
+                return $"{_databaseDialect.EscapeIdentifier(sourceDefinition.TableName!)} AS {_databaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+
+            throw new InvalidOperationException("Query source must define either a physical table or a derived table subquery.");
+        }
+
         #endregion
 
         #region Join Clause Building
