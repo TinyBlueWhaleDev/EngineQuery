@@ -16,5 +16,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the compiled subquery definition.
         /// </summary>
         public required CompiledQueryDefinition Subquery { get; init; }
+
+        /// <summary>
+        /// Gets whether the EXISTS condition should be negated.
+        /// </summary>
+        public bool IsNegated { get; init; }
     }
 }

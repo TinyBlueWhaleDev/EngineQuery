@@ -20,4 +20,5 @@
 //ExistsQueryValidator.Run();
 //MultiSourceComputedWhereQueryValidator.Run();
 //CorrelatedExistsQueryValidator.Run();
-InSubqueryQueryValidator.Run();
+//InSubqueryQueryValidator.Run();
+NotExistsQueryValidator.Run();

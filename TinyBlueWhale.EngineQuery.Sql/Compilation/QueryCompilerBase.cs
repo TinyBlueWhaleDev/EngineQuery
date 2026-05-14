@@ -421,7 +421,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var existsQuery = Compile(existsDefinition.Subquery);
             var commandText = ReindexSubqueryParameters(existsQuery, sqlParameters);
 
-            return $"EXISTS ({commandText})";
+            var existsKeyword = existsDefinition.IsNegated ? "NOT EXISTS": "EXISTS";
+
+            return $"{existsKeyword} ({commandText})";
         }
 
         // Builds a SQL WHERE computed expression condition.
