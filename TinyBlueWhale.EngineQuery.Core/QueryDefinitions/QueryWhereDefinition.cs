@@ -13,18 +13,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public LambdaExpression PredicateExpression { get; init; } = null!;
 
         /// <summary>
-        /// Gets the CLR entity type that owns the filtered property.
+        /// Gets the query source associated with the selected column.
         /// </summary>
-        public Type? SourceType { get; init; }
-
-        /// <summary>
-        /// Gets the table alias associated with the filtered source.
-        /// </summary>
-        public string? SourceAlias { get; init; }
-
-        /// <summary>
-        /// Gets the property-to-column mappings associated with the filtered source.
-        /// </summary>
-        public IReadOnlyDictionary<string, string>? SourceColumnMappings { get; init; }
+        public required QuerySourceDefinition Source { get; init; }
     }
 }

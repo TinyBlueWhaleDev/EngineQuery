@@ -33,18 +33,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public required string Alias { get; init; }
 
         /// <summary>
-        /// Gets the CLR entity type that owns the CASE WHEN condition source.
+        /// Gets the query source associated with the selected column.
         /// </summary>
-        public Type? SourceType { get; init; }
-
-        /// <summary>
-        /// Gets the table alias associated with the CASE WHEN condition source.
-        /// </summary>
-        public string? SourceAlias { get; init; }
-
-        /// <summary>
-        /// Gets the property-to-column mappings associated with the CASE WHEN condition source.
-        /// </summary>
-        public IReadOnlyDictionary<string, string>? SourceColumnMappings { get; init; }
+        public required QuerySourceDefinition Source { get; init; }
     }
 }

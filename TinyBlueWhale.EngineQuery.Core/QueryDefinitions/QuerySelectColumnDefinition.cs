@@ -17,18 +17,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public string? Alias { get; init; }
 
         /// <summary>
-        /// Gets the CLR entity type that owns the selected property.
+        /// Gets the query source associated with the selected column.
         /// </summary>
-        public Type? SourceType { get; init; }
-
-        /// <summary>
-        /// Gets the table alias associated with the selected property source.
-        /// </summary>
-        public string? SourceAlias { get; init; }
-
-        /// <summary>
-        /// Gets the property-to-column mappings associated with the selected property source.
-        /// </summary>
-        public IReadOnlyDictionary<string, string>? SourceColumnMappings { get; init; }
+        public QuerySourceDefinition? Source { get; init; }
     }
 }

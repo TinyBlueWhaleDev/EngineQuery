@@ -59,8 +59,7 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
             return new QuerySelectColumnDefinition
             {
                 PropertyName = memberExpression.Member.Name,
-                Alias = projectedMemberName == memberExpression.Member.Name ? null : projectedMemberName,
-                SourceType = parameterExpression.Type
+                Alias = projectedMemberName == memberExpression.Member.Name ? null : projectedMemberName
             };
         }
     }
