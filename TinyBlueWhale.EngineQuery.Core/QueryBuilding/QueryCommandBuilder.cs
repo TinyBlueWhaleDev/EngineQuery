@@ -397,10 +397,69 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
-        // Builds the query definition without compiling SQL.
-        internal CompiledQueryDefinition BuildDefinition()
+        /// <summary>
+        /// Adds a correlated EXISTS subquery condition using an outer entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TOuter">
+        /// Outer entity type available in the current query scope.
+        /// </typeparam>
+        /// <typeparam name="TSubquery">
+        /// Root entity type of the EXISTS subquery.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional alias assigned to the EXISTS subquery root table.
+        /// </param>
+        /// <param name="subqueryBuilder">
+        /// Function used to build the correlated EXISTS subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> WhereExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
         {
-            return _queryDefinition;
+            ArgumentNullException.ThrowIfNull(subqueryBuilder);
+
+            var outerSource = ResolveQuerySource<TOuter>();
+
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<TSubquery>(out var subqueryMetadata))
+                throw new InvalidOperationException($"Metadata for entity type '{typeof(TSubquery).Name}' could not be resolved.");
+
+            var columnMappings = subqueryMetadata!.Properties.ToDictionary(
+                property => property.Key,
+                property => property.Value.ColumnName);
+
+            var nestedCommandBuilder = new QueryCommandBuilder<TSubquery>(
+                _queryCompiler,
+                subqueryMetadata.TableName,
+                alias,
+                columnMappings,
+                _metadataResolver);
+
+            nestedCommandBuilder.RegisterOuterSources(
+                new Dictionary<Type, QuerySourceDefinition>
+                {
+                    [typeof(TOuter)] = outerSource
+                });
+
+            var configuredNestedCommandBuilder = subqueryBuilder(nestedCommandBuilder);
+
+            if (configuredNestedCommandBuilder is not QueryCommandBuilder<TSubquery> concreteNestedCommandBuilder)
+                throw new InvalidOperationException("The EXISTS subquery builder returned an unsupported query command builder instance.");
+
+            var subqueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
+
+            subqueryDefinition.UseConstantSelectProjection = true;
+
+            _queryDefinition.ExistsDefinitions.Add(
+                new QueryExistsDefinition
+                {
+                    Subquery = subqueryDefinition
+                });
+
+            return this;
         }
 
 
@@ -1189,10 +1248,29 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (_queryDefinition.SourceDefinitions.TryGetValue(typeof(TEntity), out var sourceDefinition))
                 return sourceDefinition;
 
-            throw new InvalidOperationException(
-                $"Entity type '{typeof(TEntity).Name}' is not available in the current query scope.");
+            if (_queryDefinition.OuterSourceDefinitions.TryGetValue(typeof(TEntity), out var outerSourceDefinition))
+                return outerSourceDefinition;
+
+            throw new InvalidOperationException($"Entity type '{typeof(TEntity).Name}' is not available in the current query scope.");
         }
 
-       
+
+
+        // Builds the query definition without compiling SQL.
+        internal CompiledQueryDefinition BuildDefinition()
+        {
+            return _queryDefinition;
+        }
+
+        // Registers inherited outer query sources in the current query definition.
+        internal void RegisterOuterSources(IReadOnlyDictionary<Type, QuerySourceDefinition> outerSources)
+        {
+            ArgumentNullException.ThrowIfNull(outerSources);
+
+            foreach (var outerSource in outerSources)
+                _queryDefinition.OuterSourceDefinitions[outerSource.Key] = outerSource.Value;
+        }
+
+
     }
 }

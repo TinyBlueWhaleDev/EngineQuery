@@ -139,20 +139,6 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias);
 
         /// <summary>
-        /// Adds an EXISTS subquery condition.
-        /// </summary>
-        /// <typeparam name="TSubquery">
-        /// Root entity type of the EXISTS subquery.
-        /// </typeparam>
-        /// <param name="subqueryBuilder">
-        /// Function used to build the EXISTS subquery.
-        /// </param>
-        /// <returns>
-        /// Current query command builder instance.
-        /// </returns>
-        IQueryCommandBuilder<T> WhereExists<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
-
-        /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
         /// <typeparam name="TSource">
@@ -298,6 +284,25 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// </returns>
         IQueryCommandBuilder<T> WhereComputed<TLeft, TRight>(Expression<Func<TLeft, TRight, bool>> expression);
 
+        /// <summary>
+        /// Adds an EXISTS subquery condition.
+        /// </summary>
+        /// <typeparam name="TSubquery">
+        /// Root entity type of the EXISTS subquery.
+        /// </typeparam>
+        /// <param name="subqueryBuilder">
+        /// Function used to build the EXISTS subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> WhereExists<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+
+        /// <summary>
+        /// Adds a correlated EXISTS subquery condition using an outer entity available in the current query scope.
+        /// </summary>
+        IQueryCommandBuilder<T> WhereExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+        
         /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        

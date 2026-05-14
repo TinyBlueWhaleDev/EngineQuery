@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
@@ -71,6 +72,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 .ToDictionary(property => property.Key, property => property.Value.ColumnName);
 
             return new QueryCommandBuilder<T>(_queryCompiler, metadata!.TableName, alias, columnMappings, metadataResolver: _metadataResolver);
+        }
+
+        // Creates a query command builder with inherited outer sources.
+        internal QueryCommandBuilder<TEntity> FromWithOuterSources<TEntity>(string? alias,IReadOnlyDictionary<Type, QuerySourceDefinition> outerSources)
+        {
+            var commandBuilder = (QueryCommandBuilder<TEntity>)From<TEntity>(alias);
+
+            commandBuilder.RegisterOuterSources(outerSources);
+
+            return commandBuilder;
         }
     }
 }

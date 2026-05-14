@@ -52,6 +52,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public bool UseConstantSelectProjection { get; set; }
 
         /// <summary>
+        /// Gets the query sources inherited from an outer query scope.
+        /// </summary>
+        public Dictionary<Type, QuerySourceDefinition> OuterSourceDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets the query sources available in the current SQL generation scope.
         /// </summary>
         public Dictionary<Type, QuerySourceDefinition> SourceDefinitions { get; } = [];
