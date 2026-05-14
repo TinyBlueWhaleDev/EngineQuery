@@ -302,7 +302,30 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Adds a correlated EXISTS subquery condition using an outer entity available in the current query scope.
         /// </summary>
         IQueryCommandBuilder<T> WhereExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
-        
+
+        /// <summary>
+        /// Adds an IN subquery condition for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TOuter">
+        /// Outer entity type associated with the selected column.
+        /// </typeparam>
+        /// <typeparam name="TSubquery">
+        /// Root entity type of the IN subquery.
+        /// </typeparam>
+        /// <param name="outerSelector">
+        /// Expression that selects the outer column evaluated by the IN condition.
+        /// </param>
+        /// <param name="alias">
+        /// Optional alias assigned to the IN subquery root table.
+        /// </param>
+        /// <param name="subqueryBuilder">
+        /// Function used to build the IN subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> WhereIn<TOuter, TSubquery>(Expression<Func<TOuter, object>> outerSelector, string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+
         /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
