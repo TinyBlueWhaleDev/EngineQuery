@@ -327,6 +327,26 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> WhereIn<TOuter, TSubquery>(Expression<Func<TOuter, object>> outerSelector, string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
 
         /// <summary>
+        /// Adds a correlated NOT EXISTS subquery condition using an outer entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TOuter">
+        /// Outer entity type available in the current query scope.
+        /// </typeparam>
+        /// <typeparam name="TSubquery">
+        /// Root entity type of the NOT EXISTS subquery.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional alias assigned to the NOT EXISTS subquery root table.
+        /// </param>
+        /// <param name="subqueryBuilder">
+        /// Function used to build the correlated NOT EXISTS subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> WhereNotExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+
+        /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
         /// <param name="keySelector">

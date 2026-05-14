@@ -535,6 +535,72 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        /// <summary>
+        /// Adds a correlated NOT EXISTS subquery condition using an outer entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TOuter">
+        /// Outer entity type available in the current query scope.
+        /// </typeparam>
+        /// <typeparam name="TSubquery">
+        /// Root entity type of the NOT EXISTS subquery.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional alias assigned to the NOT EXISTS subquery root table.
+        /// </param>
+        /// <param name="subqueryBuilder">
+        /// Function used to build the correlated NOT EXISTS subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> WhereNotExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        {
+            ArgumentNullException.ThrowIfNull(subqueryBuilder);
+
+            var outerSource = ResolveQuerySource<TOuter>();
+
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<TSubquery>(out var subqueryMetadata))
+                throw new InvalidOperationException($"Metadata for entity type '{typeof(TSubquery).Name}' could not be resolved.");
+
+            var columnMappings = subqueryMetadata!.Properties.ToDictionary(
+                property => property.Key,
+                property => property.Value.ColumnName);
+
+            var nestedCommandBuilder = new QueryCommandBuilder<TSubquery>(
+                _queryCompiler,
+                subqueryMetadata.TableName,
+                alias,
+                columnMappings,
+                _metadataResolver);
+
+            nestedCommandBuilder.RegisterOuterSources(
+                new Dictionary<Type, QuerySourceDefinition>
+                {
+                    [typeof(TOuter)] = outerSource
+                });
+
+            var configuredNestedCommandBuilder = subqueryBuilder(nestedCommandBuilder);
+
+            if (configuredNestedCommandBuilder is not QueryCommandBuilder<TSubquery> concreteNestedCommandBuilder)
+                throw new InvalidOperationException("The NOT EXISTS subquery builder returned an unsupported query command builder instance.");
+
+            var subqueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
+
+            subqueryDefinition.UseConstantSelectProjection = true;
+
+            _queryDefinition.ExistsDefinitions.Add(
+                new QueryExistsDefinition
+                {
+                    Subquery = subqueryDefinition,
+                    IsNegated = true
+                });
+
+            return this;
+        }
+
         // Extracts scalar SQL function arguments from an array expression.
         private static List<QueryScalarFunctionArgumentDefinition> ExtractScalarFunctionArguments<TEntity>(Expression<Func<TEntity, object[]>> expression)
         {
