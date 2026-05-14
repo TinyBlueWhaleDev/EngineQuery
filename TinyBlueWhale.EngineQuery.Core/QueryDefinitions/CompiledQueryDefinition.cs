@@ -42,6 +42,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryCaseWhenDefinition> CaseWhenDefinitions { get; } = [];
 
         /// <summary>
+        /// Gets the EXISTS conditions associated with the query.
+        /// </summary>
+        public List<QueryExistsDefinition> ExistsDefinitions { get; } = [];
+
+        /// <summary>
+        /// Gets or sets whether the query should generate a constant SELECT projection.
+        /// </summary>
+        public bool UseConstantSelectProjection { get; set; }
+
+        /// <summary>
         /// Gets the query sources available in the current SQL generation scope.
         /// </summary>
         public Dictionary<Type, QuerySourceDefinition> SourceDefinitions { get; } = [];

@@ -139,6 +139,20 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias);
 
         /// <summary>
+        /// Adds an EXISTS subquery condition.
+        /// </summary>
+        /// <typeparam name="TSubquery">
+        /// Root entity type of the EXISTS subquery.
+        /// </typeparam>
+        /// <param name="subqueryBuilder">
+        /// Function used to build the EXISTS subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> WhereExists<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+
+        /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
         /// <typeparam name="TSource">
