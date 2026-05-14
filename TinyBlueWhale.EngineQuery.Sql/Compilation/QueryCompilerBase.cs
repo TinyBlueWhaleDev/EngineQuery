@@ -265,18 +265,22 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Adds SQL WHERE conditions when filters are defined.
         protected virtual void AddWhereClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
         {
-            if (queryDefinition.WhereDefinitions.Count == 0)
+            if (queryDefinition.WhereDefinitions.Count == 0 && queryDefinition.WhereScalarFunctionDefinitions.Count == 0)
                 return;
 
             var whereConditions = queryDefinition.WhereDefinitions
                 .Select(whereDefinition =>
                 {
-                    var parser = CreateWhereClauseExpressionParser(sqlParameters,queryDefinition, whereDefinition);
+                    var parser = CreateWhereClauseExpressionParser(sqlParameters, queryDefinition, whereDefinition);
 
                     return parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
                 });
 
-            sqlLines.Add("WHERE " + string.Join(" AND ", whereConditions));
+            var functionConditions = queryDefinition.WhereScalarFunctionDefinitions
+                .Select(functionDefinition =>
+                    BuildWhereScalarFunctionCondition(functionDefinition, sqlParameters));
+
+            sqlLines.Add("WHERE " + string.Join(" AND ", whereConditions.Concat(functionConditions)));
         }
 
         // Creates a SQL WHERE clause expression parser instance.
@@ -287,6 +291,22 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 sqlParameters,
                 whereDefinition.SourceColumnMappings ?? queryDefinition.ColumnMappings,
                 whereDefinition.SourceAlias ?? queryDefinition.TableAlias);
+        }
+
+        // Builds a SQL WHERE scalar function condition.
+        private string BuildWhereScalarFunctionCondition(QueryWhereScalarFunctionDefinition functionDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            var columnName = ResolveMappedColumnName(
+                functionDefinition.SourceColumnMappings,
+                functionDefinition.PropertyName);
+
+            var columnReference = string.IsNullOrWhiteSpace(functionDefinition.SourceAlias)
+                ? _databaseDialect.EscapeIdentifier(columnName)
+                : _databaseDialect.BuildQualifiedIdentifier(functionDefinition.SourceAlias, columnName);
+
+            var parameterName = AddSqlParameter(sqlParameters, functionDefinition.Value);
+
+            return $"{ResolveScalarFunctionName(functionDefinition.Function)}({columnReference}) {ResolveComparisonOperator(functionDefinition.ComparisonOperator)} {parameterName}";
         }
 
         #endregion

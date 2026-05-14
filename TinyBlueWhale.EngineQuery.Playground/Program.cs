@@ -10,4 +10,5 @@
 //GroupByQueryValidator.Run();
 //AggregateQueryValidator.Run();
 //HavingQueryValidator.Run();
-ScalarFunctionQueryValidator.Run();
+//ScalarFunctionQueryValidator.Run();
+WhereScalarFunctionQueryValidator.Run();

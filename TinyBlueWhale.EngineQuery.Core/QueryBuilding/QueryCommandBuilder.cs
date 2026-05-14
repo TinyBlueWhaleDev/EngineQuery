@@ -543,6 +543,49 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return condition ? AddWhere(predicate) : this;
         }
 
+        /// <summary>
+        /// Adds a WHERE condition based on a scalar SQL function for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the function column.
+        /// </typeparam>
+        /// <param name="function">
+        /// Scalar SQL function evaluated by the WHERE condition.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the entity property used by the scalar function.
+        /// </param>
+        /// <param name="comparisonOperator">
+        /// Comparison operator applied to the scalar function result.
+        /// </param>
+        /// <param name="value">
+        /// Comparison value used by the WHERE condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> WhereFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value)
+        {
+            ArgumentNullException.ThrowIfNull(selector);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+            var propertyName = QueryColumnExpressionExtractor.ExtractColumns(selector).Single().PropertyName;
+
+            _queryDefinition.WhereScalarFunctionDefinitions.Add(
+                new QueryWhereScalarFunctionDefinition
+                {
+                    Function = function,
+                    PropertyName = propertyName,
+                    ComparisonOperator = comparisonOperator,
+                    Value = value,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
+
+            return this;
+        }
+
 
         #endregion
 
