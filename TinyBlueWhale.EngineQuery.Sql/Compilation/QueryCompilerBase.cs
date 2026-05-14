@@ -29,13 +29,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect ?? throw new ArgumentNullException(nameof(databaseDialect));
 
         /// <summary>
-        /// Compiles the specified query definition into SQL command text and parameters.
+        /// Compiles the specified query definition into a generated SQL query.
         /// </summary>
         /// <param name="queryDefinition">
-        /// Query definition containing projections, filters, ordering and pagination metadata.
+        /// Query definition to compile.
         /// </param>
         /// <returns>
-        /// Generated SQL query command.
+        /// Generated SQL query.
         /// </returns>
         public GeneratedSqlQuery Compile(CompiledQueryDefinition queryDefinition)
         {
@@ -46,7 +46,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var sqlLines = new List<string>
             {
                 BuildSelectClause(queryDefinition, sqlParameters),
-                BuildFromClause(queryDefinition ,sqlParameters)
+                BuildFromClause(queryDefinition, sqlParameters)
             };
 
             AddJoinClausesIfNeeded(queryDefinition, sqlLines);
@@ -57,6 +57,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             AddPaginationClauseIfNeeded(queryDefinition, sqlLines);
 
             var commandText = string.Join(Environment.NewLine, sqlLines);
+
+            if (queryDefinition.UnionDefinitions.Count > 0)
+                commandText = BuildUnionCommandText(queryDefinition, sqlParameters, commandText);
 
             if (queryDefinition.CteDefinitions.Count > 0)
                 commandText = BuildCteClause(queryDefinition, sqlParameters) + Environment.NewLine + commandText;
@@ -86,6 +89,32 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 });
 
             return "WITH " + string.Join(", ", cteClauses);
+        }
+
+        #endregion
+
+        #region Union Clause building
+
+        // Builds SQL command text including UNION clauses.
+        protected virtual string BuildUnionCommandText(CompiledQueryDefinition queryDefinition,List<QuerySqlParameter> sqlParameters,
+            string commandText)
+        {
+            foreach (var unionDefinition in queryDefinition.UnionDefinitions)
+            {
+                var unionQuery = Compile(unionDefinition.Query);
+
+                var unionCommandText = ReindexSubqueryParameters(
+                    unionQuery,
+                    sqlParameters);
+
+                commandText +=
+                    Environment.NewLine +
+                    "UNION" +
+                    Environment.NewLine +
+                    unionCommandText;
+            }
+
+            return commandText;
         }
 
         #endregion

@@ -1285,6 +1285,56 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         #endregion
 
+        #region Union Overloads
+
+        /// <summary>
+        /// Adds a UNION query to the current query.
+        /// </summary>
+        /// <typeparam name="TUnion">
+        /// Root entity type used by the UNION query.
+        /// </typeparam>
+        /// <param name="unionBuilder">
+        /// Function used to build the UNION query.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="unionBuilder"/> is null.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the UNION builder returns an unsupported query command builder instance.
+        /// </exception>
+        public IQueryCommandBuilder<T> Union<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder)
+        {
+            ArgumentNullException.ThrowIfNull(unionBuilder);
+
+            var nestedQueryBuilder = new QueryBuilder(
+                _queryCompiler,
+                _metadataResolver);
+
+            var unionCommandBuilder = unionBuilder(nestedQueryBuilder);
+
+            if (unionCommandBuilder is not QueryCommandBuilder<TUnion> concreteUnionCommandBuilder)
+                throw new InvalidOperationException("The UNION builder returned an unsupported query command builder instance.");
+
+            var unionQueryDefinition = concreteUnionCommandBuilder.BuildDefinition();
+
+            unionQueryDefinition.ForceSelectAliases = true;
+
+            _queryDefinition.ForceSelectAliases = true;
+
+            _queryDefinition.UnionDefinitions.Add(
+                new QueryUnionDefinition
+                {
+                    Query = unionQueryDefinition
+                });
+
+            return this;
+        }
+
+        #endregion
+
         #region Having Overloads
         /// <summary>
         /// Adds a HAVING condition based on an aggregate expression for an entity available in the current query scope.

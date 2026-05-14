@@ -57,6 +57,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public bool UseConstantSelectProjection { get; set; }
 
         /// <summary>
+        /// Gets the UNION query definitions associated with the query.
+        /// </summary>
+        public List<QueryUnionDefinition> UnionDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets the IN subquery conditions associated with the query.
         /// </summary>
         public List<QueryInSubqueryDefinition> InSubqueryDefinitions { get; } = [];
