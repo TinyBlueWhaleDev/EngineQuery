@@ -462,6 +462,78 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        /// <summary>
+        /// Adds an IN subquery condition for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TOuter">
+        /// Outer entity type associated with the selected column.
+        /// </typeparam>
+        /// <typeparam name="TSubquery">
+        /// Root entity type of the IN subquery.
+        /// </typeparam>
+        /// <param name="outerSelector">
+        /// Expression that selects the outer column evaluated by the IN condition.
+        /// </param>
+        /// <param name="alias">
+        /// Optional alias assigned to the IN subquery root table.
+        /// </param>
+        /// <param name="subqueryBuilder">
+        /// Function used to build the IN subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="outerSelector"/> or <paramref name="subqueryBuilder"/> is null.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when metadata for <typeparamref name="TSubquery"/> cannot be resolved.
+        /// </exception>
+        public IQueryCommandBuilder<T> WhereIn<TOuter, TSubquery>(Expression<Func<TOuter, object>> outerSelector, string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        {
+            ArgumentNullException.ThrowIfNull(outerSelector);
+            ArgumentNullException.ThrowIfNull(subqueryBuilder);
+
+            var outerSource = ResolveQuerySource<TOuter>();
+
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<TSubquery>(out var subqueryMetadata))
+                throw new InvalidOperationException($"Metadata for entity type '{typeof(TSubquery).Name}' could not be resolved.");
+
+            var columnMappings = subqueryMetadata!.Properties.ToDictionary(
+                property => property.Key,
+                property => property.Value.ColumnName);
+
+            var nestedCommandBuilder = new QueryCommandBuilder<TSubquery>(
+                _queryCompiler,
+                subqueryMetadata.TableName,
+                alias,
+                columnMappings,
+                _metadataResolver);
+
+            nestedCommandBuilder.RegisterOuterSources(
+                new Dictionary<Type, QuerySourceDefinition>
+                {
+                    [typeof(TOuter)] = outerSource
+                });
+
+            var configuredNestedCommandBuilder = subqueryBuilder(nestedCommandBuilder);
+
+            if (configuredNestedCommandBuilder is not QueryCommandBuilder<TSubquery> concreteNestedCommandBuilder)
+                throw new InvalidOperationException("The IN subquery builder returned an unsupported query command builder instance.");
+
+            _queryDefinition.InSubqueryDefinitions.Add(
+                new QueryInSubqueryDefinition
+                {
+                    OuterSelector = outerSelector,
+                    OuterSource = outerSource,
+                    Subquery = concreteNestedCommandBuilder.BuildDefinition()
+                });
+
+            return this;
+        }
 
         // Extracts scalar SQL function arguments from an array expression.
         private static List<QueryScalarFunctionArgumentDefinition> ExtractScalarFunctionArguments<TEntity>(Expression<Func<TEntity, object[]>> expression)

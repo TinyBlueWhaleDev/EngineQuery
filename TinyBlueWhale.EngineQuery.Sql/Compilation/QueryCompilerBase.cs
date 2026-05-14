@@ -8,6 +8,7 @@ using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
+using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
@@ -324,16 +325,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             if (queryDefinition.WhereDefinitions.Count == 0 &&
                 queryDefinition.WhereScalarFunctionDefinitions.Count == 0 &&
                 queryDefinition.WhereComputedExpressionDefinitions.Count == 0 &&
-                queryDefinition.ExistsDefinitions.Count == 0)
+                queryDefinition.ExistsDefinitions.Count == 0 &&
+                queryDefinition.InSubqueryDefinitions.Count == 0)
                 return;
 
             var whereConditions = queryDefinition.WhereDefinitions
                 .Select(whereDefinition =>
                 {
-                    var parser = CreateWhereClauseExpressionParser(
-                        sqlParameters,
-                        queryDefinition,
-                        whereDefinition);
+                    var parser = CreateWhereClauseExpressionParser(sqlParameters, queryDefinition, whereDefinition);
 
                     return parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
                 });
@@ -347,19 +346,60 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var existsConditions = queryDefinition.ExistsDefinitions
                 .Select(existsDefinition => BuildExistsCondition(existsDefinition, sqlParameters));
 
-            sqlLines.Add("WHERE " + string.Join(" AND ", whereConditions.Concat(functionConditions).Concat(computedConditions).Concat(existsConditions)));
+            var inConditions = queryDefinition.InSubqueryDefinitions
+                .Select(inDefinition => BuildInSubqueryCondition(inDefinition, sqlParameters));
+
+            sqlLines.Add("WHERE " + string.Join(" AND ",
+                whereConditions
+                    .Concat(functionConditions)
+                    .Concat(computedConditions)
+                    .Concat(existsConditions)
+                    .Concat(inConditions)));
         }
 
-        // Builds an EXISTS SQL condition.
-        protected virtual string BuildExistsCondition(QueryExistsDefinition existsDefinition, List<QuerySqlParameter> sqlParameters)
+        // Builds an IN subquery SQL condition.
+        protected virtual string BuildInSubqueryCondition(QueryInSubqueryDefinition inDefinition, List<QuerySqlParameter> sqlParameters)
         {
-            var existsQuery = Compile(existsDefinition.Subquery);
-            var offset = sqlParameters.Count;
-            var commandText = existsQuery.CommandText;
+            var outerColumnReference = BuildInSubqueryOuterColumnReference(inDefinition);
+            var subquery = Compile(inDefinition.Subquery);
+            var commandText = ReindexSubqueryParameters(subquery, sqlParameters);
 
-            foreach (var parameter in existsQuery.Parameters)
+            return $"{outerColumnReference} IN ({commandText})";
+        }
+
+        // Builds the outer column reference used by an IN subquery condition.
+        private string BuildInSubqueryOuterColumnReference(QueryInSubqueryDefinition inDefinition)
+        {
+            var propertyName = ExtractSinglePropertyName(inDefinition.OuterSelector);
+
+            var columnName = ResolveMappedColumnName(inDefinition.OuterSource.ColumnMappings,propertyName);
+
+            return _databaseDialect.BuildQualifiedIdentifier(inDefinition.OuterSource.TableAlias, columnName);
+        }
+
+        // Extracts a single property name from a lambda expression.
+        private static string ExtractSinglePropertyName(LambdaExpression expression)
+        {
+            var body = expression.Body is UnaryExpression unaryExpression
+                ? unaryExpression.Operand
+                : expression.Body;
+
+            if (body is not MemberExpression memberExpression)
+                throw new NotSupportedException($"Expression '{expression}' is not supported as a column selector.");
+
+            return memberExpression.Member.Name;
+        }
+
+        // Reindexes subquery parameters and appends them to the parent parameter collection.
+        private static string ReindexSubqueryParameters(GeneratedSqlQuery subquery, List<QuerySqlParameter> sqlParameters)
+        {
+            var offset = sqlParameters.Count;
+            var commandText = subquery.CommandText;
+
+            foreach (var parameter in subquery.Parameters)
             {
                 var newName = $"@p{offset}";
+
                 commandText = commandText.Replace(parameter.Name, newName);
 
                 sqlParameters.Add(
@@ -371,6 +411,15 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
                 offset++;
             }
+
+            return commandText;
+        }
+
+        // Builds an EXISTS SQL condition.
+        protected virtual string BuildExistsCondition(QueryExistsDefinition existsDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            var existsQuery = Compile(existsDefinition.Subquery);
+            var commandText = ReindexSubqueryParameters(existsQuery, sqlParameters);
 
             return $"EXISTS ({commandText})";
         }
