@@ -18,8 +18,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public required LambdaExpression Expression { get; init; }
 
         /// <summary>
-        /// Gets the query source associated with the selected column.
+        /// Gets the query sources associated with the expression parameters.
         /// </summary>
-        public required QuerySourceDefinition Source { get; init; }
+        public required IReadOnlyDictionary<ParameterExpression, QuerySourceDefinition> Sources { get; init; }
     }
 }

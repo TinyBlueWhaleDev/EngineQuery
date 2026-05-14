@@ -280,6 +280,24 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// </returns>
         IQueryCommandBuilder<T> WhereComputed<TEntity>(Expression<Func<TEntity, bool>> expression);
 
+
+        /// <summary>
+        /// Adds a WHERE condition based on a computed expression involving two entities available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TLeft">
+        /// Left entity type associated with the computed expression.
+        /// </typeparam>
+        /// <typeparam name="TRight">
+        /// Right entity type associated with the computed expression.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Computed boolean expression used to generate the SQL WHERE condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> WhereComputed<TLeft, TRight>(Expression<Func<TLeft, TRight, bool>> expression);
+
         /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
