@@ -115,5 +115,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// </summary>
         public QueryPaginationDefinition Pagination { get; set; } = new();
 
+        /// <summary>
+        /// Gets or sets the root entity type associated with the query.
+        /// </summary>
+        public required Type EntityType { get; init; }
+
     }
 }

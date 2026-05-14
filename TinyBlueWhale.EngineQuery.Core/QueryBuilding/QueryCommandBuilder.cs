@@ -67,7 +67,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             {
                 TableName = tableName,
                 TableAlias = tableAlias,
-                ColumnMappings = columnMappings ?? new Dictionary<string, string>()
+                ColumnMappings = columnMappings ?? new Dictionary<string, string>(),
+                EntityType = typeof(T)
             };
 
             RegisterRootSource(tableName, tableAlias);
