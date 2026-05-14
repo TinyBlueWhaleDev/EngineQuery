@@ -39,6 +39,16 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
                 .Property(x => x.OrderId).HasColumnName("order_id")
                 .Property(x => x.Quantity).HasColumnName("quantity");
 
+            registry.Entity<ActiveUser>()
+                .ToTable("users")
+                .Property(x => x.Id).HasColumnName("user_id")
+                .Property(x => x.Email).HasColumnName("email");
+
+            registry.Entity<ArchivedUser>()
+                .ToTable("archived_users")
+                .Property(x => x.Id).HasColumnName("archived_user_id")
+                .Property(x => x.Email).HasColumnName("email");
+
             return new FluentEntityMetadataResolver(registry);
         }
     }

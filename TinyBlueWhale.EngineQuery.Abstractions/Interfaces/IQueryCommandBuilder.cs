@@ -347,6 +347,20 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> WhereNotExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
 
         /// <summary>
+        /// Adds a UNION query to the current query.
+        /// </summary>
+        /// <typeparam name="TUnion">
+        /// Root entity type used by the UNION query.
+        /// </typeparam>
+        /// <param name="unionBuilder">
+        /// Function used to build the UNION query.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> Union<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder);
+
+        /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
         /// <param name="keySelector">
