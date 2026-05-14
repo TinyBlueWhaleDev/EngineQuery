@@ -15,6 +15,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Enums
         Upper = 2,
         Length = 3,
         Trim = 4,
-        Coalesce = 5
+        Coalesce = 5,
+        Concat = 6
     }
 }

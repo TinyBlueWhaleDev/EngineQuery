@@ -228,6 +228,85 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        /// <summary>
+        /// Adds a scalar SQL function projection using multiple function arguments for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the function arguments.
+        /// </typeparam>
+        /// <param name="function">
+        /// Scalar SQL function applied to the selected arguments.
+        /// </param>
+        /// <param name="argumentsSelector">
+        /// Expression that selects the scalar function arguments.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the scalar function result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="argumentsSelector"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="alias"/> is null, empty or whitespace.
+        /// </exception>
+        public IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object[]>> argumentsSelector, string alias)
+        {
+            ArgumentNullException.ThrowIfNull(argumentsSelector);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+
+            _queryDefinition.ScalarFunctionDefinitions.Add(
+                new QueryScalarFunctionDefinition
+                {
+                    Function = function,
+                    Arguments = ExtractScalarFunctionArguments(argumentsSelector),
+                    Alias = alias,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
+
+            return this;
+        }
+        // Extracts scalar SQL function arguments from an array expression.
+        private static List<QueryScalarFunctionArgumentDefinition> ExtractScalarFunctionArguments<TEntity>(Expression<Func<TEntity, object[]>> expression)
+        {
+            return expression.Body switch
+            {
+                NewArrayExpression newArrayExpression => [.. newArrayExpression.Expressions.Select(CreateScalarFunctionArgument)],
+
+                _ => throw new NotSupportedException(
+                    $"Expression '{expression}' is not supported as a scalar function argument selector.")
+            };
+        }
+
+        // Creates a scalar SQL function argument definition from an expression.
+        private static QueryScalarFunctionArgumentDefinition CreateScalarFunctionArgument(Expression expression)
+        {
+            if (expression is UnaryExpression unaryExpression)
+                expression = unaryExpression.Operand;
+
+            if (expression is MemberExpression memberExpression)
+                return new QueryScalarFunctionArgumentDefinition
+                {
+                    PropertyName = memberExpression.Member.Name
+                };
+            
+
+            if (expression is ConstantExpression constantExpression)
+                return new QueryScalarFunctionArgumentDefinition
+                {
+                    ConstantValue = constantExpression.Value
+                };
+            
+
+            throw new NotSupportedException($"Scalar function argument expression '{expression}' is not supported.");
+        }
+
         #endregion
 
         #region Join Overloads
