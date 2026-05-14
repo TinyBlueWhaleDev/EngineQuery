@@ -230,6 +230,20 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> WhereFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value);
 
         /// <summary>
+        /// Adds a WHERE condition based on a computed expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the computed expression.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Computed boolean expression used to generate the SQL WHERE condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> WhereComputed<TEntity>(Expression<Func<TEntity, bool>> expression);
+
+        /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
         /// <param name="keySelector">

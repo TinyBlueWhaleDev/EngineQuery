@@ -68,6 +68,12 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
                 ExpressionType.Subtract => "-",
                 ExpressionType.Multiply => "*",
                 ExpressionType.Divide => "/",
+                ExpressionType.Equal => "=",
+                ExpressionType.NotEqual => "<>",
+                ExpressionType.GreaterThan => ">",
+                ExpressionType.GreaterThanOrEqual => ">=",
+                ExpressionType.LessThan => "<",
+                ExpressionType.LessThanOrEqual => "<=",
                 _ => throw new NotSupportedException($"Computed expression operator '{expressionType}' is not supported.")
             };
         }

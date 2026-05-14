@@ -13,4 +13,5 @@
 //ScalarFunctionQueryValidator.Run();
 //WhereScalarFunctionQueryValidator.Run();
 //MultiArgumentScalarFunctionQueryValidator.Run();
-ComputedExpressionQueryValidator.Run();
+//ComputedExpressionQueryValidator.Run();
+WhereComputedExpressionQueryValidator.Run();

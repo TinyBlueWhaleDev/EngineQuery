@@ -711,6 +711,41 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        /// <summary>
+        /// Adds a WHERE condition based on a computed expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the computed expression.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Computed boolean expression used to generate the SQL WHERE condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="expression"/> is null.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <typeparamref name="TEntity"/> is not available in the current query scope.
+        /// </exception>
+        public IQueryCommandBuilder<T> WhereComputed<TEntity>(Expression<Func<TEntity, bool>> expression)
+        {
+            ArgumentNullException.ThrowIfNull(expression);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+
+            _queryDefinition.WhereComputedExpressionDefinitions.Add(
+                new QueryWhereComputedExpressionDefinition
+                {
+                    Expression = expression,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
+
+            return this;
+        }
 
         #endregion
 

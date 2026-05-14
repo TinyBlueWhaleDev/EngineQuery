@@ -285,24 +285,53 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region Where Clause Building
         // Adds SQL WHERE conditions when filters are defined.
-        protected virtual void AddWhereClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
+        // Adds SQL WHERE conditions when filters are defined.
+        protected virtual void AddWhereClauseIfNeeded(
+            CompiledQueryDefinition queryDefinition,
+            List<QuerySqlParameter> sqlParameters,
+            List<string> sqlLines)
         {
-            if (queryDefinition.WhereDefinitions.Count == 0 && queryDefinition.WhereScalarFunctionDefinitions.Count == 0)
+            if (queryDefinition.WhereDefinitions.Count == 0 &&
+                queryDefinition.WhereScalarFunctionDefinitions.Count == 0 &&
+                queryDefinition.WhereComputedExpressionDefinitions.Count == 0)
                 return;
 
             var whereConditions = queryDefinition.WhereDefinitions
                 .Select(whereDefinition =>
                 {
-                    var parser = CreateWhereClauseExpressionParser(sqlParameters, queryDefinition, whereDefinition);
+                    var parser = CreateWhereClauseExpressionParser(
+                        sqlParameters,
+                        queryDefinition,
+                        whereDefinition);
 
                     return parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
                 });
 
             var functionConditions = queryDefinition.WhereScalarFunctionDefinitions
                 .Select(functionDefinition =>
-                    BuildWhereScalarFunctionCondition(functionDefinition, sqlParameters));
+                    BuildWhereScalarFunctionCondition(
+                        functionDefinition,
+                        sqlParameters));
 
-            sqlLines.Add("WHERE " + string.Join(" AND ", whereConditions.Concat(functionConditions)));
+            var computedConditions = queryDefinition.WhereComputedExpressionDefinitions
+                .Select(computedDefinition =>
+                    BuildWhereComputedExpressionCondition(
+                        computedDefinition,
+                        sqlParameters));
+
+            sqlLines.Add("WHERE " + string.Join(" AND ", whereConditions.Concat(functionConditions).Concat(computedConditions)));
+        }
+
+        // Builds a SQL WHERE computed expression condition.
+        protected virtual string BuildWhereComputedExpressionCondition(QueryWhereComputedExpressionDefinition computedDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            var parser = new SqlComputedExpressionParser(
+                _databaseDialect,
+                sqlParameters,
+                computedDefinition.SourceColumnMappings,
+                computedDefinition.SourceAlias);
+
+            return parser.Parse(computedDefinition.Expression.Body);
         }
 
         // Creates a SQL WHERE clause expression parser instance.

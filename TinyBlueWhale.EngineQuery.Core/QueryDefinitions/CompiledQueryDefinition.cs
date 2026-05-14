@@ -67,6 +67,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryWhereScalarFunctionDefinition> WhereScalarFunctionDefinitions { get; } = [];
 
         /// <summary>
+        /// Gets computed SQL WHERE expressions associated with the query.
+        /// </summary>
+        public List<QueryWhereComputedExpressionDefinition> WhereComputedExpressionDefinitions { get; } = [];
+        /// <summary>
         /// Gets the SQL GROUP BY definitions associated with the query.
         /// </summary>
         public List<QueryGroupByDefinition> GroupByDefinitions { get; } = [];
