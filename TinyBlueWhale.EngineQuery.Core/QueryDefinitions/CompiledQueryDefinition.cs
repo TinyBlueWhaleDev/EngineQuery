@@ -57,6 +57,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryWhereDefinition> WhereDefinitions { get; } = [];
 
         /// <summary>
+        /// Gets the SQL WHERE scalar function definitions associated with the query.
+        /// </summary>
+        public List<QueryWhereScalarFunctionDefinition> WhereScalarFunctionDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets the SQL GROUP BY definitions associated with the query.
         /// </summary>
         public List<QueryGroupByDefinition> GroupByDefinitions { get; } = [];

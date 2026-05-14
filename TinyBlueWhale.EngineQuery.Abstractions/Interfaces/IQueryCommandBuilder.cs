@@ -170,6 +170,29 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> WhereIf<TEntity>(bool condition,Expression<Func<TEntity, bool>> predicate);
 
         /// <summary>
+        /// Adds a WHERE condition based on a scalar SQL function for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the function column.
+        /// </typeparam>
+        /// <param name="function">
+        /// Scalar SQL function evaluated by the WHERE condition.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the entity property used by the scalar function.
+        /// </param>
+        /// <param name="comparisonOperator">
+        /// Comparison operator applied to the scalar function result.
+        /// </param>
+        /// <param name="value">
+        /// Comparison value used by the WHERE condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> WhereFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value);
+
+        /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
         /// <param name="keySelector">
