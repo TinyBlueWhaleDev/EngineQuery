@@ -318,6 +318,59 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return this;
         }
+
+        /// <summary>
+        /// Adds a CASE WHEN SELECT expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the CASE WHEN condition.
+        /// </typeparam>
+        /// <param name="condition">
+        /// Boolean expression evaluated by the CASE WHEN expression.
+        /// </param>
+        /// <param name="whenTrue">
+        /// Value returned when the condition is true.
+        /// </param>
+        /// <param name="whenFalse">
+        /// Value returned when the condition is false.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the CASE WHEN expression result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="condition"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="alias"/> is null, empty or whitespace.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <typeparamref name="TEntity"/> is not available in the current query scope.
+        /// </exception>
+        public IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias)
+        {
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            var sourceDefinition = ResolveQuerySource<TEntity>();
+
+            _queryDefinition.CaseWhenDefinitions.Add(
+                new QueryCaseWhenDefinition
+                {
+                    ConditionExpression = condition,
+                    WhenTrueValue = whenTrue,
+                    WhenFalseValue = whenFalse,
+                    Alias = alias,
+                    SourceType = typeof(TEntity),
+                    SourceAlias = sourceDefinition.TableAlias,
+                    SourceColumnMappings = sourceDefinition.ColumnMappings
+                });
+
+            return this;
+        }
+
         // Extracts scalar SQL function arguments from an array expression.
         private static List<QueryScalarFunctionArgumentDefinition> ExtractScalarFunctionArguments<TEntity>(Expression<Func<TEntity, object[]>> expression)
         {
