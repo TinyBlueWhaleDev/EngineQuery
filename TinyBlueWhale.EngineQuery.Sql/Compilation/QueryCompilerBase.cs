@@ -72,14 +72,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region Select Clause Building        
         // Builds the SQL SELECT clause from query projections, aggregate expressions, scalar function expressions and computed expressions.
-        protected virtual string BuildSelectClause(
-            CompiledQueryDefinition queryDefinition,
-            List<QuerySqlParameter> sqlParameters)
+        // Builds the SQL SELECT clause from query projections, aggregate expressions, scalar function expressions, computed expressions and CASE WHEN expressions.
+        protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters)
         {
             if (queryDefinition.SelectDefinitions.Count == 0 &&
                 queryDefinition.AggregateDefinitions.Count == 0 &&
                 queryDefinition.ScalarFunctionDefinitions.Count == 0 &&
-                queryDefinition.ComputedExpressionDefinitions.Count == 0)
+                queryDefinition.ComputedExpressionDefinitions.Count == 0 &&
+                queryDefinition.CaseWhenDefinitions.Count == 0)
                 return "SELECT *";
 
             var selectedColumns = queryDefinition.SelectDefinitions
@@ -94,7 +94,26 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var computedColumns = queryDefinition.ComputedExpressionDefinitions
                 .Select(computedDefinition => BuildComputedExpressionColumn(computedDefinition, sqlParameters));
 
-            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns).Concat(computedColumns))}";
+            var caseWhenColumns = queryDefinition.CaseWhenDefinitions
+                .Select(caseWhenDefinition => BuildCaseWhenColumn(caseWhenDefinition, sqlParameters));
+
+            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns).Concat(computedColumns).Concat(caseWhenColumns))}";
+        }
+
+        // Builds a CASE WHEN SQL projection.
+        protected virtual string BuildCaseWhenColumn(QueryCaseWhenDefinition caseWhenDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            var parser = new SqlComputedExpressionParser(
+                _databaseDialect,
+                sqlParameters,
+                caseWhenDefinition.SourceColumnMappings,
+                caseWhenDefinition.SourceAlias);
+
+            var conditionSql = parser.Parse(caseWhenDefinition.ConditionExpression.Body);
+            var whenTrueParameter = AddSqlParameter(sqlParameters, caseWhenDefinition.WhenTrueValue);
+            var whenFalseParameter = AddSqlParameter(sqlParameters, caseWhenDefinition.WhenFalseValue);
+
+            return $"CASE WHEN {conditionSql} THEN {whenTrueParameter} ELSE {whenFalseParameter} END AS {_databaseDialect.EscapeIdentifier(caseWhenDefinition.Alias)}";
         }
 
         // Builds a computed SQL expression projection.

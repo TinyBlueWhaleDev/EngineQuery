@@ -116,6 +116,29 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> SelectComputed<TEntity>(Expression<Func<TEntity, object>> expression, string alias);
 
         /// <summary>
+        /// Adds a CASE WHEN SELECT expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the CASE WHEN condition.
+        /// </typeparam>
+        /// <param name="condition">
+        /// Boolean expression evaluated by the CASE WHEN expression.
+        /// </param>
+        /// <param name="whenTrue">
+        /// Value returned when the condition is true.
+        /// </param>
+        /// <param name="whenFalse">
+        /// Value returned when the condition is false.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the CASE WHEN expression result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias);
+
+        /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
         /// <typeparam name="TSource">

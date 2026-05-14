@@ -37,6 +37,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QuerySelectColumnDefinition> SelectDefinitions { get; } = [];
 
         /// <summary>
+        /// Gets CASE WHEN SELECT expressions associated with the query.
+        /// </summary>
+        public List<QueryCaseWhenDefinition> CaseWhenDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets the query sources available in the current SQL generation scope.
         /// </summary>
         public Dictionary<Type, QuerySourceDefinition> SourceDefinitions { get; } = [];
