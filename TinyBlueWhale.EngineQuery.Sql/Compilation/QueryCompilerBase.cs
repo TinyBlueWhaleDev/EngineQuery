@@ -46,27 +46,19 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var sqlLines = new List<string>
             {
                 BuildSelectClause(queryDefinition, sqlParameters),
-                BuildFromClause(queryDefinition)
+                BuildFromClause(queryDefinition ,sqlParameters)
             };
 
             AddJoinClausesIfNeeded(queryDefinition, sqlLines);
-
             AddWhereClauseIfNeeded(queryDefinition, sqlParameters, sqlLines);
-
             AddGroupByClauseIfNeeded(queryDefinition, sqlLines);
-
             AddHavingClauseIfNeeded(queryDefinition, sqlParameters, sqlLines);
-
             AddOrderByClauseIfNeeded(queryDefinition, sqlLines);
-
             AddPaginationClauseIfNeeded(queryDefinition, sqlLines);
 
             return new GeneratedSqlQuery
             {
-                CommandText = string.Join(
-                    Environment.NewLine,
-                    sqlLines),
-
+                CommandText = string.Join(Environment.NewLine, sqlLines),
                 Parameters = sqlParameters
             };
         }
@@ -230,15 +222,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region From Clause Building
         // Builds the SQL FROM clause.
-        protected virtual string BuildFromClause(
-            CompiledQueryDefinition queryDefinition)
+        protected virtual string BuildFromClause(CompiledQueryDefinition queryDefinition,List<QuerySqlParameter> sqlParameters)
         {
             var rootSource = queryDefinition.SourceDefinitions.TryGetValue(queryDefinition.EntityType, out var sourceDefinition)
                 ? sourceDefinition
                 : null;
 
             if (rootSource is not null)
-                return $"FROM {BuildQuerySourceReference(rootSource)}";
+                return $"FROM {BuildQuerySourceReference(rootSource, sqlParameters)}";
 
             var tableName = _databaseDialect.EscapeIdentifier(queryDefinition.TableName);
 
@@ -248,17 +239,21 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL reference for a physical table or derived table query source.
-        protected virtual string BuildQuerySourceReference(QuerySourceDefinition sourceDefinition)
+        protected virtual string BuildQuerySourceReference(QuerySourceDefinition sourceDefinition, List<QuerySqlParameter> sqlParameters)
         {
             if (sourceDefinition.IsDerivedTable)
             {
                 var subquery = Compile(sourceDefinition.Subquery!);
 
-                return $"({subquery.CommandText}) AS {_databaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+                var commandText = ReindexSubqueryParameters(subquery, sqlParameters);
+
+                return $"({commandText}) AS {_databaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
             }
 
             if (sourceDefinition.IsTable)
+            {
                 return $"{_databaseDialect.EscapeIdentifier(sourceDefinition.TableName!)} AS {_databaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+            }
 
             throw new InvalidOperationException("Query source must define either a physical table or a derived table subquery.");
         }

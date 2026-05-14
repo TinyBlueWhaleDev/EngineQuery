@@ -30,6 +30,44 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         #region Constructor
         /// <summary>
+        /// Initializes a new instance of the <see cref="QueryCommandBuilder{T}"/> class using a prebuilt query source.
+        /// </summary>
+        /// <param name="queryCompiler">
+        /// Query compiler used to generate SQL.
+        /// </param>
+        /// <param name="querySource">
+        /// Root query source associated with the builder.
+        /// </param>
+        /// <param name="metadataResolver">
+        /// Optional entity metadata resolver.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryCompiler"/> or <paramref name="querySource"/> is null.
+        /// </exception>
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler, QuerySourceDefinition querySource, IEntityMetadataResolver? metadataResolver = null)
+        {
+            ArgumentNullException.ThrowIfNull(queryCompiler);
+            ArgumentNullException.ThrowIfNull(querySource);
+
+            _queryCompiler = queryCompiler;
+            _metadataResolver = metadataResolver;
+
+            _queryDefinition = new CompiledQueryDefinition
+            {
+                EntityType = typeof(T),
+                TableName = querySource.TableName ?? querySource.TableAlias,
+                TableAlias = querySource.TableAlias,
+                ColumnMappings = querySource.ColumnMappings
+            };
+
+            _queryDefinition.SourceDefinitions[typeof(T)] = querySource;
+
+            if (!string.IsNullOrWhiteSpace(querySource.TableAlias))
+                _registeredAliases.Add(querySource.TableAlias);
+        }
+
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="QueryCommandBuilder{T}"/> class.
         /// </summary>
         /// <param name="queryCompiler">
@@ -47,11 +85,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver used for metadata-driven joins.
         /// </param>
-        public QueryCommandBuilder(IQueryCompiler queryCompiler, 
-            string tableName, 
-            string? tableAlias = null, 
-            IReadOnlyDictionary<string, string>? columnMappings = null,
-            IEntityMetadataResolver? metadataResolver = null)
+        public QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName, string? tableAlias = null,  IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
