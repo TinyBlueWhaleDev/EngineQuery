@@ -359,6 +359,51 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        /// <summary>
+        /// Adds an EXISTS subquery condition.
+        /// </summary>
+        /// <typeparam name="TSubquery">
+        /// Root entity type of the EXISTS subquery.
+        /// </typeparam>
+        /// <param name="subqueryBuilder">
+        /// Function used to build the EXISTS subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="subqueryBuilder"/> is null.
+        /// </exception>
+        public IQueryCommandBuilder<T> WhereExists<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        {
+            ArgumentNullException.ThrowIfNull(subqueryBuilder);
+
+            var nestedQueryBuilder = new QueryBuilder(_queryCompiler, _metadataResolver);
+
+            var nestedCommandBuilder = subqueryBuilder(nestedQueryBuilder);
+
+            if (nestedCommandBuilder is not QueryCommandBuilder<TSubquery> concreteNestedCommandBuilder)
+                throw new InvalidOperationException("The EXISTS subquery builder returned an unsupported query command builder instance.");
+
+            var subqueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
+            subqueryDefinition.UseConstantSelectProjection = true;
+
+            _queryDefinition.ExistsDefinitions.Add(
+                new QueryExistsDefinition
+                {
+                    Subquery = subqueryDefinition
+                });
+
+            return this;
+        }
+
+        // Builds the query definition without compiling SQL.
+        internal CompiledQueryDefinition BuildDefinition()
+        {
+            return _queryDefinition;
+        }
+
+
         // Extracts scalar SQL function arguments from an array expression.
         private static List<QueryScalarFunctionArgumentDefinition> ExtractScalarFunctionArguments<TEntity>(Expression<Func<TEntity, object[]>> expression)
         {

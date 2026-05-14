@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Enums;
+using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
@@ -71,16 +72,18 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
 
         #region Select Clause Building        
-        // Builds the SQL SELECT clause from query projections, aggregate expressions, scalar function expressions and computed expressions.
         // Builds the SQL SELECT clause from query projections, aggregate expressions, scalar function expressions, computed expressions and CASE WHEN expressions.
         protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters)
         {
+            if (queryDefinition.UseConstantSelectProjection)
+                return "SELECT 1";
+
             if (queryDefinition.SelectDefinitions.Count == 0 &&
                 queryDefinition.AggregateDefinitions.Count == 0 &&
                 queryDefinition.ScalarFunctionDefinitions.Count == 0 &&
                 queryDefinition.ComputedExpressionDefinitions.Count == 0 &&
                 queryDefinition.CaseWhenDefinitions.Count == 0)
-                return "SELECT *";
+                return "SELECT *";            
 
             var selectedColumns = queryDefinition.SelectDefinitions
                 .Select(selectDefinition => BuildSelectColumn(queryDefinition, selectDefinition));
@@ -314,17 +317,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #endregion
 
-        #region Where Clause Building
+        #region Where Clause Building               
         // Adds SQL WHERE conditions when filters are defined.
-        // Adds SQL WHERE conditions when filters are defined.
-        protected virtual void AddWhereClauseIfNeeded(
-            CompiledQueryDefinition queryDefinition,
-            List<QuerySqlParameter> sqlParameters,
-            List<string> sqlLines)
+        protected virtual void AddWhereClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
         {
             if (queryDefinition.WhereDefinitions.Count == 0 &&
                 queryDefinition.WhereScalarFunctionDefinitions.Count == 0 &&
-                queryDefinition.WhereComputedExpressionDefinitions.Count == 0)
+                queryDefinition.WhereComputedExpressionDefinitions.Count == 0 &&
+                queryDefinition.ExistsDefinitions.Count == 0)
                 return;
 
             var whereConditions = queryDefinition.WhereDefinitions
@@ -339,18 +339,40 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 });
 
             var functionConditions = queryDefinition.WhereScalarFunctionDefinitions
-                .Select(functionDefinition =>
-                    BuildWhereScalarFunctionCondition(
-                        functionDefinition,
-                        sqlParameters));
+                .Select(functionDefinition => BuildWhereScalarFunctionCondition(functionDefinition, sqlParameters));
 
             var computedConditions = queryDefinition.WhereComputedExpressionDefinitions
-                .Select(computedDefinition =>
-                    BuildWhereComputedExpressionCondition(
-                        computedDefinition,
-                        sqlParameters));
+                .Select(computedDefinition => BuildWhereComputedExpressionCondition(computedDefinition, sqlParameters));
 
-            sqlLines.Add("WHERE " + string.Join(" AND ", whereConditions.Concat(functionConditions).Concat(computedConditions)));
+            var existsConditions = queryDefinition.ExistsDefinitions
+                .Select(existsDefinition => BuildExistsCondition(existsDefinition, sqlParameters));
+
+            sqlLines.Add("WHERE " + string.Join(" AND ", whereConditions.Concat(functionConditions).Concat(computedConditions).Concat(existsConditions)));
+        }
+
+        // Builds an EXISTS SQL condition.
+        protected virtual string BuildExistsCondition(QueryExistsDefinition existsDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            var existsQuery = Compile(existsDefinition.Subquery);
+            var offset = sqlParameters.Count;
+            var commandText = existsQuery.CommandText;
+
+            foreach (var parameter in existsQuery.Parameters)
+            {
+                var newName = $"@p{offset}";
+                commandText = commandText.Replace(parameter.Name, newName);
+
+                sqlParameters.Add(
+                    new QuerySqlParameter
+                    {
+                        Name = newName,
+                        Value = parameter.Value
+                    });
+
+                offset++;
+            }
+
+            return $"EXISTS ({commandText})";
         }
 
         // Builds a SQL WHERE computed expression condition.

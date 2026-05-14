@@ -4,8 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Helpers
 {
