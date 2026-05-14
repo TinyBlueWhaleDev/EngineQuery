@@ -1458,6 +1458,41 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         #endregion
 
         /// <summary>
+        /// Adds a ROW_NUMBER window function projection to the current query.
+        /// </summary>
+        /// <param name="alias">
+        /// SQL alias assigned to the ROW_NUMBER result.
+        /// </param>
+        /// <param name="windowBuilder">
+        /// Function used to configure the window function clauses.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="alias"/> is null, empty or whitespace.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="windowBuilder"/> is null.
+        /// </exception>
+        public IQueryCommandBuilder<T> SelectRowNumber(
+            string alias,
+            Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+            ArgumentNullException.ThrowIfNull(windowBuilder);
+
+            var builder = new WindowFunctionBuilder(ResolveQuerySource);
+
+            windowBuilder(builder);
+
+            _queryDefinition.RowNumberDefinitions.Add(
+                builder.BuildRowNumberDefinition(alias));
+
+            return this;
+        }
+
+        /// <summary>
         /// Compiles the current query definition into SQL command text and parameters.
         /// </summary>
         /// <returns>
@@ -1492,15 +1527,23 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         // Resolves a query source previously registered in the current query scope.
         private QuerySourceDefinition ResolveQuerySource<TEntity>()
         {
-            if (_queryDefinition.SourceDefinitions.TryGetValue(typeof(TEntity), out var sourceDefinition))
-                return sourceDefinition;
-
-            if (_queryDefinition.OuterSourceDefinitions.TryGetValue(typeof(TEntity), out var outerSourceDefinition))
-                return outerSourceDefinition;
-
-            throw new InvalidOperationException($"Entity type '{typeof(TEntity).Name}' is not available in the current query scope.");
+            var type = typeof(TEntity);
+            return ResolveQuerySource(type);            
         }
 
+        // Resolves a query source using a runtime entity type.
+        private QuerySourceDefinition ResolveQuerySource(Type entityType)
+        {
+            ArgumentNullException.ThrowIfNull(entityType);
+
+            if (_queryDefinition.SourceDefinitions.TryGetValue(entityType, out var sourceDefinition))
+                return sourceDefinition;
+
+            if (_queryDefinition.OuterSourceDefinitions.TryGetValue(entityType, out var outerSourceDefinition))
+                return outerSourceDefinition;
+
+            throw new InvalidOperationException($"Entity type '{entityType.Name}' is not available in the current query scope.");
+        }
 
 
         // Builds the query definition without compiling SQL.
@@ -1525,6 +1568,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             foreach (var cteDefinition in cteDefinitions)
                 _queryDefinition.CteDefinitions.Add(cteDefinition);
-        }
+        }     
     }
 }

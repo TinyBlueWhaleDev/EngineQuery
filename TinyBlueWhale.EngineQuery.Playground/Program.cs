@@ -25,4 +25,5 @@
 //DerivedTableQueryValidator.Run();
 //CommonTableExpressionQueryValidator.Run();
 //UnionQueryValidator.Run();
-UnionAllQueryValidator.Run();
+//UnionAllQueryValidator.Run();
+RowNumberWindowFunctionQueryValidator.Run();

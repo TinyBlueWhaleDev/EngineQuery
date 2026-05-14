@@ -479,6 +479,21 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// </returns>
         IQueryCommandBuilder<T> HavingAggregate<TEntity>(QueryAggregateFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value);
 
+
+        /// <summary>
+        /// Adds a ROW_NUMBER window function projection to the current query.
+        /// </summary>
+        /// <param name="alias">
+        /// SQL alias assigned to the ROW_NUMBER result.
+        /// </param>
+        /// <param name="windowBuilder">
+        /// Function used to configure the window function clauses.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> SelectRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
+
         /// <summary>
         /// Builds the current query definition into SQL command text and parameters.
         /// </summary>
