@@ -70,19 +70,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
             var leftOperand = ParseExpressionOperandToSql(binaryExpression.Left);
             var rightOperand = ParseExpressionOperandToSql(binaryExpression.Right);
 
-            var sqlOperator = binaryExpression.NodeType switch
-            {
-                ExpressionType.Equal => "=",
-                ExpressionType.NotEqual => "<>",
-                ExpressionType.GreaterThan => ">",
-                ExpressionType.GreaterThanOrEqual => ">=",
-                ExpressionType.LessThan => "<",
-                ExpressionType.LessThanOrEqual => "<=",
-                ExpressionType.AndAlso => "AND",
-                ExpressionType.OrElse => "OR",
-
-                _ => throw new NotSupportedException($"Binary operator '{binaryExpression.NodeType}' is not supported.")
-            };
+            var sqlOperator = SqlComputedExpressionParser.ResolveSqlOperator(binaryExpression.NodeType);
 
             return $"({leftOperand} {sqlOperator} {rightOperand})";
         }

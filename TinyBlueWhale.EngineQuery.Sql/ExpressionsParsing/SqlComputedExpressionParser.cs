@@ -60,7 +60,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         }
 
         // Resolves the SQL operator associated with the expression type.
-        private static string ResolveSqlOperator(ExpressionType expressionType)
+        public static string ResolveSqlOperator(ExpressionType expressionType)
         {
             return expressionType switch
             {
@@ -74,6 +74,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
                 ExpressionType.GreaterThanOrEqual => ">=",
                 ExpressionType.LessThan => "<",
                 ExpressionType.LessThanOrEqual => "<=",
+                ExpressionType.AndAlso => "AND",
+                ExpressionType.OrElse => "OR",
                 _ => throw new NotSupportedException($"Computed expression operator '{expressionType}' is not supported.")
             };
         }
