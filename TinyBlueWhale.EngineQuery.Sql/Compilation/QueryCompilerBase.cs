@@ -56,12 +56,39 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             AddOrderByClauseIfNeeded(queryDefinition, sqlLines);
             AddPaginationClauseIfNeeded(queryDefinition, sqlLines);
 
+            var commandText = string.Join(Environment.NewLine, sqlLines);
+
+            if (queryDefinition.CteDefinitions.Count > 0)
+                commandText = BuildCteClause(queryDefinition, sqlParameters) + Environment.NewLine + commandText;
+
             return new GeneratedSqlQuery
             {
-                CommandText = string.Join(Environment.NewLine, sqlLines),
+                CommandText = commandText,
                 Parameters = sqlParameters
             };
         }
+
+        #region Builds the SQL WITH clause
+
+        // Builds the SQL WITH clause for common table expressions.
+        protected virtual string BuildCteClause(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            var cteClauses = queryDefinition.CteDefinitions
+                .Select(cteDefinition =>
+                {
+                    var cteQuery = Compile(cteDefinition.Query);
+
+                    var commandText = ReindexSubqueryParameters(
+                        cteQuery,
+                        sqlParameters);
+
+                    return $"{_databaseDialect.EscapeIdentifier(cteDefinition.Name)} AS ({commandText})";
+                });
+
+            return "WITH " + string.Join(", ", cteClauses);
+        }
+
+        #endregion
 
 
         #region Select Clause Building        
@@ -129,16 +156,23 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var sqlExpression = parser.Parse(computedDefinition.Expression.Body);
 
             return $"{sqlExpression} AS {_databaseDialect.EscapeIdentifier(computedDefinition.Alias)}";
-        }        
+        }
 
-        // Builds a SQL SELECT column fragment including optional alias projection.
-        protected virtual string BuildSelectColumn(CompiledQueryDefinition queryDefinition,QuerySelectColumnDefinition selectDefinition)
+        // Builds a SQL SELECT column fragment including optional alias projection.       
+        protected virtual string BuildSelectColumn(CompiledQueryDefinition queryDefinition, QuerySelectColumnDefinition selectDefinition)
         {
             var columnReference = BuildSelectColumnReference(queryDefinition, selectDefinition);
 
-            return string.IsNullOrWhiteSpace(selectDefinition.Alias)
-                ? columnReference
-                : $"{columnReference} AS {_databaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
+            var shouldApplyAlias = queryDefinition.ForceSelectAliases || !string.IsNullOrWhiteSpace(selectDefinition.Alias);
+
+            if (!shouldApplyAlias)
+                return columnReference;
+
+            var alias = string.IsNullOrWhiteSpace(selectDefinition.Alias)
+                ? selectDefinition.PropertyName
+                : selectDefinition.Alias;
+
+            return $"{columnReference} AS {_databaseDialect.EscapeIdentifier(alias)}";
         }
 
         // Builds a SQL aggregate SELECT expression.

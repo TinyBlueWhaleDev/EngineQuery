@@ -1444,6 +1444,13 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 _queryDefinition.OuterSourceDefinitions[outerSource.Key] = outerSource.Value;
         }
 
+        // Registers common table expressions inherited from the query builder.
+        internal void RegisterCteDefinitions(IReadOnlyList<QueryCteDefinition> cteDefinitions)
+        {
+            ArgumentNullException.ThrowIfNull(cteDefinitions);
 
+            foreach (var cteDefinition in cteDefinitions)
+                _queryDefinition.CteDefinitions.Add(cteDefinition);
+        }
     }
 }

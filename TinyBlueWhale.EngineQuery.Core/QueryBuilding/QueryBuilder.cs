@@ -19,6 +19,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         private readonly IEntityMetadataResolver? _metadataResolver = metadataResolver;
 
+        private readonly List<QueryCteDefinition> _cteDefinitions = [];
+
         /// <summary>
         /// Creates a new query builder using an explicit table name.
         /// </summary>
@@ -114,6 +116,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 throw new InvalidOperationException("The derived table subquery builder returned an unsupported query command builder instance.");
 
             var subqueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
+            subqueryDefinition.ForceSelectAliases = true;
 
             var derivedColumnMappings = ResolveDerivedColumnMappings<TDerived>();
 
@@ -126,6 +129,63 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             };
 
             return new QueryCommandBuilder<TDerived>(_queryCompiler, derivedSource, _metadataResolver);
+        }
+
+        /// <summary>
+        /// Registers a common table expression that can be used as a query source.
+        /// </summary>
+        public IQueryBuilder With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder, IQueryCommandBuilder<TSubqueryRoot>> cteBuilder)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+            ArgumentNullException.ThrowIfNull(cteBuilder);
+
+            var nestedQueryBuilder = new QueryBuilder(
+                _queryCompiler,
+                _metadataResolver);
+
+            var nestedCommandBuilder = cteBuilder(nestedQueryBuilder);            
+
+            if (nestedCommandBuilder is not QueryCommandBuilder<TSubqueryRoot> concreteNestedCommandBuilder)
+                throw new InvalidOperationException("The CTE builder returned an unsupported query command builder instance.");
+
+            var cteQueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
+            cteQueryDefinition.ForceSelectAliases = true;
+
+            _cteDefinitions.Add(
+                new QueryCteDefinition
+                {
+                    Name = name,
+                    Query = cteQueryDefinition                    
+                });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Creates a query command builder using a common table expression as the root source.
+        /// </summary>
+        public IQueryCommandBuilder<TCte> FromCte<TCte>(string name)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+            var columnMappings = ResolveDerivedColumnMappings<TCte>();
+
+            var cteSource = new QuerySourceDefinition
+            {
+                EntityType = typeof(TCte),
+                TableName = name,
+                TableAlias = name,
+                ColumnMappings = columnMappings
+            };
+
+            var commandBuilder = new QueryCommandBuilder<TCte>(
+                _queryCompiler,
+                cteSource,
+                _metadataResolver);
+
+            commandBuilder.RegisterCteDefinitions(_cteDefinitions);
+
+            return commandBuilder;
         }
 
         // Resolves derived table column mappings using metadata when available or property names by convention.
@@ -146,5 +206,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return commandBuilder;
         }
+
     }
 }

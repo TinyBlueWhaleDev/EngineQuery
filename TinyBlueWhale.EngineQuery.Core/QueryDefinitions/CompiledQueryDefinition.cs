@@ -37,6 +37,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QuerySelectColumnDefinition> SelectDefinitions { get; } = [];
 
         /// <summary>
+        /// Gets the common table expressions associated with the query.
+        /// </summary>
+        public List<QueryCteDefinition> CteDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets CASE WHEN SELECT expressions associated with the query.
         /// </summary>
         public List<QueryCaseWhenDefinition> CaseWhenDefinitions { get; } = [];
@@ -119,6 +124,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets or sets the root entity type associated with the query.
         /// </summary>
         public required Type EntityType { get; init; }
+
+        /// <summary>
+        /// Gets or sets whether selected columns should always be projected using CLR property aliases.
+        /// </summary>
+        public bool ForceSelectAliases { get; set; }
 
     }
 }

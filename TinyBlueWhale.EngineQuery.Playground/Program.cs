@@ -22,4 +22,5 @@
 //CorrelatedExistsQueryValidator.Run();
 //InSubqueryQueryValidator.Run();
 //NotExistsQueryValidator.Run();
-DerivedTableQueryValidator.Run();
+//DerivedTableQueryValidator.Run();
+CommonTableExpressionQueryValidator.Run();

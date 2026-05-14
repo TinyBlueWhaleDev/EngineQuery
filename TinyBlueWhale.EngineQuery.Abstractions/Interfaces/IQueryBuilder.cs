@@ -55,5 +55,39 @@
         /// Query command builder for the derived table source.
         /// </returns>
         IQueryCommandBuilder<TDerived> FromSubquery<TDerived, TSubqueryRoot>(string alias, Func<IQueryBuilder, IQueryCommandBuilder<TSubqueryRoot>> subqueryBuilder);
+
+        /// <summary>
+        /// Registers a common table expression that can be used as a query source.
+        /// </summary>
+        /// <typeparam name="TCte">
+        /// CLR type used to represent the common table expression projection.
+        /// </typeparam>
+        /// <typeparam name="TSubqueryRoot">
+        /// Root entity type used by the common table expression query.
+        /// </typeparam>
+        /// <param name="name">
+        /// Common table expression name.
+        /// </param>
+        /// <param name="cteBuilder">
+        /// Function used to build the common table expression query.
+        /// </param>
+        /// <returns>
+        /// Current query builder instance.
+        /// </returns>
+        IQueryBuilder With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder, IQueryCommandBuilder<TSubqueryRoot>> cteBuilder);
+
+        /// <summary>
+        /// Creates a query command builder using a common table expression as the root source.
+        /// </summary>
+        /// <typeparam name="TCte">
+        /// CLR type used to represent the common table expression projection.
+        /// </typeparam>
+        /// <param name="name">
+        /// Common table expression name.
+        /// </param>
+        /// <returns>
+        /// Query command builder for the common table expression source.
+        /// </returns>
+        IQueryCommandBuilder<TCte> FromCte<TCte>(string name);
     }
 }
