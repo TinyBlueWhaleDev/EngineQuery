@@ -71,23 +71,40 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
 
         #region Select Clause Building        
-        // Builds the SQL SELECT clause from query projections, aggregate expressions and scalar function expressions.
-        protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters)
+        // Builds the SQL SELECT clause from query projections, aggregate expressions, scalar function expressions and computed expressions.
+        protected virtual string BuildSelectClause(
+            CompiledQueryDefinition queryDefinition,
+            List<QuerySqlParameter> sqlParameters)
         {
             if (queryDefinition.SelectDefinitions.Count == 0 &&
                 queryDefinition.AggregateDefinitions.Count == 0 &&
-                queryDefinition.ScalarFunctionDefinitions.Count == 0)
+                queryDefinition.ScalarFunctionDefinitions.Count == 0 &&
+                queryDefinition.ComputedExpressionDefinitions.Count == 0)
                 return "SELECT *";
 
             var selectedColumns = queryDefinition.SelectDefinitions
                 .Select(selectDefinition => BuildSelectColumn(queryDefinition, selectDefinition));
 
-            var aggregateColumns = queryDefinition.AggregateDefinitions.Select(BuildAggregateColumn);
+            var aggregateColumns = queryDefinition.AggregateDefinitions
+                .Select(BuildAggregateColumn);
 
             var scalarFunctionColumns = queryDefinition.ScalarFunctionDefinitions
                 .Select(functionDefinition => BuildScalarFunctionColumn(functionDefinition, sqlParameters));
 
-            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns))}";
+            var computedColumns = queryDefinition.ComputedExpressionDefinitions
+                .Select(computedDefinition => BuildComputedExpressionColumn(computedDefinition, sqlParameters));
+
+            return $"SELECT {string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns).Concat(computedColumns))}";
+        }
+
+        // Builds a computed SQL expression projection.
+        protected virtual string BuildComputedExpressionColumn(QueryComputedExpressionDefinition computedDefinition, List<QuerySqlParameter> sqlParameters)
+        {
+            var parser = new SqlComputedExpressionParser(_databaseDialect, sqlParameters, computedDefinition.SourceColumnMappings, computedDefinition.SourceAlias);
+
+            var sqlExpression = parser.Parse(computedDefinition.Expression.Body);
+
+            return $"{sqlExpression} AS {_databaseDialect.EscapeIdentifier(computedDefinition.Alias)}";
         }
 
         // Builds a SQL SELECT column fragment including optional alias projection.

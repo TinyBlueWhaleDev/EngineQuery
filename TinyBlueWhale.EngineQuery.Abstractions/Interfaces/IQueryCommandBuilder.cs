@@ -99,6 +99,23 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object[]>> argumentsSelector, string alias);
 
         /// <summary>
+        /// Adds a computed SELECT expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the computed expression.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Expression used to generate the computed SQL expression.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the computed expression result.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> SelectComputed<TEntity>(Expression<Func<TEntity, object>> expression, string alias);
+
+        /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
         /// <typeparam name="TSource">
