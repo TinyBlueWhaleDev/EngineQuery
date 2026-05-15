@@ -250,6 +250,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             };
         }
 
+
         // Builds a SQL column argument for a window function.
         private string BuildWindowFunctionColumnArgument(QueryWindowFunctionArgumentDefinition argumentDefinition)
         {
@@ -276,6 +277,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 QueryWindowFunction.Lead => "LEAD",
                 QueryWindowFunction.FirstValue => "FIRST_VALUE",
                 QueryWindowFunction.LastValue => "LAST_VALUE",
+                QueryWindowFunction.Ntile => "NTILE",
                 _ => throw new NotSupportedException($"Window function '{function}' is not supported.")
             };
         }

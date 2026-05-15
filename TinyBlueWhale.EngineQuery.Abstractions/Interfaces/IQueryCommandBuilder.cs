@@ -237,6 +237,23 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> SelectLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
 
         /// <summary>
+        /// Adds an NTILE window function projection to the current query.
+        /// </summary>
+        /// <param name="buckets">
+        /// Number of ranked groups used by NTILE.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the NTILE result.
+        /// </param>
+        /// <param name="windowBuilder">
+        /// Function used to configure the window function clauses.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> SelectNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
+
+        /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
         /// <typeparam name="TSource">
