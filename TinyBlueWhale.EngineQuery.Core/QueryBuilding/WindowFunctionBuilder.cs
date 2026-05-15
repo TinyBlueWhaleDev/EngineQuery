@@ -1,8 +1,9 @@
-﻿using TinyBlueWhale.EngineQuery.Core.Enums;
+﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
-using System.Linq.Expressions;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 {
@@ -53,15 +54,17 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return AddOrdering(selector, QueryOrderingDirection.Descending);
         }
 
-        internal QueryRowNumberDefinition BuildRowNumberDefinition(string alias)
+        // Builds a SQL window function definition.
+        internal QueryWindowFunctionDefinition BuildWindowFunctionDefinition(QueryWindowFunction function, string alias)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
             if (_orderings.Count == 0)
-                throw new InvalidOperationException("ROW_NUMBER requires at least one ORDER BY column.");
+                throw new InvalidOperationException("Window functions require at least one ORDER BY column.");
 
-            return new QueryRowNumberDefinition
+            return new QueryWindowFunctionDefinition
             {
+                Function = function,
                 Alias = alias,
                 Partitions = _partitions,
                 Orderings = _orderings

@@ -3,16 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
     /// <summary>
-    /// Represents a ROW_NUMBER window function projection.
+    /// Represents a SQL window function projection.
     /// </summary>
-    public sealed record QueryRowNumberDefinition
+    public sealed record QueryWindowFunctionDefinition
     {
         /// <summary>
-        /// Gets the SQL alias assigned to the ROW_NUMBER result.
+        /// Gets the SQL window function.
+        /// </summary>
+        public required QueryWindowFunction Function { get; init; }
+
+        /// <summary>
+        /// Gets the SQL alias assigned to the window function result.
         /// </summary>
         public required string Alias { get; init; }
 

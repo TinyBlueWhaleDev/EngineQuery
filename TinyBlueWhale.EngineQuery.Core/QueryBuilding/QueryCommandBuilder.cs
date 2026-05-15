@@ -1475,24 +1475,29 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a ROW_NUMBER window function projection to the current query.
         /// </summary>
-        /// <param name="alias">
-        /// SQL alias assigned to the ROW_NUMBER result.
-        /// </param>
-        /// <param name="windowBuilder">
-        /// Function used to configure the window function clauses.
-        /// </param>
-        /// <returns>
-        /// Current query command builder instance.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// Thrown when <paramref name="alias"/> is null, empty or whitespace.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="windowBuilder"/> is null.
-        /// </exception>
-        public IQueryCommandBuilder<T> SelectRowNumber(
-            string alias,
-            Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        public IQueryCommandBuilder<T> SelectRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            return AddWindowFunction(QueryWindowFunction.RowNumber, alias, windowBuilder);
+        }
+
+        /// <summary>
+        /// Adds a RANK window function projection to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> SelectRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            return AddWindowFunction(QueryWindowFunction.Rank, alias, windowBuilder);
+        }
+
+        /// <summary>
+        /// Adds a DENSE_RANK window function projection to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> SelectDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            return AddWindowFunction(QueryWindowFunction.DenseRank, alias, windowBuilder);
+        }
+
+        // Adds a SQL window function projection to the current query.
+        private QueryCommandBuilder<T> AddWindowFunction(QueryWindowFunction function, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(alias);
             ArgumentNullException.ThrowIfNull(windowBuilder);
@@ -1501,8 +1506,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             windowBuilder(builder);
 
-            _queryDefinition.RowNumberDefinitions.Add(
-                builder.BuildRowNumberDefinition(alias));
+            _queryDefinition.WindowFunctionDefinitions.Add(builder.BuildWindowFunctionDefinition(function,alias));
 
             return this;
         }

@@ -131,7 +131,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 queryDefinition.ScalarFunctionDefinitions.Count == 0 &&
                 queryDefinition.ComputedExpressionDefinitions.Count == 0 &&
                 queryDefinition.CaseWhenDefinitions.Count == 0 &&
-                queryDefinition.RowNumberDefinitions.Count == 0)
+                queryDefinition.WindowFunctionDefinitions.Count == 0)
                 return "SELECT *";            
 
             var selectedColumns = queryDefinition.SelectDefinitions
@@ -149,31 +149,55 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var caseWhenColumns = queryDefinition.CaseWhenDefinitions
                 .Select(caseWhenDefinition => BuildCaseWhenColumn(caseWhenDefinition, sqlParameters));
 
-            var rowNumberColumns = queryDefinition.RowNumberDefinitions.Select(BuildRowNumberColumn);
+            var windowFunctionColumns = queryDefinition.WindowFunctionDefinitions
+                .Select(BuildWindowFunctionColumn);
 
             var distinctKeyword = queryDefinition.IsDistinct ? "DISTINCT " : string.Empty;
 
-            return $"SELECT {distinctKeyword}{string.Join(", ", selectedColumns.Concat(aggregateColumns).Concat(scalarFunctionColumns).Concat(computedColumns).Concat(caseWhenColumns).Concat(rowNumberColumns))}";
+            return $"SELECT {distinctKeyword}{string.Join(", ", selectedColumns
+                .Concat(aggregateColumns)
+                .Concat(scalarFunctionColumns)
+                .Concat(computedColumns)
+                .Concat(caseWhenColumns)
+                .Concat(windowFunctionColumns))}";
         }
 
         // Builds a ROW_NUMBER window function projection.
-        protected virtual string BuildRowNumberColumn(QueryRowNumberDefinition rowNumberDefinition)
+        // Builds a SQL window function projection.
+        protected virtual string BuildWindowFunctionColumn(
+            QueryWindowFunctionDefinition windowFunctionDefinition)
         {
             var windowClauses = new List<string>();
 
-            if (rowNumberDefinition.Partitions.Count > 0)
+            if (windowFunctionDefinition.Partitions.Count > 0)
             {
-                var partitionColumns = rowNumberDefinition.Partitions
+                var partitionColumns = windowFunctionDefinition.Partitions
                     .Select(BuildWindowPartitionColumn);
 
                 windowClauses.Add("PARTITION BY " + string.Join(", ", partitionColumns));
             }
 
-            var orderingColumns = rowNumberDefinition.Orderings.Select(BuildWindowOrderingColumn);
+            var orderingColumns = windowFunctionDefinition.Orderings
+                .Select(BuildWindowOrderingColumn);
 
             windowClauses.Add("ORDER BY " + string.Join(", ", orderingColumns));
 
-            return $"ROW_NUMBER() OVER ({string.Join(" ", windowClauses)}) AS {_databaseDialect.EscapeIdentifier(rowNumberDefinition.Alias)}";
+            var functionName = ResolveWindowFunctionName(
+                windowFunctionDefinition.Function);
+
+            return $"{functionName}() OVER ({string.Join(" ", windowClauses)}) AS {_databaseDialect.EscapeIdentifier(windowFunctionDefinition.Alias)}";
+        }
+
+        // Resolves the SQL window function name.
+        private static string ResolveWindowFunctionName(QueryWindowFunction function)
+        {
+            return function switch
+            {
+                QueryWindowFunction.RowNumber => "ROW_NUMBER",
+                QueryWindowFunction.Rank => "RANK",
+                QueryWindowFunction.DenseRank => "DENSE_RANK",
+                _ => throw new NotSupportedException($"Window function '{function}' is not supported.")
+            };
         }
 
         // Builds a PARTITION BY column reference for a window function.
