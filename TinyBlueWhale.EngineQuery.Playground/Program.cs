@@ -34,4 +34,5 @@
 //RecursiveCommonTableExpressionQueryValidator.Run();
 //AdvancedWindowFunctionQueryValidator.Run();
 //FirstLastValueWindowFunctionQueryValidator.Run();
-NtileWindowFunctionQueryValidator.Run();
+//NtileWindowFunctionQueryValidator.Run();
+ProviderCapabilityQueryValidator.Run();

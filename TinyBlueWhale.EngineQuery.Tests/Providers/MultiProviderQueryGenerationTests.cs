@@ -24,7 +24,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Providers
         public void SqlServerProvider_Should_Generate_Expected_Sql()
         {
             var queryBuilder = new QueryBuilder(
-                new SqlServerQueryCompiler(new SqlServerDatabaseDialect()),
+                new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new EngineQuery.SqlServer.Capabilities.SqlServerProviderCapabilities()),
                 CreateMetadataResolver());
 
             var sql = BuildQuery(queryBuilder);
@@ -47,7 +47,7 @@ OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY
         public void PostgreSqlProvider_Should_Generate_Expected_Sql()
         {
             var queryBuilder = new QueryBuilder(
-                new PostgreSqlQueryCompiler(new PostgreSqlDatabaseDialect()),
+                new PostgreSqlQueryCompiler(new PostgreSqlDatabaseDialect(), new PostgreSqlServer.Capabilities.PostgreSqlProviderCapabilities()),
                 CreateMetadataResolver());
 
             var sql = BuildQuery(queryBuilder);
@@ -70,7 +70,7 @@ LIMIT 10 OFFSET 20
         public void MySqlProvider_Should_Generate_Expected_Sql()
         {
             var queryBuilder = new QueryBuilder(
-                new MySqlQueryCompiler(new MySqlDatabaseDialect()),
+                new MySqlQueryCompiler(new MySqlDatabaseDialect(), new EngineQuery.MySqlServer.Capabilities.MySqlProviderCapabilities()),
                 CreateMetadataResolver());
 
             var sql = BuildQuery(queryBuilder);

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
+using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
@@ -16,7 +12,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
         public static void Run()
         {
             var queryBuilder = new QueryBuilder(
-                new SqlServerQueryCompiler(new SqlServerDatabaseDialect()),
+                new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new SqlServerProviderCapabilities()),
                 new AttributeEntityMetadataResolver());
 
             var sql = queryBuilder

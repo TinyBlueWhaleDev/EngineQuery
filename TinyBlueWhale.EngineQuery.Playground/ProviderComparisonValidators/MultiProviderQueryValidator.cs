@@ -9,6 +9,7 @@ using TinyBlueWhale.EngineQuery.Metadata.Fluent;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
 using TinyBlueWhale.EngineQuery.MySql.Dialects;
+using TinyBlueWhale.EngineQuery.MySqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
 using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
@@ -37,7 +38,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         {
             var queryBuilder = new QueryBuilder(
                 new SqlServerQueryCompiler(
-                    new SqlServerDatabaseDialect()),
+                    new SqlServerDatabaseDialect(), new SqlServer.Capabilities.SqlServerProviderCapabilities()),
                 metadataResolver);
 
             return BuildQuery(queryBuilder);
@@ -48,7 +49,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         {
             var queryBuilder = new QueryBuilder(
                 new PostgreSqlQueryCompiler(
-                    new PostgreSqlDatabaseDialect()),
+                    new PostgreSqlDatabaseDialect(), new PostgreSqlServer.Capabilities.PostgreSqlProviderCapabilities()),
                 metadataResolver);
 
             return BuildQuery(queryBuilder);
@@ -59,7 +60,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         {
             var queryBuilder = new QueryBuilder(
                 new MySqlQueryCompiler(
-                    new MySqlDatabaseDialect()),
+                    new MySqlDatabaseDialect(), new MySqlProviderCapabilities()),
                 metadataResolver);
 
             return BuildQuery(queryBuilder);
