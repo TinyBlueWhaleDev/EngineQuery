@@ -3,7 +3,7 @@ using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
 using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
 using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 
-namespace TinyBlueWhale.EngineQuery.Tests.Providers
+namespace TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql
 {    
 
     /// <summary>

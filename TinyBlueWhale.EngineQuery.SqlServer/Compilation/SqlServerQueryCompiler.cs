@@ -8,7 +8,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
     /// <summary>
     /// Compiles query definitions into SQL Server command text.
     /// </summary>
-    public sealed class SqlServerQueryCompiler(ISqlDatabaseDialect databaseDialect, SqlServerProviderCapabilities providerCapabilities) : QueryCompilerBase(databaseDialect, providerCapabilities)
+    public sealed class SqlServerQueryCompiler(ISqlDatabaseDialect databaseDialect, IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(databaseDialect, providerCapabilities)
     {
         // Resolves the SQL keyword used for recursive common table expressions.
         protected override string ResolveRecursiveCteKeyword()

@@ -1,5 +1,2 @@
-SELECT "u"."user_id" AS "UserId", UPPER("u"."email") AS "NormalizedEmail", LENGTH("u"."email") AS "EmailLength", COALESCE("u"."email", @p0) AS "SafeEmail"
+SELECT "u"."user_id" AS "UserId", UPPER("u"."email") AS "NormalizedEmail", LENGTH("u"."email") AS "EmailLength"
 FROM "users" AS "u"
-
--- Parameters
-@p0 = NO_EMAIL

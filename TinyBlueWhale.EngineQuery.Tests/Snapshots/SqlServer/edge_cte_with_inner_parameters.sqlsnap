@@ -1,5 +1,11 @@
 WITH [order_summary] AS (SELECT [o].[user_id] AS [UserId], SUM([o].[total]) AS [TotalAmount], COUNT([o].[order_id]) AS [OrderCount]
 FROM [orders] AS [o]
+WHERE ([o].[total] > @p1)
 GROUP BY [o].[user_id])
 SELECT [order_summary].[UserId], [order_summary].[TotalAmount], [order_summary].[OrderCount]
 FROM [order_summary] AS [order_summary]
+WHERE ([order_summary].[TotalAmount] > @p0)
+
+-- Parameters
+@p0 = 500
+@p1 = 100

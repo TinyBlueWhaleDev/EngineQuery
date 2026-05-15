@@ -1,0 +1,8 @@
+SELECT [o].[order_id] AS [OrderId], [o].[total], CASE WHEN (([o].[total] <= @p0) OR ([o].[total] > @p1)) THEN @p2 ELSE @p3 END AS [RiskStatus]
+FROM [orders] AS [o]
+
+-- Parameters
+@p0 = 0
+@p1 = 10000
+@p2 = REVIEW
+@p3 = NORMAL

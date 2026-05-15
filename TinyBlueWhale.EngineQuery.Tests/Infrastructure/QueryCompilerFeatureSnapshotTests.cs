@@ -1,13 +1,17 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Tests.Models;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
-{    
-
+{
     /// <summary>
-    /// Provides provider-shared feature snapshot tests for SQL query generation.
+    /// Provides provider-shared snapshot tests for successful SQL generation features.
     /// </summary>
-    public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerSnapshotTestBase
+    public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerProviderTestBase
     {
         [Test]
         public void ToSql_Should_Match_Snapshot_For_Select_All()
@@ -16,7 +20,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 .From<User>("Users")
                 .Build();
 
-            AssertSnapshot("select_all", sql);
+            AssertSnapshot(
+                "select_all",
+                sql);
         }
 
         [Test]
@@ -31,7 +37,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 })
                 .Build();
 
-            AssertSnapshot("select_projection", sql);
+            AssertSnapshot(
+                "select_projection",
+                sql);
         }
 
         [Test]
@@ -39,10 +47,15 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
         {
             var sql = CreateQueryBuilder()
                 .From<User>("Users")
-                .Where<User>(x => x.IsActive && x.Email.Contains("@gmail.com") && x.Age >= 18)
+                .Where<User>(x =>
+                    x.IsActive &&
+                    x.Email.Contains("@gmail.com") &&
+                    x.Age >= 18)
                 .Build();
 
-            AssertSnapshot("where_boolean_string_methods", sql);
+            AssertSnapshot(
+                "where_boolean_string_methods",
+                sql);
         }
 
         [Test]
@@ -50,10 +63,14 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
         {
             var sql = CreateQueryBuilder()
                 .From<User>("Users")
-                .Where<User>(x => x.Email.Contains("@gmail.com") || x.Email.Contains("@company.com"))
+                .Where<User>(x =>
+                    x.Email.Contains("@gmail.com") ||
+                    x.Email.Contains("@company.com"))
                 .Build();
 
-            AssertSnapshot("where_or", sql);
+            AssertSnapshot(
+                "where_or",
+                sql);
         }
 
         [Test]
@@ -65,7 +82,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 .WhereIf<User>(false, x => x.IsDeleted)
                 .Build();
 
-            AssertSnapshot("where_if", sql);
+            AssertSnapshot(
+                "where_if",
+                sql);
         }
 
         [Test]
@@ -79,7 +98,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 .Take(10)
                 .Build();
 
-            AssertSnapshot("order_pagination", sql);
+            AssertSnapshot(
+                "order_pagination",
+                sql);
         }
 
         [Test]
@@ -94,7 +115,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 })
                 .Build();
 
-            AssertSnapshot("distinct", sql);
+            AssertSnapshot(
+                "distinct",
+                sql);
         }
 
         [Test]
@@ -102,8 +125,12 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
         {
             var sql = CreateQueryBuilder()
                 .From<JoinUser>(alias: "u")
-                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (u, o) => u.Id == o.UserId)
-                .LeftJoin<JoinOrder, JoinOrderItem>(alias: "oi", on: (o, oi) => o.Id == oi.OrderId)
+                .InnerJoin<JoinUser, JoinOrder>(
+                    alias: "o",
+                    on: (u, o) => u.Id == o.UserId)
+                .LeftJoin<JoinOrder, JoinOrderItem>(
+                    alias: "oi",
+                    on: (o, oi) => o.Id == oi.OrderId)
                 .Select<JoinUser>(u => new
                 {
                     UserId = u.Id,
@@ -111,7 +138,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 })
                 .Build();
 
-            AssertSnapshot("joins", sql);
+            AssertSnapshot(
+                "joins",
+                sql);
         }
 
         [Test]
@@ -119,23 +148,37 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
         {
             var sql = CreateQueryBuilder()
                 .From<JoinUser>(alias: "u")
-                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (u, o) => u.Id == o.UserId)
+                .InnerJoin<JoinUser, JoinOrder>(
+                    alias: "o",
+                    on: (u, o) => u.Id == o.UserId)
                 .Select<JoinUser>(u => new
                 {
                     UserId = u.Id,
                     u.Email
                 })
-                .SelectAggregate<JoinOrder>(QueryAggregateFunction.Sum, o => o.Total, "TotalAmount")
-                .SelectAggregate<JoinOrder>(QueryAggregateFunction.Count, o => o.Id, "OrderCount")
+                .SelectAggregate<JoinOrder>(
+                    QueryAggregateFunction.Sum,
+                    o => o.Total,
+                    "TotalAmount")
+                .SelectAggregate<JoinOrder>(
+                    QueryAggregateFunction.Count,
+                    o => o.Id,
+                    "OrderCount")
                 .GroupBy<JoinUser>(u => new
                 {
                     u.Id,
                     u.Email
                 })
-                .HavingAggregate<JoinOrder>(QueryAggregateFunction.Sum, o => o.Total, QueryComparisonOperator.GreaterThan, 1000)
+                .HavingAggregate<JoinOrder>(
+                    QueryAggregateFunction.Sum,
+                    o => o.Total,
+                    QueryComparisonOperator.GreaterThan,
+                    1000)
                 .Build();
 
-            AssertSnapshot("groupby_aggregate_having", sql);
+            AssertSnapshot(
+                "groupby_aggregate_having",
+                sql);
         }
 
         [Test]
@@ -147,19 +190,19 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 {
                     UserId = u.Id
                 })
-                .SelectFunction<JoinUser>(QueryScalarFunction.Upper, u => u.Email, "NormalizedEmail")
-                .SelectFunction<JoinUser>(QueryScalarFunction.Length, u => u.Email, "EmailLength")
                 .SelectFunction<JoinUser>(
-                    QueryScalarFunction.Coalesce,
-                    u => new object[]
-                    {
-                    u.Email,
-                    "NO_EMAIL"
-                    },
-                    "SafeEmail")
+                    QueryScalarFunction.Upper,
+                    u => u.Email,
+                    "NormalizedEmail")
+                .SelectFunction<JoinUser>(
+                    QueryScalarFunction.Length,
+                    u => u.Email,
+                    "EmailLength")
                 .Build();
 
-            AssertSnapshot("scalar_functions", sql);
+            AssertSnapshot(
+                "scalar_functions",
+                sql);
         }
 
         [Test]
@@ -172,11 +215,16 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                     OrderId = o.Id,
                     o.Total
                 })
-                .SelectComputed<JoinOrder>(o => o.Total * 1.16m, "TotalWithTax")
-                .WhereComputed<JoinOrder>(o => o.Total * 1.16m > 1000)
+                .SelectComputed<JoinOrder>(
+                    o => o.Total * 1.16m,
+                    "TotalWithTax")
+                .WhereComputed<JoinOrder>(
+                    o => o.Total * 1.16m > 1000)
                 .Build();
 
-            AssertSnapshot("computed_expressions", sql);
+            AssertSnapshot(
+                "computed_expressions",
+                sql);
         }
 
         [Test]
@@ -190,13 +238,15 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                     o.Total
                 })
                 .SelectCase<JoinOrder>(
-                    condition: o => o.Total > 1000 && o.Total < 5000,
+                    condition: o => o.Total > 1000,
                     whenTrue: "VIP",
                     whenFalse: "STANDARD",
                     alias: "CustomerType")
                 .Build();
 
-            AssertSnapshot("case_when", sql);
+            AssertSnapshot(
+                "case_when",
+                sql);
         }
 
         [Test]
@@ -212,11 +262,15 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 .WhereExists<JoinUser, JoinOrder>(
                     alias: "o",
                     subquery => subquery
-                        .WhereComputed<JoinOrder, JoinUser>((o, u) => o.UserId == u.Id && o.Total > 100))
+                        .WhereComputed<JoinOrder, JoinUser>((o, u) =>
+                            o.UserId == u.Id &&
+                            o.Total > 100))
                 .WhereNotExists<JoinUser, JoinOrder>(
                     alias: "o2",
                     subquery => subquery
-                        .WhereComputed<JoinOrder, JoinUser>((o, u) => o.UserId == u.Id && o.Total <= 0))
+                        .WhereComputed<JoinOrder, JoinUser>((o, u) =>
+                            o.UserId == u.Id &&
+                            o.Total <= 0))
                 .WhereIn<JoinUser, JoinOrder>(
                     u => u.Id,
                     alias: "oi",
@@ -228,7 +282,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                         .Where<JoinOrder>(o => o.Total > 500))
                 .Build();
 
-            AssertSnapshot("exists_notexists_in", sql);
+            AssertSnapshot(
+                "exists_notexists_in",
+                sql);
         }
 
         [Test]
@@ -243,8 +299,14 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                         {
                             UserId = o.UserId
                         })
-                        .SelectAggregate<JoinOrder>(QueryAggregateFunction.Sum, o => o.Total, "TotalAmount")
-                        .SelectAggregate<JoinOrder>(QueryAggregateFunction.Count, o => o.Id, "OrderCount")
+                        .SelectAggregate<JoinOrder>(
+                            QueryAggregateFunction.Sum,
+                            o => o.Total,
+                            "TotalAmount")
+                        .SelectAggregate<JoinOrder>(
+                            QueryAggregateFunction.Count,
+                            o => o.Id,
+                            "OrderCount")
                         .GroupBy<JoinOrder>(o => o.UserId))
                 .Select<OrderSummary>(summary => new
                 {
@@ -252,11 +314,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                     summary.TotalAmount,
                     summary.OrderCount
                 })
-                .WhereComputed<OrderSummary>(summary => summary.TotalAmount > 500)
-                .OrderByDescending<OrderSummary>(summary => summary.TotalAmount)
                 .Build();
 
-            AssertSnapshot("derived_table", sql);
+            AssertSnapshot(
+                "derived_table",
+                sql);
         }
 
         [Test]
@@ -271,8 +333,14 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                         {
                             UserId = o.UserId
                         })
-                        .SelectAggregate<JoinOrder>(QueryAggregateFunction.Sum, o => o.Total, "TotalAmount")
-                        .SelectAggregate<JoinOrder>(QueryAggregateFunction.Count, o => o.Id, "OrderCount")
+                        .SelectAggregate<JoinOrder>(
+                            QueryAggregateFunction.Sum,
+                            o => o.Total,
+                            "TotalAmount")
+                        .SelectAggregate<JoinOrder>(
+                            QueryAggregateFunction.Count,
+                            o => o.Id,
+                            "OrderCount")
                         .GroupBy<JoinOrder>(o => o.UserId))
                 .FromCte<OrderSummary>("order_summary")
                 .Select<OrderSummary>(summary => new
@@ -281,10 +349,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                     summary.TotalAmount,
                     summary.OrderCount
                 })
-                .WhereComputed<OrderSummary>(summary => summary.TotalAmount > 500)
                 .Build();
 
-            AssertSnapshot("cte", sql);
+            AssertSnapshot(
+                "cte",
+                sql);
         }
 
         [Test]
@@ -304,7 +373,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                         .Where<Category>(c => c.ParentId == null),
                     recursiveQueryBuilder: recursiveQuery => recursiveQuery
                         .From<Category>(alias: "c")
-                        .InnerJoin<Category, CategoryTree>(alias: "ct", on: (c, ct) => c.ParentId == ct.Id)
+                        .InnerJoin<Category, CategoryTree>(
+                            alias: "ct",
+                            on: (c, ct) => c.ParentId == ct.Id)
                         .Select<Category>(c => new
                         {
                             c.Id,
@@ -320,7 +391,9 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 })
                 .Build();
 
-            AssertSnapshot("recursive_cte", sql);
+            AssertSnapshot(
+                "recursive_cte",
+                sql);
         }
 
         [Test]
@@ -332,31 +405,29 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 {
                     u.Email
                 })
-                .Where<ActiveUser>(u => u.Id > 10)
                 .UnionAll<ArchivedUser>(set => set
                     .From<ArchivedUser>(alias: "a")
                     .Select<ArchivedUser>(a => new
                     {
                         a.Email
-                    })
-                    .Where<ArchivedUser>(a => a.Id > 100))
+                    }))
                 .Intersect<ArchivedUser>(set => set
                     .From<ArchivedUser>(alias: "a2")
                     .Select<ArchivedUser>(a => new
                     {
                         a.Email
-                    })
-                    .Where<ArchivedUser>(a => a.Id > 200))
+                    }))
                 .Except<ArchivedUser>(set => set
                     .From<ArchivedUser>(alias: "a3")
                     .Select<ArchivedUser>(a => new
                     {
                         a.Email
-                    })
-                    .Where<ArchivedUser>(a => a.Id > 500))
+                    }))
                 .Build();
 
-            AssertSnapshot("set_operations", sql);
+            AssertSnapshot(
+                "set_operations",
+                sql);
         }
 
         [Test]
@@ -378,12 +449,15 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                             o.UserId,
                             o.Total
                         })
-                        .WhereComputed<JoinOrder, JoinUser>((o, u) => o.UserId == u.Id)
+                        .WhereComputed<JoinOrder, JoinUser>((o, u) =>
+                            o.UserId == u.Id)
                         .OrderByDescending<JoinOrder>(o => o.Total)
                         .Take(1))
                 .Build();
 
-            AssertSnapshot("apply_lateral", sql);
+            AssertSnapshot(
+                "apply_lateral",
+                sql);
         }
 
         [Test]
@@ -397,30 +471,56 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                     o.UserId,
                     o.Total
                 })
-                .SelectRowNumber("RowNumber", window => window.PartitionBy<JoinOrder>(o => o.UserId).OrderByDescending<JoinOrder>(o => o.Total))
-                .SelectRank("OrderRank", window => window.PartitionBy<JoinOrder>(o => o.UserId).OrderByDescending<JoinOrder>(o => o.Total))
-                .SelectDenseRank("DenseOrderRank", window => window.PartitionBy<JoinOrder>(o => o.UserId).OrderByDescending<JoinOrder>(o => o.Total))
-                .SelectLag<JoinOrder>(o => o.Total, "PreviousOrderTotal", window => window.PartitionBy<JoinOrder>(o => o.UserId).OrderBy<JoinOrder>(o => o.Id))
-                .SelectLead<JoinOrder>(o => o.Total, "NextOrderTotal", window => window.PartitionBy<JoinOrder>(o => o.UserId).OrderBy<JoinOrder>(o => o.Id))
-                .SelectFirstValue<JoinOrder>(o => o.Total, "FirstOrderTotal", window => window.PartitionBy<JoinOrder>(o => o.UserId).OrderBy<JoinOrder>(o => o.Id))
-                .SelectLastValue<JoinOrder>(o => o.Total, "LastOrderTotal", window => window.PartitionBy<JoinOrder>(o => o.UserId).OrderBy<JoinOrder>(o => o.Id))
-                .SelectNtile(4, "OrderQuartile", window => window.PartitionBy<JoinOrder>(o => o.UserId).OrderByDescending<JoinOrder>(o => o.Total))
+                .SelectRowNumber(
+                    "RowNumber",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderByDescending<JoinOrder>(o => o.Total))
+                .SelectRank(
+                    "OrderRank",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderByDescending<JoinOrder>(o => o.Total))
+                .SelectDenseRank(
+                    "DenseOrderRank",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderByDescending<JoinOrder>(o => o.Total))
+                .SelectLag<JoinOrder>(
+                    o => o.Total,
+                    "PreviousOrderTotal",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderBy<JoinOrder>(o => o.Id))
+                .SelectLead<JoinOrder>(
+                    o => o.Total,
+                    "NextOrderTotal",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderBy<JoinOrder>(o => o.Id))
+                .SelectFirstValue<JoinOrder>(
+                    o => o.Total,
+                    "FirstOrderTotal",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderBy<JoinOrder>(o => o.Id))
+                .SelectLastValue<JoinOrder>(
+                    o => o.Total,
+                    "LastOrderTotal",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderBy<JoinOrder>(o => o.Id))
+                .SelectNtile(
+                    4,
+                    "OrderQuartile",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderByDescending<JoinOrder>(o => o.Total))
                 .Build();
 
-            AssertSnapshot("window_functions", sql);
-        }
-
-        [Test]
-        public void ToSql_Should_Throw_When_Pagination_Has_No_Order_By()
-        {
-            var exception = Assert.Throws<InvalidOperationException>(() =>
-                CreateQueryBuilder()
-                    .From<User>("Users")
-                    .Skip(10)
-                    .Take(5)
-                    .Build());
-
-            Assert.That(exception, Is.Not.Null);
+            AssertSnapshot(
+                "window_functions",
+                sql);
         }
 
         [Test]

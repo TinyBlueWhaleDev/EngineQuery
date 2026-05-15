@@ -1,9 +1,10 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
 using TinyBlueWhale.EngineQuery.MySql.Dialects;
+using TinyBlueWhale.EngineQuery.MySqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 
-namespace TinyBlueWhale.EngineQuery.Tests.Providers
+namespace TinyBlueWhale.EngineQuery.Tests.Providers.MySql
 {    
 
     /// <summary>
@@ -17,7 +18,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Providers
         protected override QueryBuilder CreateQueryBuilder()
         {
             return new QueryBuilder(
-                new MySqlQueryCompiler(new MySqlDatabaseDialect(), new MySqlServer.Capabilities.MySqlProviderCapabilities()),
+                new MySqlQueryCompiler(new MySqlDatabaseDialect(), new MySqlProviderCapabilities()),
                 TestMetadataFactory.CreateMetadataResolver());
         }
     }
