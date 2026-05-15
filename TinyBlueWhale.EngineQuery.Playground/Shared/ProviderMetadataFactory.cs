@@ -49,6 +49,18 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
                 .Property(x => x.Id).HasColumnName("archived_user_id")
                 .Property(x => x.Email).HasColumnName("email");
 
+            registry.Entity<Category>()
+                .ToTable("categories")
+                .Property(x => x.Id).HasColumnName("category_id")
+                .Property(x => x.ParentId).HasColumnName("parent_category_id")
+                .Property(x => x.Name).HasColumnName("name");
+
+            registry.Entity<CategoryTree>()
+                .ToTable("category_tree")
+                .Property(x => x.Id).HasColumnName("Id")
+                .Property(x => x.ParentId).HasColumnName("ParentId")
+                .Property(x => x.Name).HasColumnName("Name");
+
             return new FluentEntityMetadataResolver(registry);
         }
     }

@@ -74,13 +74,21 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region Builds the SQL WITH clause
 
-        // Builds the SQL WITH clause for common table expressions.
-        protected virtual string BuildCteClause(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters)
+        // Builds the SQL common table expression clause.
+        protected virtual string BuildCteClause(
+            CompiledQueryDefinition queryDefinition,
+            List<QuerySqlParameter> sqlParameters)
         {
+            var withKeyword = queryDefinition.CteDefinitions.Any(
+                cte => cte.IsRecursive)
+                ? ResolveRecursiveCteKeyword()
+                : "WITH";
+
             var cteClauses = queryDefinition.CteDefinitions
                 .Select(cteDefinition =>
                 {
-                    var cteQuery = Compile(cteDefinition.Query);
+                    var cteQuery = Compile(
+                        cteDefinition.Query);
 
                     var commandText = ReindexSubqueryParameters(
                         cteQuery,
@@ -89,7 +97,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                     return $"{_databaseDialect.EscapeIdentifier(cteDefinition.Name)} AS ({commandText})";
                 });
 
-            return "WITH " + string.Join(", ", cteClauses);
+            return withKeyword + " " + string.Join(", ", cteClauses);
+        }
+
+        // Resolves the SQL keyword used for recursive common table expressions.
+        protected virtual string ResolveRecursiveCteKeyword()
+        {
+            return "WITH RECURSIVE";
         }
 
         #endregion
@@ -463,16 +477,18 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             return $"({leftColumn} = {rightColumn})";
         }
 
-        // Builds a qualified SQL column reference from a join expression member access.
+        // Builds a SQL column reference for a JOIN expression member.
         private string BuildJoinColumnReference(Expression expression, QueryJoinDefinition joinDefinition)
         {
+            expression = SqlComputedExpressionParser.UnwrapConvertExpression(expression);
+
             if (expression is not MemberExpression memberExpression)
                 throw new NotSupportedException($"Join expression member '{expression}' is not supported.");
 
-            if (memberExpression.Expression is not ParameterExpression parameterExpression)
-                throw new NotSupportedException($"Join expression source '{expression}' is not supported.");
-
             var propertyName = memberExpression.Member.Name;
+
+            if (memberExpression.Expression is not ParameterExpression parameterExpression)
+                throw new NotSupportedException($"Join expression member '{expression}' is not supported.");
 
             if (parameterExpression.Type == joinDefinition.SourceType)
             {
@@ -488,7 +504,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 return _databaseDialect.BuildQualifiedIdentifier(joinDefinition.TableAlias, columnName);
             }
 
-            throw new NotSupportedException($"Join expression parameter type '{parameterExpression.Type.Name}' is not available in this join.");
+            throw new NotSupportedException($"Join expression parameter '{parameterExpression.Type.Name}' is not supported.");
         }
 
 

@@ -89,5 +89,33 @@
         /// Query command builder for the common table expression source.
         /// </returns>
         IQueryCommandBuilder<TCte> FromCte<TCte>(string name);
+
+        /// <summary>
+        /// Registers a recursive common table expression that can be used as a query source.
+        /// </summary>
+        /// <typeparam name="TCte">
+        /// Entity type associated with the recursive common table expression.
+        /// </typeparam>
+        /// <typeparam name="TBaseRoot">
+        /// Root entity type used by the recursive common table expression base query.
+        /// </typeparam>
+        /// <typeparam name="TRecursiveRoot">
+        /// Root entity type used by the recursive common table expression recursive query.
+        /// </typeparam>
+        /// <param name="name">
+        /// Name assigned to the recursive common table expression.
+        /// </param>
+        /// <param name="baseQueryBuilder">
+        /// Function used to build the recursive common table expression base query.
+        /// </param>
+        /// <param name="recursiveQueryBuilder">
+        /// Function used to build the recursive common table expression recursive query.
+        /// </param>
+        /// <returns>
+        /// Current query builder instance.
+        /// </returns>
+        IQueryBuilder WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
+            Func<IQueryBuilder, IQueryCommandBuilder<TBaseRoot>> baseQueryBuilder,
+            Func<IQueryBuilder, IQueryCommandBuilder<TRecursiveRoot>> recursiveQueryBuilder);
     }
 }
