@@ -1,4 +1,5 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
@@ -186,6 +187,99 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             commandBuilder.RegisterCteDefinitions(_cteDefinitions);
 
             return commandBuilder;
+        }
+
+        /// <summary>
+        /// Registers a recursive common table expression that can be used as a query source.
+        /// </summary>
+        /// <typeparam name="TCte">
+        /// Entity type associated with the recursive common table expression.
+        /// </typeparam>
+        /// <typeparam name="TBaseRoot">
+        /// Root entity type used by the recursive common table expression base query.
+        /// </typeparam>
+        /// <typeparam name="TRecursiveRoot">
+        /// Root entity type used by the recursive common table expression recursive query.
+        /// </typeparam>
+        /// <param name="name">
+        /// Name assigned to the recursive common table expression.
+        /// </param>
+        /// <param name="baseQueryBuilder">
+        /// Function used to build the recursive common table expression base query.
+        /// </param>
+        /// <param name="recursiveQueryBuilder">
+        /// Function used to build the recursive common table expression recursive query.
+        /// </param>
+        /// <returns>
+        /// Current query builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="name"/> is null, empty or whitespace.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="baseQueryBuilder"/> or <paramref name="recursiveQueryBuilder"/> is null.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the recursive common table expression builders return unsupported query command builder instances.
+        /// </exception>
+        public IQueryBuilder WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
+            Func<IQueryBuilder, IQueryCommandBuilder<TBaseRoot>> baseQueryBuilder,
+            Func<IQueryBuilder, IQueryCommandBuilder<TRecursiveRoot>> recursiveQueryBuilder)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+            ArgumentNullException.ThrowIfNull(baseQueryBuilder);
+            ArgumentNullException.ThrowIfNull(recursiveQueryBuilder);
+
+            var baseBuilder = new QueryBuilder(
+                _queryCompiler,
+                _metadataResolver);
+
+            var recursiveBuilder = new QueryBuilder(
+                _queryCompiler,
+                _metadataResolver);
+
+            var baseCommandBuilder = baseQueryBuilder(
+                baseBuilder);
+
+            var recursiveCommandBuilder = recursiveQueryBuilder(
+                recursiveBuilder);
+
+            if (baseCommandBuilder is not QueryCommandBuilder<TBaseRoot> concreteBaseBuilder)
+            {
+                throw new InvalidOperationException(
+                    "The recursive CTE base query builder returned an unsupported query command builder instance.");
+            }
+
+            if (recursiveCommandBuilder is not QueryCommandBuilder<TRecursiveRoot> concreteRecursiveBuilder)
+            {
+                throw new InvalidOperationException(
+                    "The recursive CTE recursive query builder returned an unsupported query command builder instance.");
+            }
+
+            var baseQueryDefinition = concreteBaseBuilder.BuildDefinition();
+
+            var recursiveQueryDefinition = concreteRecursiveBuilder.BuildDefinition();
+
+            baseQueryDefinition.ForceSelectAliases = true;
+
+            recursiveQueryDefinition.ForceSelectAliases = true;
+
+            baseQueryDefinition.SetOperationDefinitions.Add(
+                new QuerySetOperationDefinition
+                {
+                    Operation = QuerySetOperation.UnionAll,
+                    Query = recursiveQueryDefinition
+                });
+
+            _cteDefinitions.Add(
+                new QueryCteDefinition
+                {
+                    Name = name,
+                    Query = baseQueryDefinition,
+                    IsRecursive = true
+                });
+
+            return this;
         }
 
         // Resolves derived table column mappings using metadata when available or property names by convention.

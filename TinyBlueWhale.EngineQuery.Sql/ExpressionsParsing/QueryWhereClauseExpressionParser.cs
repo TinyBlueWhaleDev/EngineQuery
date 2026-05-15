@@ -63,16 +63,62 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
                 : _databaseDialect.BuildQualifiedIdentifier(_tableAlias, columnName);
         }
 
-        // Parses binary expressions such as ==, !=, >, <, && and ||.
-        private string ParseBinaryExpressionToSqlCondition(
-            BinaryExpression binaryExpression)
+        // Parses a binary expression into a SQL condition.
+        private string ParseBinaryExpressionToSqlCondition(BinaryExpression binaryExpression)
         {
-            var leftOperand = ParseExpressionOperandToSql(binaryExpression.Left);
-            var rightOperand = ParseExpressionOperandToSql(binaryExpression.Right);
+            if (IsNullComparison(binaryExpression))
+                return ParseNullComparisonToSqlCondition(binaryExpression);
 
-            var sqlOperator = SqlComputedExpressionParser.ResolveSqlOperator(binaryExpression.NodeType);
+            var leftOperand = ParseExpressionOperandToSql(
+                binaryExpression.Left);
+
+            var rightOperand = ParseExpressionOperandToSql(
+                binaryExpression.Right);
+
+            var sqlOperator = SqlComputedExpressionParser.ResolveSqlOperator(
+                binaryExpression.NodeType);
 
             return $"({leftOperand} {sqlOperator} {rightOperand})";
+        }
+
+        // Determines whether the binary expression compares a value against null.
+        private static bool IsNullComparison(
+            BinaryExpression binaryExpression)
+        {
+            return binaryExpression.NodeType is ExpressionType.Equal or ExpressionType.NotEqual &&
+                   (IsNullConstant(binaryExpression.Left) || IsNullConstant(binaryExpression.Right));
+        }
+
+        // Parses a null comparison into IS NULL or IS NOT NULL SQL.
+        private string ParseNullComparisonToSqlCondition(
+            BinaryExpression binaryExpression)
+        {
+            var nonNullExpression = IsNullConstant(binaryExpression.Left)
+                ? binaryExpression.Right
+                : binaryExpression.Left;
+
+            var operand = ParseExpressionOperandToSql(
+                nonNullExpression);
+
+            var sqlOperator = binaryExpression.NodeType == ExpressionType.Equal
+                ? "IS NULL"
+                : "IS NOT NULL";
+
+            return $"({operand} {sqlOperator})";
+        }
+
+        // Determines whether the expression represents a null constant.
+        private static bool IsNullConstant(Expression expression)
+        {
+            if (expression is UnaryExpression unaryExpression &&
+                (unaryExpression.NodeType == ExpressionType.Convert ||
+                 unaryExpression.NodeType == ExpressionType.ConvertChecked))
+            {
+                expression = unaryExpression.Operand;
+            }
+
+            return expression is ConstantExpression constantExpression &&
+                   constantExpression.Value is null;
         }
 
         // Converts expression operands into SQL-compatible fragments or parameters.
