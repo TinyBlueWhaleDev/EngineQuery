@@ -1,0 +1,14 @@
+SELECT [u].[user_id] AS [UserId], [u].[email]
+FROM [users] AS [u]
+WHERE EXISTS (SELECT 1
+FROM [orders] AS [o]
+WHERE (([o].[user_id] = [u].[user_id]) AND ([o].[total] > @p0))) AND NOT EXISTS (SELECT 1
+FROM [orders] AS [o2]
+WHERE (([o2].[user_id] = [u].[user_id]) AND ([o2].[total] <= @p1))) AND [u].[user_id] IN (SELECT [oi].[user_id]
+FROM [orders] AS [oi]
+WHERE ([oi].[total] > @p2))
+
+-- Parameters
+@p0 = 100
+@p1 = 0
+@p2 = 500

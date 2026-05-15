@@ -1,0 +1,9 @@
+WITH RECURSIVE "category_tree" AS (SELECT "c"."category_id" AS "Id", "c"."parent_category_id" AS "ParentId", "c"."name" AS "Name"
+FROM "categories" AS "c"
+WHERE ("c"."parent_category_id" IS NULL)
+UNION ALL
+SELECT "c"."category_id" AS "Id", "c"."parent_category_id" AS "ParentId", "c"."name" AS "Name"
+FROM "categories" AS "c"
+INNER JOIN "category_tree" AS "ct" ON ("c"."parent_category_id" = "ct"."Id"))
+SELECT "category_tree"."Id", "category_tree"."ParentId", "category_tree"."Name"
+FROM "category_tree" AS "category_tree"

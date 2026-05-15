@@ -1,0 +1,7 @@
+SELECT [o].[order_id] AS [OrderId], [o].[user_id], [o].[total], ROW_NUMBER() OVER (PARTITION BY [o].[user_id] ORDER BY [o].[total] DESC) AS [RowNumber], RANK() OVER (PARTITION BY [o].[user_id] ORDER BY [o].[total] DESC) AS [OrderRank], DENSE_RANK() OVER (PARTITION BY [o].[user_id] ORDER BY [o].[total] DESC) AS [DenseOrderRank], LAG([o].[total], @p0) OVER (PARTITION BY [o].[user_id] ORDER BY [o].[order_id] ASC) AS [PreviousOrderTotal], LEAD([o].[total], @p1) OVER (PARTITION BY [o].[user_id] ORDER BY [o].[order_id] ASC) AS [NextOrderTotal], FIRST_VALUE([o].[total]) OVER (PARTITION BY [o].[user_id] ORDER BY [o].[order_id] ASC) AS [FirstOrderTotal], LAST_VALUE([o].[total]) OVER (PARTITION BY [o].[user_id] ORDER BY [o].[order_id] ASC) AS [LastOrderTotal], NTILE(@p2) OVER (PARTITION BY [o].[user_id] ORDER BY [o].[total] DESC) AS [OrderQuartile]
+FROM [orders] AS [o]
+
+-- Parameters
+@p0 = 1
+@p1 = 1
+@p2 = 4

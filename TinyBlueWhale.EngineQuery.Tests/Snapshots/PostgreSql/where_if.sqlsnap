@@ -1,0 +1,6 @@
+SELECT *
+FROM "Users" AS "Users"
+WHERE ("Users"."IsActive" = @p0)
+
+-- Parameters
+@p0 = True

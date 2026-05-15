@@ -1,0 +1,8 @@
+SELECT `u`.`user_id` AS `UserId`, `u`.`email`, SUM(`o`.`total`) AS `TotalAmount`, COUNT(`o`.`order_id`) AS `OrderCount`
+FROM `users` AS `u`
+INNER JOIN `orders` AS `o` ON (`u`.`user_id` = `o`.`user_id`)
+GROUP BY `u`.`user_id`, `u`.`email`
+HAVING SUM(`o`.`total`) > @p0
+
+-- Parameters
+@p0 = 1000
