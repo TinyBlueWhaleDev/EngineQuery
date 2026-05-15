@@ -15,6 +15,8 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Enums
         Rank = 2,
         DenseRank = 3,
         Lag = 4,
-        Lead = 5
+        Lead = 5,        
+        FirstValue = 6,
+        LastValue = 7
     }
 }

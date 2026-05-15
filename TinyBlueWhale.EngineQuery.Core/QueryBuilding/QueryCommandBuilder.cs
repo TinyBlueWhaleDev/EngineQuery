@@ -185,12 +185,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> SelectLag<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1)
         {
-            return AddValueWindowFunction(
-                QueryWindowFunction.Lag,
-                expression,
-                alias,
-                windowBuilder,
-                offset);
+            return AddValueWindowFunction(QueryWindowFunction.Lag, expression, alias, windowBuilder, offset);
         }
 
         /// <summary>
@@ -198,21 +193,35 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> SelectLead<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1)
         {
-            return AddValueWindowFunction(
-                QueryWindowFunction.Lead,
-                expression,
-                alias,
-                windowBuilder,
-                offset);
+            return AddValueWindowFunction(QueryWindowFunction.Lead, expression, alias, windowBuilder, offset);
         }
 
-        // Adds a value-based SQL window function projection.
-        private QueryCommandBuilder<T> AddValueWindowFunction<TEntity>(QueryWindowFunction function, Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset)
+        /// <summary>
+        /// Adds a FIRST_VALUE window function projection to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> SelectFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            return AddValueWindowFunction(QueryWindowFunction.FirstValue, expression, alias, windowBuilder);
+        }
+
+        /// <summary>
+        /// Adds a LAST_VALUE window function projection to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> SelectLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            return AddValueWindowFunction(QueryWindowFunction.LastValue, expression, alias, windowBuilder);
+        }
+
+
+        // Adds a value-based SQL window function projection without offset arguments.
+        private QueryCommandBuilder<T> AddValueWindowFunction<TEntity>(QueryWindowFunction function, Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int? offset = null)
         {
             ArgumentNullException.ThrowIfNull(expression);
             ArgumentException.ThrowIfNullOrWhiteSpace(alias);
             ArgumentNullException.ThrowIfNull(windowBuilder);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(offset);
+
+            if(offset.HasValue)
+                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(offset.Value);
 
             var source = ResolveQuerySource<TEntity>();
 
@@ -232,20 +241,25 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     ArgumentType = QueryWindowFunctionArgumentType.Column,
                     Column = columns[0],
                     Source = source
-                },
-                new()
-                {
-                    ArgumentType = QueryWindowFunctionArgumentType.Constant,
-                    ConstantValue = offset
                 }
             };
 
-            _queryDefinition.WindowFunctionDefinitions.Add(builder.BuildWindowFunctionDefinition(function,alias,arguments));
+            if (offset.HasValue)
+            {
+                arguments.Add(new QueryWindowFunctionArgumentDefinition 
+                {
+                    ArgumentType = QueryWindowFunctionArgumentType.Constant,
+                    ConstantValue = offset.Value
+                });
+            }
+
+
+            _queryDefinition.WindowFunctionDefinitions.Add(builder.BuildWindowFunctionDefinition(function, alias, arguments));
 
             return this;
         }
 
-
+       
         #endregion
 
         #region Computed Expression Overloads
