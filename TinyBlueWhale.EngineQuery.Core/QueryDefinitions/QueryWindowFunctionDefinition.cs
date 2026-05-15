@@ -31,5 +31,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the ORDER BY columns used by the window function.
         /// </summary>
         public required IReadOnlyList<QueryWindowOrderingDefinition> Orderings { get; init; }
+
+        /// <summary>
+        /// Gets the SQL window function arguments.
+        /// </summary>
+        public IReadOnlyList<QueryWindowFunctionArgumentDefinition> Arguments { get; init; } = [];
     }
 }

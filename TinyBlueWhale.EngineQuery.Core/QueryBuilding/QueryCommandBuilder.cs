@@ -180,6 +180,72 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        /// <summary>
+        /// Adds a LAG window function projection to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> SelectLag<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1)
+        {
+            return AddValueWindowFunction(
+                QueryWindowFunction.Lag,
+                expression,
+                alias,
+                windowBuilder,
+                offset);
+        }
+
+        /// <summary>
+        /// Adds a LEAD window function projection to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> SelectLead<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1)
+        {
+            return AddValueWindowFunction(
+                QueryWindowFunction.Lead,
+                expression,
+                alias,
+                windowBuilder,
+                offset);
+        }
+
+        // Adds a value-based SQL window function projection.
+        private QueryCommandBuilder<T> AddValueWindowFunction<TEntity>(QueryWindowFunction function, Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset)
+        {
+            ArgumentNullException.ThrowIfNull(expression);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+            ArgumentNullException.ThrowIfNull(windowBuilder);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(offset);
+
+            var source = ResolveQuerySource<TEntity>();
+
+            var columns = QueryColumnExpressionExtractor.ExtractColumns(expression);
+
+            if (columns.Count != 1)
+                throw new InvalidOperationException("Window value functions require a single selected column.");
+
+            var builder = new WindowFunctionBuilder(ResolveQuerySource);
+
+            windowBuilder(builder);
+
+            var arguments = new List<QueryWindowFunctionArgumentDefinition>
+            {
+                new()
+                {
+                    ArgumentType = QueryWindowFunctionArgumentType.Column,
+                    Column = columns[0],
+                    Source = source
+                },
+                new()
+                {
+                    ArgumentType = QueryWindowFunctionArgumentType.Constant,
+                    ConstantValue = offset
+                }
+            };
+
+            _queryDefinition.WindowFunctionDefinitions.Add(builder.BuildWindowFunctionDefinition(function,alias,arguments));
+
+            return this;
+        }
+
+
         #endregion
 
         #region Computed Expression Overloads

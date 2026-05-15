@@ -147,6 +147,16 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias);
 
         /// <summary>
+        /// Adds a LAG window function projection to the current query.
+        /// </summary>
+        IQueryCommandBuilder<T> SelectLag<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1);
+
+        /// <summary>
+        /// Adds a LEAD window function projection to the current query.
+        /// </summary>
+        IQueryCommandBuilder<T> SelectLead<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1);
+
+        /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
         /// <typeparam name="TSource">

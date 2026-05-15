@@ -31,4 +31,5 @@
 //RankingWindowFunctionQueryValidator.Run();
 //IntersectExceptQueryValidator.Run();
 //ApplyLateralJoinQueryValidator.Run();
-RecursiveCommonTableExpressionQueryValidator.Run();
+//RecursiveCommonTableExpressionQueryValidator.Run();
+AdvancedWindowFunctionQueryValidator.Run();
