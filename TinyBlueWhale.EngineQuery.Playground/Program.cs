@@ -24,8 +24,9 @@
 //NotExistsQueryValidator.Run();
 //DerivedTableQueryValidator.Run();
 //CommonTableExpressionQueryValidator.Run();
-//UnionQueryValidator.Run();
-//UnionAllQueryValidator.Run();
+UnionQueryValidator.Run();
+UnionAllQueryValidator.Run();
 //RowNumberWindowFunctionQueryValidator.Run();
 //DistinctQueryValidator.Run();
-RankingWindowFunctionQueryValidator.Run();
+//RankingWindowFunctionQueryValidator.Run();
+IntersectExceptQueryValidator.Run();

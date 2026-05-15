@@ -357,31 +357,59 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <summary>
         /// Adds a UNION query to the current query.
         /// </summary>
-        /// <typeparam name="TUnion">
-        /// Root entity type used by the UNION query.
+        /// <typeparam name="TSet">
+        /// Root entity type used by the set operation query.
         /// </typeparam>
-        /// <param name="unionBuilder">
+        /// <param name="setBuilder">
         /// Function used to build the UNION query.
         /// </param>
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        IQueryCommandBuilder<T> Union<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder);
+        IQueryCommandBuilder<T> Union<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
 
         /// <summary>
         /// Adds a UNION ALL query to the current query.
         /// </summary>
-        /// <typeparam name="TUnion">
-        /// Root entity type used by the UNION ALL query.
+        /// <typeparam name="TSet">
+        /// Root entity type used by the set operation query.
         /// </typeparam>
-        /// <param name="unionBuilder">
+        /// <param name="setBuilder">
         /// Function used to build the UNION ALL query.
         /// </param>
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        IQueryCommandBuilder<T> UnionAll<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder);
+        IQueryCommandBuilder<T> UnionAll<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
 
+        /// <summary>
+        /// Adds an INTERSECT query to the current query.
+        /// </summary>
+        /// <typeparam name="TSet">
+        /// Root entity type used by the set operation query.
+        /// </typeparam>
+        /// <param name="setBuilder">
+        /// Function used to build the INTERSECT query.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> Intersect<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
+
+        /// <summary>
+        /// Adds an EXCEPT query to the current query.
+        /// </summary>
+        /// <typeparam name="TSet">
+        /// Root entity type used by the set operation query.
+        /// </typeparam>
+        /// <param name="setBuilder">
+        /// Function used to build the EXCEPT query.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> Except<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
+        
         /// <summary>
         /// Adds an ascending ordering expression to the query.
         /// </summary>        
