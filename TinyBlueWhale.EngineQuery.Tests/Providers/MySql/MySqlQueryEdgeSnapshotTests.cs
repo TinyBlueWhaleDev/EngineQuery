@@ -1,7 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
 using TinyBlueWhale.EngineQuery.MySql.Dialects;
-using TinyBlueWhale.EngineQuery.MySqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.MySql

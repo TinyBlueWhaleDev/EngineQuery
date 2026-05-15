@@ -4,35 +4,48 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
-namespace TinyBlueWhale.EngineQuery.MySqlServer.Capabilities
+namespace TinyBlueWhale.EngineQuery.MySql.Capabilities
 {
+
     /// <summary>
     /// Defines MySQL provider capability support.
     /// </summary>
     /// <remarks>
-    /// This capability profile assumes a modern MySQL version with support for common table expressions,
-    /// recursive common table expressions, window functions and SQL set operations.
+    /// Initializes a new instance of the <see cref="MySqlProviderCapabilities"/> class.
     /// </remarks>
-    public sealed class MySqlProviderCapabilities : IDatabaseProviderCapabilities
+    public sealed class MySqlProviderCapabilities(DatabaseProviderVersion version) : IDatabaseProviderCapabilities
     {
-        /// <inheritdoc />
-        public bool SupportsCommonTableExpressions => true;
+        private static readonly DatabaseProviderVersion DefaultVersion = DatabaseProviderVersion.Create(8, 0, 31);
+
+        private readonly DatabaseProviderVersion _version = version ?? throw new ArgumentNullException(nameof(version));
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MySqlProviderCapabilities"/> class using the default modern MySQL version.
+        /// </summary>
+        public MySqlProviderCapabilities()
+            : this(DefaultVersion)
+        {
+        }
 
         /// <inheritdoc />
-        public bool SupportsRecursiveCommonTableExpressions => true;
+        public bool SupportsCommonTableExpressions => _version.IsAtLeast(8, 0);
 
         /// <inheritdoc />
-        public bool SupportsWindowFunctions => true;
+        public bool SupportsRecursiveCommonTableExpressions => _version.IsAtLeast(8, 0);
 
         /// <inheritdoc />
-        public bool SupportsLateralJoins => true;
+        public bool SupportsWindowFunctions => _version.IsAtLeast(8, 0);
 
         /// <inheritdoc />
-        public bool SupportsIntersect => true;
+        public bool SupportsLateralJoins => _version.IsAtLeast(8, 0, 14);
 
         /// <inheritdoc />
-        public bool SupportsExcept => true;
+        public bool SupportsIntersect => _version.IsAtLeast(8, 0, 31);
+
+        /// <inheritdoc />
+        public bool SupportsExcept => _version.IsAtLeast(8, 0, 31);
 
         /// <inheritdoc />
         public bool SupportsOffsetFetchPagination => false;

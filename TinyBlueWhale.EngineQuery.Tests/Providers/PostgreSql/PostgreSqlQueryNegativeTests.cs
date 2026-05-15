@@ -1,8 +1,8 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
 using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
-using TinyBlueWhale.EngineQuery.PostgreSqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql

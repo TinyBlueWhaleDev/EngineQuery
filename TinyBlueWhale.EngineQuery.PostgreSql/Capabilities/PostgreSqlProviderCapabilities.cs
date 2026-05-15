@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
-namespace TinyBlueWhale.EngineQuery.PostgreSqlServer.Capabilities
+namespace TinyBlueWhale.EngineQuery.PostgreSql.Capabilities
 {
 
     /// <summary>
@@ -13,17 +14,37 @@ namespace TinyBlueWhale.EngineQuery.PostgreSqlServer.Capabilities
     /// </summary>
     public sealed class PostgreSqlProviderCapabilities : IDatabaseProviderCapabilities
     {
-        /// <inheritdoc />
-        public bool SupportsCommonTableExpressions => true;
+        private static readonly DatabaseProviderVersion DefaultVersion = DatabaseProviderVersion.Create(16, 0);
+
+        private readonly DatabaseProviderVersion _version;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PostgreSqlProviderCapabilities"/> class using the default modern PostgreSQL version.
+        /// </summary>
+        public PostgreSqlProviderCapabilities()
+            : this(DefaultVersion)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PostgreSqlProviderCapabilities"/> class.
+        /// </summary>
+        public PostgreSqlProviderCapabilities(DatabaseProviderVersion version)
+        {
+            _version = version ?? throw new ArgumentNullException(nameof(version));
+        }
 
         /// <inheritdoc />
-        public bool SupportsRecursiveCommonTableExpressions => true;
+        public bool SupportsCommonTableExpressions => _version.IsAtLeast(8, 4);
 
         /// <inheritdoc />
-        public bool SupportsWindowFunctions => true;
+        public bool SupportsRecursiveCommonTableExpressions => _version.IsAtLeast(8, 4);
 
         /// <inheritdoc />
-        public bool SupportsLateralJoins => true;
+        public bool SupportsWindowFunctions => _version.IsAtLeast(8, 4);
+
+        /// <inheritdoc />
+        public bool SupportsLateralJoins => _version.IsAtLeast(9, 3);
 
         /// <inheritdoc />
         public bool SupportsIntersect => true;
