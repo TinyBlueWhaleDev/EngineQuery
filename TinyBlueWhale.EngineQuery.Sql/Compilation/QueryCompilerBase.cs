@@ -26,7 +26,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// </remarks>
     public abstract class QueryCompilerBase(ISqlDatabaseDialect databaseDialect) : IQueryCompiler
     {
-        private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect ?? throw new ArgumentNullException(nameof(databaseDialect));
+        protected readonly ISqlDatabaseDialect _databaseDialect = databaseDialect ?? throw new ArgumentNullException(nameof(databaseDialect));
 
         /// <summary>
         /// Compiles the specified query definition into a generated SQL query.
@@ -50,6 +50,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             };
 
             AddJoinClausesIfNeeded(queryDefinition, sqlLines);
+            AddApplyClausesIfNeeded(queryDefinition, sqlParameters, sqlLines);
             AddWhereClauseIfNeeded(queryDefinition, sqlParameters, sqlLines);
             AddGroupByClauseIfNeeded(queryDefinition, sqlLines);
             AddHavingClauseIfNeeded(queryDefinition, sqlParameters, sqlLines);
@@ -488,6 +489,45 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             }
 
             throw new NotSupportedException($"Join expression parameter type '{parameterExpression.Type.Name}' is not available in this join.");
+        }
+
+
+        // Adds SQL APPLY or provider-equivalent LATERAL joins when defined.
+        protected virtual void AddApplyClausesIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
+        {
+            if (queryDefinition.ApplyDefinitions.Count == 0)
+                return;
+
+            foreach (var applyDefinition in queryDefinition.ApplyDefinitions)
+            {
+                var applyQuery = Compile(
+                    applyDefinition.Subquery);
+
+                var commandText = ReindexSubqueryParameters(
+                    applyQuery,
+                    sqlParameters);
+
+                sqlLines.Add(BuildApplyClause(applyDefinition,commandText));
+            }
+        }
+
+        // Builds a SQL APPLY or provider-equivalent LATERAL join clause.
+        protected virtual string BuildApplyClause(QueryApplyDefinition applyDefinition, string commandText)
+        {
+            var applyKeyword = ResolveApplyKeyword(applyDefinition.ApplyType);
+
+            return $"{applyKeyword} ({commandText}) AS {_databaseDialect.EscapeIdentifier(applyDefinition.Alias)}";
+        }
+
+        // Resolves the SQL keyword used for APPLY joins.
+        protected virtual string ResolveApplyKeyword(QueryApplyType applyType)
+        {
+            return applyType switch
+            {
+                QueryApplyType.Cross => "CROSS APPLY",
+                QueryApplyType.Outer => "OUTER APPLY",
+                _ => throw new NotSupportedException($"APPLY type '{applyType}' is not supported.")
+            };
         }
 
         #endregion

@@ -182,6 +182,47 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> LeftJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
 
         /// <summary>
+        /// Adds a CROSS APPLY or provider-equivalent LATERAL subquery join to the current query.
+        /// </summary>
+        /// <typeparam name="TOuter">
+        /// Outer entity type available in the current query scope.
+        /// </typeparam>
+        /// <typeparam name="TApply">
+        /// Root entity type used by the APPLY subquery.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Alias assigned to the APPLY subquery.
+        /// </param>
+        /// <param name="applyBuilder">
+        /// Function used to build the APPLY subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> CrossApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder);
+
+        /// <summary>
+        /// Adds an OUTER APPLY or provider-equivalent LEFT LATERAL subquery join to the current query.
+        /// </summary>
+        /// <typeparam name="TOuter">
+        /// Outer entity type available in the current query scope.
+        /// </typeparam>
+        /// <typeparam name="TApply">
+        /// Root entity type used by the APPLY subquery.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Alias assigned to the APPLY subquery.
+        /// </param>
+        /// <param name="applyBuilder">
+        /// Function used to build the APPLY subquery.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> OuterApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder);
+
+
+        /// <summary>
         /// Adds a filtering condition to the query.
         /// </summary>
         /// <param name="predicate">
