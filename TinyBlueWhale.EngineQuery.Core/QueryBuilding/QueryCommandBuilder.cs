@@ -1305,68 +1305,58 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a UNION query to the current query.
         /// </summary>
-        /// <typeparam name="TUnion">
-        /// Root entity type used by the UNION query.
-        /// </typeparam>
-        /// <param name="unionBuilder">
-        /// Function used to build the UNION query.
-        /// </param>
-        /// <returns>
-        /// Current query command builder instance.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="unionBuilder"/> is null.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the UNION builder returns an unsupported query command builder instance.
-        /// </exception>
-        public IQueryCommandBuilder<T> Union<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder)
+        public IQueryCommandBuilder<T> Union<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
         {
-            return AddUnion(unionBuilder, includeDuplicates: false);
+            return AddSetOperation(QuerySetOperation.Union, setBuilder);
         }
 
         /// <summary>
         /// Adds a UNION ALL query to the current query.
         /// </summary>
-        /// <typeparam name="TUnion">
-        /// Root entity type used by the UNION ALL query.
-        /// </typeparam>
-        /// <param name="unionBuilder">
-        /// Function used to build the UNION ALL query.
-        /// </param>
-        /// <returns>
-        /// Current query command builder instance.
-        /// </returns>
-        public IQueryCommandBuilder<T> UnionAll<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder)
+        public IQueryCommandBuilder<T> UnionAll<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
         {
-            return AddUnion(unionBuilder, includeDuplicates: true);
+            return AddSetOperation(QuerySetOperation.UnionAll, setBuilder);
         }
 
-        // Adds a UNION or UNION ALL query to the current query.
-        private QueryCommandBuilder<T> AddUnion<TUnion>(Func<IQueryBuilder, IQueryCommandBuilder<TUnion>> unionBuilder, bool includeDuplicates)
+        /// <summary>
+        /// Adds an INTERSECT query to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> Intersect<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
         {
-            ArgumentNullException.ThrowIfNull(unionBuilder);
+            return AddSetOperation(QuerySetOperation.Intersect, setBuilder);
+        }
 
-            var nestedQueryBuilder = new QueryBuilder(
-                _queryCompiler,
-                _metadataResolver);
+        /// <summary>
+        /// Adds an EXCEPT query to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> Except<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
+        {
+            return AddSetOperation(QuerySetOperation.Except, setBuilder);
+        }
 
-            var unionCommandBuilder = unionBuilder(nestedQueryBuilder);
+        // Adds a SQL set operation query to the current query.
+        private QueryCommandBuilder<T> AddSetOperation<TSet>(QuerySetOperation operation, Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
+        {
+            ArgumentNullException.ThrowIfNull(setBuilder);
 
-            if (unionCommandBuilder is not QueryCommandBuilder<TUnion> concreteUnionCommandBuilder)
-                throw new InvalidOperationException("The UNION builder returned an unsupported query command builder instance.");
+            var nestedQueryBuilder = new QueryBuilder(_queryCompiler, _metadataResolver);
 
-            var unionQueryDefinition = concreteUnionCommandBuilder.BuildDefinition();
+            var setCommandBuilder = setBuilder(nestedQueryBuilder);
 
-            unionQueryDefinition.ForceSelectAliases = true;
+            if (setCommandBuilder is not QueryCommandBuilder<TSet> concreteSetCommandBuilder)
+                throw new InvalidOperationException("The set operation builder returned an unsupported query command builder instance.");
+
+            var setQueryDefinition = concreteSetCommandBuilder.BuildDefinition();
+
+            setQueryDefinition.ForceSelectAliases = true;
 
             _queryDefinition.ForceSelectAliases = true;
 
-            _queryDefinition.UnionDefinitions.Add(
-                new QueryUnionDefinition
+            _queryDefinition.SetOperationDefinitions.Add(
+                new QuerySetOperationDefinition
                 {
-                    Query = unionQueryDefinition,
-                    IncludeDuplicates = includeDuplicates
+                    Operation = operation,
+                    Query = setQueryDefinition
                 });
 
             return this;

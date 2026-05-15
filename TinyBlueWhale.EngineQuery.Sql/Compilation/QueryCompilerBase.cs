@@ -58,8 +58,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             var commandText = string.Join(Environment.NewLine, sqlLines);
 
-            if (queryDefinition.UnionDefinitions.Count > 0)
-                commandText = BuildUnionCommandText(queryDefinition, sqlParameters, commandText);
+            if (queryDefinition.SetOperationDefinitions.Count > 0)
+                commandText = BuildSetOperationCommandText(queryDefinition, sqlParameters, commandText);
 
             if (queryDefinition.CteDefinitions.Count > 0)
                 commandText = BuildCteClause(queryDefinition, sqlParameters) + Environment.NewLine + commandText;
@@ -95,25 +95,41 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region Union Clause building
 
-        // Builds SQL command text including UNION clauses.
-        protected virtual string BuildUnionCommandText(CompiledQueryDefinition queryDefinition,List<QuerySqlParameter> sqlParameters,
-            string commandText)
+        // Builds SQL command text including set operation clauses.
+        protected virtual string BuildSetOperationCommandText(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, string commandText)
         {
-            foreach (var unionDefinition in queryDefinition.UnionDefinitions)
+            foreach (var setOperationDefinition in queryDefinition.SetOperationDefinitions)
             {
-                var unionQuery = Compile(unionDefinition.Query);
+                var setOperationQuery = Compile(setOperationDefinition.Query);
 
-                var unionCommandText = ReindexSubqueryParameters(unionQuery,sqlParameters);
+                var setOperationCommandText = ReindexSubqueryParameters(
+                    setOperationQuery,
+                    sqlParameters);
 
-                var unionKeyword = unionDefinition.IncludeDuplicates? "UNION ALL" : "UNION";
+                var setOperationKeyword = ResolveSetOperationKeyword(
+                    setOperationDefinition.Operation);
 
-                commandText += Environment.NewLine +
-                               unionKeyword +
-                               Environment.NewLine +
-                               unionCommandText;
+                commandText +=
+                    Environment.NewLine +
+                    setOperationKeyword +
+                    Environment.NewLine +
+                    setOperationCommandText;
             }
 
             return commandText;
+        }
+
+        // Resolves the SQL keyword used by a set operation.
+        private static string ResolveSetOperationKeyword(QuerySetOperation operation)
+        {
+            return operation switch
+            {
+                QuerySetOperation.Union => "UNION",
+                QuerySetOperation.UnionAll => "UNION ALL",
+                QuerySetOperation.Intersect => "INTERSECT",
+                QuerySetOperation.Except => "EXCEPT",
+                _ => throw new NotSupportedException($"Set operation '{operation}' is not supported.")
+            };
         }
 
         #endregion

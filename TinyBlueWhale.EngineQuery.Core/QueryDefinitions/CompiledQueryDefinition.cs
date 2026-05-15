@@ -67,9 +67,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryWindowFunctionDefinition> WindowFunctionDefinitions { get; } = [];
 
         /// <summary>
-        /// Gets the UNION query definitions associated with the query.
+        /// Gets the SQL set operation definitions associated with the query.
         /// </summary>
-        public List<QueryUnionDefinition> UnionDefinitions { get; } = [];
+        public List<QuerySetOperationDefinition> SetOperationDefinitions { get; } = [];
 
         /// <summary>
         /// Gets the IN subquery conditions associated with the query.
