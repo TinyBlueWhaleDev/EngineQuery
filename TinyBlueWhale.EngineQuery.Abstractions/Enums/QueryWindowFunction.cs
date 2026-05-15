@@ -13,6 +13,8 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Enums
     {
         RowNumber = 1,
         Rank = 2,
-        DenseRank = 3
+        DenseRank = 3,
+        Lag = 4,
+        Lead = 5
     }
 }

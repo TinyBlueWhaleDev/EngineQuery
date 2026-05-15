@@ -55,7 +55,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Builds a SQL window function definition.
-        internal QueryWindowFunctionDefinition BuildWindowFunctionDefinition(QueryWindowFunction function, string alias)
+        internal QueryWindowFunctionDefinition BuildWindowFunctionDefinition(QueryWindowFunction function, string alias, IReadOnlyList<QueryWindowFunctionArgumentDefinition>? arguments = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
@@ -67,9 +67,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 Function = function,
                 Alias = alias,
                 Partitions = _partitions,
-                Orderings = _orderings
+                Orderings = _orderings,
+                Arguments = arguments ?? []
             };
         }
+
 
         // Adds an ordering column to the window function.
         private WindowFunctionBuilder AddOrdering<TEntity>(Expression<Func<TEntity, object>> selector, QueryOrderingDirection direction)
