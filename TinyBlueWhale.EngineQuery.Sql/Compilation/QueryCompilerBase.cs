@@ -12,6 +12,7 @@ using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.Parameters;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
@@ -46,7 +47,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             ValidateProviderCapabilities(queryDefinition);
 
-            var sqlParameters = new List<QuerySqlParameter>();
+            var sqlParameters = new QueryParameterCollection();
 
             var sqlLines = new List<string>
             {
@@ -77,7 +78,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             return new GeneratedSqlQuery
             {
                 CommandText = commandText,
-                Parameters = sqlParameters
+                Parameters = sqlParameters.Parameters
             };
         }
 
@@ -134,7 +135,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         // Builds the SQL common table expression clause.
         protected virtual string BuildCteClause(
             CompiledQueryDefinition queryDefinition,
-            List<QuerySqlParameter> sqlParameters)
+            QueryParameterCollection sqlParameters)
         {
             var withKeyword = queryDefinition.CteDefinitions.Any(
                 cte => cte.IsRecursive)
@@ -168,7 +169,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         #region Union Clause building
 
         // Builds SQL command text including set operation clauses.
-        protected virtual string BuildSetOperationCommandText(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, string commandText)
+        protected virtual string BuildSetOperationCommandText(CompiledQueryDefinition queryDefinition, QueryParameterCollection sqlParameters, string commandText)
         {
             foreach (var setOperationDefinition in queryDefinition.SetOperationDefinitions)
             {
@@ -209,7 +210,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region Select Clause Building        
         // Builds the SQL SELECT clause from query projections, aggregate expressions, scalar function expressions, computed expressions and CASE WHEN expressions.
-        protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildSelectClause(CompiledQueryDefinition queryDefinition, QueryParameterCollection sqlParameters)
         {
             if (queryDefinition.UseConstantSelectProjection)
                 return "SELECT 1";
@@ -272,7 +273,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL window function projection.
-        protected virtual string BuildWindowFunctionColumn(QueryWindowFunctionDefinition windowFunctionDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildWindowFunctionColumn(QueryWindowFunctionDefinition windowFunctionDefinition, QueryParameterCollection sqlParameters)
         {
             var windowClauses = new List<string>();
 
@@ -297,7 +298,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL window function argument.
-        protected virtual string BuildWindowFunctionArgument(QueryWindowFunctionArgumentDefinition argumentDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildWindowFunctionArgument(QueryWindowFunctionArgumentDefinition argumentDefinition, QueryParameterCollection sqlParameters)
         {
             return argumentDefinition.ArgumentType switch
             {
@@ -367,7 +368,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a CASE WHEN SQL projection.
-        protected virtual string BuildCaseWhenColumn(QueryCaseWhenDefinition caseWhenDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildCaseWhenColumn(QueryCaseWhenDefinition caseWhenDefinition, QueryParameterCollection sqlParameters)
         {
             var expressionScope = new QueryExpressionScope();
 
@@ -388,7 +389,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a computed SQL expression projection.
-        protected virtual string BuildComputedExpressionColumn(QueryComputedExpressionDefinition computedDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildComputedExpressionColumn(QueryComputedExpressionDefinition computedDefinition, QueryParameterCollection sqlParameters)
         {
             var expressionScope = new QueryExpressionScope();
 
@@ -433,7 +434,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a scalar SQL function projection.
-        protected virtual string BuildScalarFunctionColumn(QueryScalarFunctionDefinition functionDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildScalarFunctionColumn(QueryScalarFunctionDefinition functionDefinition, QueryParameterCollection sqlParameters)
         {
             var arguments = functionDefinition.Arguments.Count > 0
                 ? BuildScalarFunctionArguments(functionDefinition, sqlParameters)
@@ -445,13 +446,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds all scalar SQL function arguments.
-        private List<string> BuildScalarFunctionArguments(QueryScalarFunctionDefinition functionDefinition, List<QuerySqlParameter> sqlParameters)
+        private List<string> BuildScalarFunctionArguments(QueryScalarFunctionDefinition functionDefinition, QueryParameterCollection sqlParameters)
         {
             return [.. functionDefinition.Arguments.Select(argument => BuildScalarFunctionArgument(functionDefinition,argument,sqlParameters))];
         }
 
         // Builds a scalar SQL function argument.
-        private string BuildScalarFunctionArgument(QueryScalarFunctionDefinition functionDefinition, QueryScalarFunctionArgumentDefinition argumentDefinition, List<QuerySqlParameter> sqlParameters)
+        private string BuildScalarFunctionArgument(QueryScalarFunctionDefinition functionDefinition, QueryScalarFunctionArgumentDefinition argumentDefinition, QueryParameterCollection sqlParameters)
         {
             if (argumentDefinition.IsColumn)
             {
@@ -499,7 +500,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region From Clause Building
         // Builds the SQL FROM clause.
-        protected virtual string BuildFromClause(CompiledQueryDefinition queryDefinition,List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildFromClause(CompiledQueryDefinition queryDefinition,QueryParameterCollection sqlParameters)
         {
             var rootSource = queryDefinition.SourceDefinitions.TryGetValue(queryDefinition.EntityType, out var sourceDefinition)
                 ? sourceDefinition
@@ -516,7 +517,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL reference for a physical table or derived table query source.
-        protected virtual string BuildQuerySourceReference(QuerySourceDefinition sourceDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildQuerySourceReference(QuerySourceDefinition sourceDefinition, QueryParameterCollection sqlParameters)
         {
             if (sourceDefinition.IsDerivedTable)
             {
@@ -617,7 +618,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
 
         // Adds SQL APPLY or provider-equivalent LATERAL joins when defined.
-        protected virtual void AddApplyClausesIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
+        protected virtual void AddApplyClausesIfNeeded(CompiledQueryDefinition queryDefinition, QueryParameterCollection sqlParameters, List<string> sqlLines)
         {
             if (queryDefinition.ApplyDefinitions.Count == 0)
                 return;
@@ -658,7 +659,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
         #region Where Clause Building               
         // Adds SQL WHERE conditions when filters are defined.
-        protected virtual void AddWhereClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
+        protected virtual void AddWhereClauseIfNeeded(CompiledQueryDefinition queryDefinition, QueryParameterCollection sqlParameters, List<string> sqlLines)
         {
             if (queryDefinition.WhereDefinitions.Count == 0 &&
                 queryDefinition.WhereScalarFunctionDefinitions.Count == 0 &&
@@ -696,7 +697,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds an IN subquery SQL condition.
-        protected virtual string BuildInSubqueryCondition(QueryInSubqueryDefinition inDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildInSubqueryCondition(QueryInSubqueryDefinition inDefinition, QueryParameterCollection sqlParameters)
         {
             var outerColumnReference = BuildInSubqueryOuterColumnReference(inDefinition);
             var subquery = Compile(inDefinition.Subquery);
@@ -728,33 +729,26 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             return memberExpression.Member.Name;
         }
 
-        // Reindexes subquery parameters and appends them to the parent parameter collection.
-        private static string ReindexSubqueryParameters(GeneratedSqlQuery subquery, List<QuerySqlParameter> sqlParameters)
+        // Rewrites nested query parameters into the parent parameter collection.
+        protected virtual string ReindexSubqueryParameters(GeneratedSqlQuery subquery, QueryParameterCollection sqlParameters)
         {
-            var offset = sqlParameters.Count;
             var commandText = subquery.CommandText;
 
             foreach (var parameter in subquery.Parameters)
             {
-                var newName = $"@p{offset}";
+                var rewrittenParameter = sqlParameters.AddRewritten(parameter);
 
-                commandText = commandText.Replace(parameter.Name, newName);
-
-                sqlParameters.Add(
-                    new QuerySqlParameter
-                    {
-                        Name = newName,
-                        Value = parameter.Value
-                    });
-
-                offset++;
+                commandText = commandText.Replace(
+                    parameter.Name,
+                    rewrittenParameter.Name,
+                    StringComparison.Ordinal);
             }
 
             return commandText;
         }
 
         // Builds an EXISTS SQL condition.
-        protected virtual string BuildExistsCondition(QueryExistsDefinition existsDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildExistsCondition(QueryExistsDefinition existsDefinition, QueryParameterCollection sqlParameters)
         {
             var existsQuery = Compile(existsDefinition.Subquery);
             var commandText = ReindexSubqueryParameters(existsQuery, sqlParameters);
@@ -765,7 +759,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL WHERE computed expression condition.
-        protected virtual string BuildWhereComputedExpressionCondition(QueryWhereComputedExpressionDefinition computedDefinition, List<QuerySqlParameter> sqlParameters)
+        protected virtual string BuildWhereComputedExpressionCondition(QueryWhereComputedExpressionDefinition computedDefinition, QueryParameterCollection sqlParameters)
         {
             var expressionScope = new QueryExpressionScope();
 
@@ -783,7 +777,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Creates a SQL WHERE clause expression parser instance.
-        protected virtual QueryWhereClauseExpressionParser CreateWhereClauseExpressionParser(List<QuerySqlParameter> sqlParameters, CompiledQueryDefinition queryDefinition, QueryWhereDefinition whereDefinition)
+        protected virtual QueryWhereClauseExpressionParser CreateWhereClauseExpressionParser(QueryParameterCollection sqlParameters, CompiledQueryDefinition queryDefinition, QueryWhereDefinition whereDefinition)
         {
             return new QueryWhereClauseExpressionParser(
                 _databaseDialect,
@@ -793,7 +787,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL WHERE scalar function condition.
-        private string BuildWhereScalarFunctionCondition(QueryWhereScalarFunctionDefinition functionDefinition, List<QuerySqlParameter> sqlParameters)
+        private string BuildWhereScalarFunctionCondition(QueryWhereScalarFunctionDefinition functionDefinition, QueryParameterCollection sqlParameters)
         {
             var columnName = ResolveMappedColumnName(
                 functionDefinition.Source.ColumnMappings,
@@ -851,7 +845,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         #region Having Clause Building
 
         // Adds SQL HAVING conditions when aggregate filters are configured.
-        protected virtual void AddHavingClauseIfNeeded(CompiledQueryDefinition queryDefinition, List<QuerySqlParameter> sqlParameters, List<string> sqlLines)
+        protected virtual void AddHavingClauseIfNeeded(CompiledQueryDefinition queryDefinition, QueryParameterCollection sqlParameters, List<string> sqlLines)
         {
             if (queryDefinition.HavingAggregateDefinitions.Count == 0)
                 return;
@@ -863,7 +857,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Builds a SQL HAVING aggregate condition.
-        private string BuildHavingAggregateCondition(QueryHavingAggregateDefinition havingDefinition, List<QuerySqlParameter> sqlParameters)
+        private string BuildHavingAggregateCondition(QueryHavingAggregateDefinition havingDefinition, QueryParameterCollection sqlParameters)
         {
             var columnName = ResolveMappedColumnName(havingDefinition.Source.ColumnMappings, havingDefinition.PropertyName);
 
@@ -895,19 +889,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
         // Adds a SQL parameter and returns the generated parameter name.
-        private static string AddSqlParameter(List<QuerySqlParameter> sqlParameters,object? value)
-        {
-            var parameterName = $"@p{sqlParameters.Count}";
-
-            sqlParameters.Add(
-                new QuerySqlParameter
-                {
-                    Name = parameterName,
-                    Value = value
-                });
-
-            return parameterName;
-        }
+        protected virtual string AddSqlParameter(QueryParameterCollection sqlParameters, object? value) => sqlParameters.Add(value);        
 
         #endregion
 
