@@ -1,16 +1,17 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 
+
 namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
 {
 
     /// <summary>
-    /// Provides provider-shared snapshot test infrastructure for query compiler tests.
+    /// Provides shared provider-specific query compiler test infrastructure.
     /// </summary>
-    public abstract class QueryCompilerSnapshotTestBase
+    public abstract class QueryCompilerProviderTestBase
     {
         /// <summary>
-        /// Gets the provider name used to resolve snapshot files.
+        /// Gets the provider name used to resolve provider-specific snapshots.
         /// </summary>
         protected abstract string ProviderName { get; }
 

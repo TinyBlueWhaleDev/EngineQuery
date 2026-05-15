@@ -1,0 +1,6 @@
+SELECT `u`.`user_id` AS `UserId`, `u`.`email`
+FROM `users` AS `u`
+WHERE (`u`.`is_active` = @p0)
+
+-- Parameters
+@p0 = True

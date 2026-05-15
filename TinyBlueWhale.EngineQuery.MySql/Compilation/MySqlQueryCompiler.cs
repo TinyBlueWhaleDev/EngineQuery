@@ -1,4 +1,5 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.MySqlServer.Capabilities;
@@ -9,7 +10,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Compilation
     /// <summary>
     /// Compiles query definitions into MySQL command text.
     /// </summary>
-    public sealed class MySqlQueryCompiler(ISqlDatabaseDialect databaseDialect, MySqlProviderCapabilities providerCapabilities) : QueryCompilerBase(databaseDialect, providerCapabilities)
+    public sealed class MySqlQueryCompiler(ISqlDatabaseDialect databaseDialect, IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(databaseDialect, providerCapabilities)
     {
         // Builds a MySQL LATERAL join clause for APPLY definitions.
         protected override string BuildApplyClause(QueryApplyDefinition applyDefinition, string commandText)

@@ -1,8 +1,7 @@
-SELECT "o"."order_id" AS "OrderId", "o"."total", CASE WHEN (("o"."total" > @p0) AND ("o"."total" < @p1)) THEN @p2 ELSE @p3 END AS "CustomerType"
+SELECT "o"."order_id" AS "OrderId", "o"."total", CASE WHEN ("o"."total" > @p0) THEN @p1 ELSE @p2 END AS "CustomerType"
 FROM "orders" AS "o"
 
 -- Parameters
 @p0 = 1000
-@p1 = 5000
-@p2 = VIP
-@p3 = STANDARD
+@p1 = VIP
+@p2 = STANDARD
