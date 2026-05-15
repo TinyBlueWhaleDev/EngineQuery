@@ -274,6 +274,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 QueryWindowFunction.DenseRank => "DENSE_RANK",
                 QueryWindowFunction.Lag => "LAG",
                 QueryWindowFunction.Lead => "LEAD",
+                QueryWindowFunction.FirstValue => "FIRST_VALUE",
+                QueryWindowFunction.LastValue => "LAST_VALUE",
                 _ => throw new NotSupportedException($"Window function '{function}' is not supported.")
             };
         }

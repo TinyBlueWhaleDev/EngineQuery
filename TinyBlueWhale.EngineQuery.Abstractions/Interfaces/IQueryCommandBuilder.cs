@@ -147,14 +147,94 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias);
 
         /// <summary>
-        /// Adds a LAG window function projection to the current query.
+        /// Adds a <c>LAG</c> window function projection to the current query.
         /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type containing the target column expression.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Expression that identifies the column used by the <c>LAG</c> function.
+        /// </param>
+        /// <param name="alias">
+        /// Alias assigned to the generated SQL projection.
+        /// </param>
+        /// <param name="windowBuilder">
+        /// Function used to configure the window definition, including
+        /// <c>PARTITION BY</c> and <c>ORDER BY</c> clauses.
+        /// </param>
+        /// <param name="offset">
+        /// Number of rows behind the current row to access.
+        /// Default value is <c>1</c>.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance for method chaining.
+        /// </returns>
         IQueryCommandBuilder<T> SelectLag<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1);
 
         /// <summary>
-        /// Adds a LEAD window function projection to the current query.
+        /// Adds a <c>LEAD</c> window function projection to the current query.
         /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type containing the target column expression.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Expression that identifies the column used by the <c>LEAD</c> function.
+        /// </param>
+        /// <param name="alias">
+        /// Alias assigned to the generated SQL projection.
+        /// </param>
+        /// <param name="windowBuilder">
+        /// Function used to configure the window definition, including
+        /// <c>PARTITION BY</c> and <c>ORDER BY</c> clauses.
+        /// </param>
+        /// <param name="offset">
+        /// Number of rows ahead of the current row to access.
+        /// Default value is <c>1</c>.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance for method chaining.
+        /// </returns>      
         IQueryCommandBuilder<T> SelectLead<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1);
+
+        /// <summary>
+        /// Adds a FIRST_VALUE window function projection to the current query.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected window function value.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Expression that selects the value returned by FIRST_VALUE.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the FIRST_VALUE result.
+        /// </param>
+        /// <param name="windowBuilder">
+        /// Function used to configure the window function clauses.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> SelectFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
+
+        /// <summary>
+        /// Adds a LAST_VALUE window function projection to the current query.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected window function value.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Expression that selects the value returned by LAST_VALUE.
+        /// </param>
+        /// <param name="alias">
+        /// SQL alias assigned to the LAST_VALUE result.
+        /// </param>
+        /// <param name="windowBuilder">
+        /// Function used to configure the window function clauses.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        IQueryCommandBuilder<T> SelectLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
 
         /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
