@@ -787,6 +787,76 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return AddJoin(QueryJoinType.Left, tableName, alias, on);
         }
 
+        /// <summary>
+        /// Adds a CROSS APPLY or provider-equivalent LATERAL subquery join to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> CrossApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
+        {
+            return AddApply(QueryApplyType.Cross, alias, typeof(TOuter), applyBuilder);
+        }
+
+        /// <summary>
+        /// Adds an OUTER APPLY or provider-equivalent LEFT LATERAL subquery join to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> OuterApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
+        {
+            return AddApply(QueryApplyType.Outer, alias, typeof(TOuter), applyBuilder);
+        }
+
+        // Adds an APPLY or provider-equivalent LATERAL subquery join to the current query.
+        private QueryCommandBuilder<T> AddApply<TApply>(QueryApplyType applyType, string alias, Type outerEntityType, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+            ArgumentNullException.ThrowIfNull(outerEntityType);
+            ArgumentNullException.ThrowIfNull(applyBuilder);
+
+            var outerSource = ResolveQuerySource(
+                outerEntityType);
+
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<TApply>(out var applyMetadata))
+                throw new InvalidOperationException($"Metadata for entity type '{typeof(TApply).Name}' could not be resolved.");
+
+            var columnMappings = applyMetadata!.Properties.ToDictionary(
+                property => property.Key,
+                property => property.Value.ColumnName);
+
+            var applyCommandBuilder = new QueryCommandBuilder<TApply>(
+                _queryCompiler,
+                applyMetadata.TableName,
+                alias,
+                columnMappings,
+                _metadataResolver);
+
+            applyCommandBuilder.RegisterOuterSources(
+                new Dictionary<Type, QuerySourceDefinition>
+                {
+                    [outerEntityType] = outerSource
+                });
+
+            var configuredApplyCommandBuilder = applyBuilder(
+                applyCommandBuilder);
+
+            if (configuredApplyCommandBuilder is not QueryCommandBuilder<TApply> concreteApplyCommandBuilder)
+                throw new InvalidOperationException("The APPLY builder returned an unsupported query command builder instance.");
+
+            var applyQueryDefinition = concreteApplyCommandBuilder.BuildDefinition();
+
+            applyQueryDefinition.ForceSelectAliases = true;
+
+            _queryDefinition.ApplyDefinitions.Add(
+                new QueryApplyDefinition
+                {
+                    ApplyType = applyType,
+                    Alias = alias,
+                    Subquery = applyQueryDefinition
+                });
+
+            return this;
+        }
+
         // Adds a metadata-driven join definition.
         private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
