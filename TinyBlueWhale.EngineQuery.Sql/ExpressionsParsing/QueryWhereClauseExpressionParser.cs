@@ -2,6 +2,7 @@
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.Parameters;
 
 namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
 {
@@ -12,13 +13,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
     /// This parser is responsible for converting supported expression patterns
     /// into provider-specific SQL predicate fragments and query parameters.
     /// </remarks>
-    public sealed class QueryWhereClauseExpressionParser(ISqlDatabaseDialect databaseDialect, 
-        List<QuerySqlParameter> sqlParameters, 
+    public sealed class QueryWhereClauseExpressionParser(ISqlDatabaseDialect databaseDialect,
+        QueryParameterCollection sqlParameters, 
         IReadOnlyDictionary<string, string> columnMappings,
         string? tableAlias = null)
     {
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
-        private readonly List<QuerySqlParameter> _sqlParameters = sqlParameters;
+        private readonly QueryParameterCollection _sqlParameters = sqlParameters;
         private readonly IReadOnlyDictionary<string, string> _columnMappings = columnMappings;
         private readonly string? _tableAlias = tableAlias;
 
@@ -216,15 +217,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         // Registers a SQL parameter preserving deterministic parameter ordering.
         private string AddSqlParameter(object? value)
         {
-            var parameterName = $"@p{_sqlParameters.Count}";
-
-            _sqlParameters.Add(new QuerySqlParameter
-            {
-                Name = parameterName,
-                Value = value
-            });
-
-            return parameterName;
+            return _sqlParameters.Add(value);
         }
 
         // Represents supported SQL LIKE search patterns.
