@@ -27,4 +27,5 @@
 //UnionQueryValidator.Run();
 //UnionAllQueryValidator.Run();
 //RowNumberWindowFunctionQueryValidator.Run();
-DistinctQueryValidator.Run();
+//DistinctQueryValidator.Run();
+RankingWindowFunctionQueryValidator.Run();

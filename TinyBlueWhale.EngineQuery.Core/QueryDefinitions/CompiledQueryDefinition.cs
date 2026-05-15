@@ -61,10 +61,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// </summary>
         public bool IsDistinct { get; set; }
 
-        /// <summary>
-        /// Gets ROW_NUMBER window function projections associated with the query.
+        /// /// <summary>
+        /// Gets SQL window function projections associated with the query.
         /// </summary>
-        public List<QueryRowNumberDefinition> RowNumberDefinitions { get; } = [];
+        public List<QueryWindowFunctionDefinition> WindowFunctionDefinitions { get; } = [];
 
         /// <summary>
         /// Gets the UNION query definitions associated with the query.
