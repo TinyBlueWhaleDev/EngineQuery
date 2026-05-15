@@ -2,7 +2,6 @@
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
-using TinyBlueWhale.EngineQuery.PostgreSqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 
 namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation

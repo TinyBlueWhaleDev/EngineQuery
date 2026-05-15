@@ -4,14 +4,30 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Capabilities
 {
     /// <summary>
     /// Defines SQL Server provider capability support.
     /// </summary>
-    public sealed class SqlServerProviderCapabilities : IDatabaseProviderCapabilities
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="SqlServerProviderCapabilities"/> class.
+    /// </remarks>
+    public sealed class SqlServerProviderCapabilities(DatabaseProviderVersion version) : IDatabaseProviderCapabilities
     {
+        private static readonly DatabaseProviderVersion DefaultVersion = DatabaseProviderVersion.Create(16, 0);
+
+        private readonly DatabaseProviderVersion _version = version ?? throw new ArgumentNullException(nameof(version));
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SqlServerProviderCapabilities"/> class using the default modern SQL Server version.
+        /// </summary>
+        public SqlServerProviderCapabilities()
+            : this(DefaultVersion)
+        {
+        }
+
         /// <inheritdoc />
         public bool SupportsCommonTableExpressions => true;
 
@@ -31,7 +47,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Capabilities
         public bool SupportsExcept => true;
 
         /// <inheritdoc />
-        public bool SupportsOffsetFetchPagination => true;
+        public bool SupportsOffsetFetchPagination => _version.IsAtLeast(11, 0);
 
         /// <inheritdoc />
         public bool SupportsLimitOffsetPagination => false;
