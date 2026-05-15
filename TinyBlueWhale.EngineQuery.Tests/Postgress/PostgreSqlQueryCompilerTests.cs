@@ -24,7 +24,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Postgress
         {
             return new QueryBuilder(
                 new PostgreSqlQueryCompiler(
-                    new PostgreSqlDatabaseDialect()));
+                    new PostgreSqlDatabaseDialect(), new PostgreSqlServer.Capabilities.PostgreSqlProviderCapabilities()));
         }
     }
 }

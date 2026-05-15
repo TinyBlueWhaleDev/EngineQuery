@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
@@ -24,9 +25,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// This compiler transforms query definitions into provider-specific SQL command text
     /// while delegating syntax differences to the configured database dialect.
     /// </remarks>
-    public abstract class QueryCompilerBase(ISqlDatabaseDialect databaseDialect) : IQueryCompiler
+    public abstract class QueryCompilerBase(ISqlDatabaseDialect databaseDialect,
+        IDatabaseProviderCapabilities providerCapabilities) : IQueryCompiler
     {
         protected readonly ISqlDatabaseDialect _databaseDialect = databaseDialect ?? throw new ArgumentNullException(nameof(databaseDialect));
+        private readonly IDatabaseProviderCapabilities _providerCapabilities = providerCapabilities ?? throw new ArgumentNullException(nameof(providerCapabilities));
 
         /// <summary>
         /// Compiles the specified query definition into a generated SQL query.
@@ -40,6 +43,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         public GeneratedSqlQuery Compile(CompiledQueryDefinition queryDefinition)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
+
+            ValidateProviderCapabilities(queryDefinition);
 
             var sqlParameters = new List<QuerySqlParameter>();
 
@@ -55,6 +60,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             AddGroupByClauseIfNeeded(queryDefinition, sqlLines);
             AddHavingClauseIfNeeded(queryDefinition, sqlParameters, sqlLines);
             AddOrderByClauseIfNeeded(queryDefinition, sqlLines);
+
+            if (queryDefinition.Pagination.HasPagination)
+                ValidatePaginationSupport();            
+
             AddPaginationClauseIfNeeded(queryDefinition, sqlLines);
 
             var commandText = string.Join(Environment.NewLine, sqlLines);
@@ -70,6 +79,54 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 CommandText = commandText,
                 Parameters = sqlParameters
             };
+        }
+
+        // Validates whether the current provider supports all features used by the query.
+        protected virtual void ValidateProviderCapabilities(CompiledQueryDefinition queryDefinition)
+        {
+            if (queryDefinition.CteDefinitions.Count > 0 && !_providerCapabilities.SupportsCommonTableExpressions)
+                throw new NotSupportedException("Common table expressions are not supported by the current provider.");
+
+            if (queryDefinition.CteDefinitions.Any(cteDefinition => cteDefinition.IsRecursive) && !_providerCapabilities.SupportsRecursiveCommonTableExpressions)
+                throw new NotSupportedException("Recursive common table expressions are not supported by the current provider.");
+
+            if (queryDefinition.WindowFunctionDefinitions.Count > 0 && !_providerCapabilities.SupportsWindowFunctions)
+                throw new NotSupportedException("Window functions are not supported by the current provider.");
+
+            if (queryDefinition.ApplyDefinitions.Count > 0 && !_providerCapabilities.SupportsLateralJoins)
+                throw new NotSupportedException("APPLY or LATERAL joins are not supported by the current provider.");
+
+            if (queryDefinition.SetOperationDefinitions.Any(setOperation => setOperation.Operation == QuerySetOperation.Intersect) && !_providerCapabilities.SupportsIntersect)
+                throw new NotSupportedException("INTERSECT set operations are not supported by the current provider.");
+
+            if (queryDefinition.SetOperationDefinitions.Any(setOperation => setOperation.Operation == QuerySetOperation.Except) && !_providerCapabilities.SupportsExcept)
+                throw new NotSupportedException("EXCEPT set operations are not supported by the current provider.");
+
+            foreach (var cteDefinition in queryDefinition.CteDefinitions)
+                ValidateProviderCapabilities(cteDefinition.Query);            
+
+            foreach (var setOperationDefinition in queryDefinition.SetOperationDefinitions)
+                ValidateProviderCapabilities(setOperationDefinition.Query);
+
+            foreach (var applyDefinition in queryDefinition.ApplyDefinitions)
+                ValidateProviderCapabilities(applyDefinition.Subquery);
+
+            foreach (var existsDefinition in queryDefinition.ExistsDefinitions)
+                ValidateProviderCapabilities(existsDefinition.Subquery);
+
+            foreach (var inSubqueryDefinition in queryDefinition.InSubqueryDefinitions)
+                ValidateProviderCapabilities(inSubqueryDefinition.Subquery);
+
+            foreach (var sourceDefinition in queryDefinition.SourceDefinitions.Values.Where(source => source.IsDerivedTable))            
+                ValidateProviderCapabilities(sourceDefinition.Subquery!);
+            
+        }
+
+        // Validates whether the current provider supports the configured pagination syntax.
+        protected virtual void ValidatePaginationSupport()
+        {
+            if (!_providerCapabilities.SupportsOffsetFetchPagination && !_providerCapabilities.SupportsLimitOffsetPagination)
+                throw new NotSupportedException("Pagination is not supported by the current provider.");
         }
 
         #region Builds the SQL WITH clause

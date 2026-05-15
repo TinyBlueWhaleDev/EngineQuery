@@ -7,8 +7,11 @@ using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
 using TinyBlueWhale.EngineQuery.MySql.Dialects;
+using TinyBlueWhale.EngineQuery.MySqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
 using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
+using TinyBlueWhale.EngineQuery.PostgreSqlServer.Capabilities;
+using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
@@ -23,18 +26,18 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         /// Creates a SQL Server query builder.
         /// </summary>
         public static QueryBuilder CreateSqlServer(FluentEntityMetadataResolver metadataResolver) =>
-            new(new SqlServerQueryCompiler(new SqlServerDatabaseDialect()), metadataResolver);
+            new(new SqlServerQueryCompiler(new SqlServerDatabaseDialect(),new SqlServerProviderCapabilities()), metadataResolver);
 
         /// <summary>
         /// Creates a PostgreSQL query builder.
         /// </summary>
         public static QueryBuilder CreatePostgreSql(FluentEntityMetadataResolver metadataResolver) =>
-            new(new PostgreSqlQueryCompiler(new PostgreSqlDatabaseDialect()), metadataResolver);
+            new(new PostgreSqlQueryCompiler(new PostgreSqlDatabaseDialect(), new PostgreSqlProviderCapabilities()), metadataResolver);
 
         /// <summary>
         /// Creates a MySQL query builder.
         /// </summary>
         public static QueryBuilder CreateMySql(FluentEntityMetadataResolver metadataResolver) =>
-            new(new MySqlQueryCompiler(new MySqlDatabaseDialect()), metadataResolver);
+            new(new MySqlQueryCompiler(new MySqlDatabaseDialect(), new MySqlProviderCapabilities()), metadataResolver);
     }
 }

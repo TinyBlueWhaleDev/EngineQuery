@@ -14,7 +14,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.SqlServer
         protected override QueryBuilder CreateQueryBuilder()
         {
             return new QueryBuilder(
-                new SqlServerQueryCompiler(new SqlServerDatabaseDialect()));
+                new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new EngineQuery.SqlServer.Capabilities.SqlServerProviderCapabilities()));
         }
     }
 }

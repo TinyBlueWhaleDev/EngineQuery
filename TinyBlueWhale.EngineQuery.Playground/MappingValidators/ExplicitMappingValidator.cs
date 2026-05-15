@@ -16,7 +16,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
         {
             var queryBuilder = new QueryBuilder(
                 new SqlServerQueryCompiler(
-                    new SqlServerDatabaseDialect()));
+                    new SqlServerDatabaseDialect(), new SqlServer.Capabilities.SqlServerProviderCapabilities()));
 
             var sql = queryBuilder
                 .From<ExplicitLogEntry>("system_logs")

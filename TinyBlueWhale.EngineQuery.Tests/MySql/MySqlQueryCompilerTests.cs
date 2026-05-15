@@ -20,7 +20,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.MySql
         {
             return new QueryBuilder(
                 new MySqlQueryCompiler(
-                    new MySqlDatabaseDialect()));
+                    new MySqlDatabaseDialect(), new EngineQuery.MySqlServer.Capabilities.MySqlProviderCapabilities()));
         }
     }
 }
