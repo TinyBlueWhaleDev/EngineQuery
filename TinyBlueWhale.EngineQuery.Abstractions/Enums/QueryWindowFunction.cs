@@ -17,6 +17,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Enums
         Lag = 4,
         Lead = 5,        
         FirstValue = 6,
-        LastValue = 7
+        LastValue = 7,
+        Ntile = 8
     }
 }

@@ -33,4 +33,5 @@
 //ApplyLateralJoinQueryValidator.Run();
 //RecursiveCommonTableExpressionQueryValidator.Run();
 //AdvancedWindowFunctionQueryValidator.Run();
-FirstLastValueWindowFunctionQueryValidator.Run();
+//FirstLastValueWindowFunctionQueryValidator.Run();
+NtileWindowFunctionQueryValidator.Run();

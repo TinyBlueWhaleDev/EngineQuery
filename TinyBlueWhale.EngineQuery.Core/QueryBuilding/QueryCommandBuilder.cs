@@ -212,6 +212,37 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return AddValueWindowFunction(QueryWindowFunction.LastValue, expression, alias, windowBuilder);
         }
 
+        /// <summary>
+        /// Adds an NTILE window function projection to the current query.
+        /// </summary>
+        public IQueryCommandBuilder<T> SelectNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(buckets);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+            ArgumentNullException.ThrowIfNull(windowBuilder);
+
+            var builder = new WindowFunctionBuilder(ResolveQuerySource);
+
+            windowBuilder(builder);
+
+            var arguments = new List<QueryWindowFunctionArgumentDefinition>
+            {
+                new()
+                {
+                    ArgumentType = QueryWindowFunctionArgumentType.Constant,
+                    ConstantValue = buckets
+                }
+            };
+
+            _queryDefinition.WindowFunctionDefinitions.Add(
+                builder.BuildWindowFunctionDefinition(
+                    QueryWindowFunction.Ntile,
+                    alias,
+                    arguments));
+
+            return this;
+        }
+
 
         // Adds a value-based SQL window function projection without offset arguments.
         private QueryCommandBuilder<T> AddValueWindowFunction<TEntity>(QueryWindowFunction function, Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int? offset = null)
