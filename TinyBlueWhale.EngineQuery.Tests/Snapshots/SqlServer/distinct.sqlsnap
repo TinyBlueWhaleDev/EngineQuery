@@ -1,0 +1,2 @@
+SELECT DISTINCT [u].[email]
+FROM [users] AS [u]

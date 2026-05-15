@@ -1,0 +1,2 @@
+SELECT `Users`.`Id`, `Users`.`Email`
+FROM `Users` AS `Users`

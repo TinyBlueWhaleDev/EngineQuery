@@ -1,0 +1,4 @@
+SELECT *
+FROM [Users] AS [Users]
+ORDER BY [Users].[Email] ASC, [Users].[CreatedAt] DESC
+OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY

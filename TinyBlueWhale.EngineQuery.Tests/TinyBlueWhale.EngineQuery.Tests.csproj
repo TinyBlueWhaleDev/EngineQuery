@@ -27,4 +27,10 @@
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Snapshots\MySql\" />
+    <Folder Include="Snapshots\PostgreSql\" />
+    <Folder Include="Snapshots\SqlServer\" />
+  </ItemGroup>
+
 </Project>
