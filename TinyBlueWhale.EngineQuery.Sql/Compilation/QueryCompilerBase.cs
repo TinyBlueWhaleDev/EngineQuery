@@ -15,6 +15,7 @@ using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Parameters;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing;
+using TinyBlueWhale.EngineQuery.Sql.Formatting;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Compilation
@@ -75,9 +76,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             if (queryDefinition.CteDefinitions.Count > 0)
                 commandText = BuildCteClause(queryDefinition, sqlParameters) + Environment.NewLine + commandText;
 
+            var formattedCommandText = SqlScriptFormatter.Format(commandText);
+
             return new GeneratedSqlQuery
             {
-                CommandText = commandText,
+                CommandText = formattedCommandText,
                 Parameters = sqlParameters.Parameters
             };
         }
