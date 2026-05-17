@@ -410,16 +410,29 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         {
             var columnReference = BuildSelectColumnReference(queryDefinition, selectDefinition);
 
-            var shouldApplyAlias = queryDefinition.ForceSelectAliases || !string.IsNullOrWhiteSpace(selectDefinition.Alias);
-
-            if (!shouldApplyAlias)
-                return columnReference;
+            var columnName = ResolveSelectColumnName(queryDefinition, selectDefinition);
 
             var alias = string.IsNullOrWhiteSpace(selectDefinition.Alias)
                 ? selectDefinition.PropertyName
                 : selectDefinition.Alias;
 
+            var shouldApplyAlias = queryDefinition.ForceSelectAliases ||
+                !string.IsNullOrWhiteSpace(selectDefinition.Alias) ||
+                !string.Equals(columnName, alias, StringComparison.Ordinal);
+
+            if (!shouldApplyAlias)
+                return columnReference;
+
             return $"{columnReference} AS {_databaseDialect.EscapeIdentifier(alias)}";
+        }
+
+        // Resolves the physical database column name for a select projection.
+        private static string ResolveSelectColumnName(CompiledQueryDefinition queryDefinition, QuerySelectColumnDefinition selectDefinition)
+        {
+            if (selectDefinition.Source is not null)
+                return ResolveMappedColumnName(selectDefinition.Source.ColumnMappings, selectDefinition.PropertyName);
+
+            return QueryColumnMappingHelper.ResolveColumnName(queryDefinition, selectDefinition.PropertyName);
         }
 
         // Builds a SQL aggregate SELECT expression.
@@ -483,7 +496,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         }
 
 
-        // Builds a SQL column reference for single-source and multi-source projections.
         // Builds a SQL column reference for single-source and multi-source projections.
         private string BuildSelectColumnReference(
             CompiledQueryDefinition queryDefinition,
