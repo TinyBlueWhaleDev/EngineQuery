@@ -407,8 +407,7 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
                     .SelectNtile(
                         4,
                         "InvoiceQuartile",
-                        window => window
-                            .OrderByDescending<InvoiceFluent>(invoice => invoice.Total))
+                        window => window.OrderByDescending<InvoiceFluent>(invoice => invoice.Total))
                     .Build()
             };
         }
@@ -455,8 +454,7 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
                     .SelectNtile(
                         4,
                         "InvoiceQuartile",
-                        window => window
-                            .OrderByDescending<InvoiceEf>(invoice => invoice.Total))
+                        window => window.OrderByDescending<InvoiceEf>(invoice => invoice.Total))
                     .Build()
             };
         }

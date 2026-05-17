@@ -11,6 +11,6 @@ namespace TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadMo
         public int InvoiceId { get; set; }
         public int CustomerId { get; set; }
         public decimal Total { get; set; }
-        public int InvoiceQuartile { get; set; }
+        public long InvoiceQuartile { get; set; }
     }
 }
