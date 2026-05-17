@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Sql.Formatting
 {
 
@@ -27,8 +22,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Formatting
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(sql);
 
-            var lines = sql
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var lines = sql.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             var formattedLines = new List<string>();
 
@@ -60,10 +54,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Formatting
         }
 
         // Determines whether the token starts a top-level SQL clause.
-        private static bool IsClauseStart(
-            string token,
-            string[] tokens,
-            int index)
+        private static bool IsClauseStart(string token, string[] tokens, int index)
         {
             if (index == 0)
                 return true;
@@ -74,40 +65,31 @@ namespace TinyBlueWhale.EngineQuery.Sql.Formatting
             if (token.Equals("WHERE", StringComparison.Ordinal))
                 return true;
 
-            if (token.Equals("GROUP", StringComparison.Ordinal) &&
-                NextTokenEquals(tokens, index, "BY"))
+            if (token.Equals("GROUP", StringComparison.Ordinal) && NextTokenEquals(tokens, index, "BY"))
                 return true;
 
             if (token.Equals("HAVING", StringComparison.Ordinal))
                 return true;
 
-            if (token.Equals("ORDER", StringComparison.Ordinal) &&
-                NextTokenEquals(tokens, index, "BY"))
+            if (token.Equals("ORDER", StringComparison.Ordinal) && NextTokenEquals(tokens, index, "BY"))
                 return true;
 
-            if (token.Equals("INNER", StringComparison.Ordinal) &&
-                NextTokenEquals(tokens, index, "JOIN"))
+            if (token.Equals("INNER", StringComparison.Ordinal) && NextTokenEquals(tokens, index, "JOIN"))
                 return true;
 
-            if (token.Equals("LEFT", StringComparison.Ordinal) &&
-                NextTokenEquals(tokens, index, "JOIN"))
+            if (token.Equals("LEFT", StringComparison.Ordinal) && NextTokenEquals(tokens, index, "JOIN"))
                 return true;
 
-            if (token.Equals("RIGHT", StringComparison.Ordinal) &&
-                NextTokenEquals(tokens, index, "JOIN"))
+            if (token.Equals("RIGHT", StringComparison.Ordinal) && NextTokenEquals(tokens, index, "JOIN"))
                 return true;
 
-            if (token.Equals("FULL", StringComparison.Ordinal) &&
-                NextTokenEquals(tokens, index, "JOIN"))
+            if (token.Equals("FULL", StringComparison.Ordinal) && NextTokenEquals(tokens, index, "JOIN"))
                 return true;
 
-            if (token.Equals("CROSS", StringComparison.Ordinal) &&
-                (NextTokenEquals(tokens, index, "JOIN") ||
-                 NextTokenEquals(tokens, index, "APPLY")))
+            if (token.Equals("CROSS", StringComparison.Ordinal) && (NextTokenEquals(tokens, index, "JOIN") || NextTokenEquals(tokens, index, "APPLY")))
                 return true;
 
-            if (token.Equals("OUTER", StringComparison.Ordinal) &&
-                NextTokenEquals(tokens, index, "APPLY"))
+            if (token.Equals("OUTER", StringComparison.Ordinal) && NextTokenEquals(tokens, index, "APPLY"))
                 return true;
 
             if (token.Equals("UNION", StringComparison.Ordinal))
