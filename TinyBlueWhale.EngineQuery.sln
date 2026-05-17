@@ -21,6 +21,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Sql", "TinyBlueWhale.EngineQuery.Sql\TinyBlueWhale.EngineQuery.Sql.csproj", "{9CA5264D-25F3-40BD-8F9B-3B147B93E5FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Metadata.EntityFramework", "TinyBlueWhale.EngineQuery.Metadata.EntityFramework\TinyBlueWhale.EngineQuery.Metadata.EntityFramework.csproj", "{430E7AEC-A8DB-4526-9CAA-C9D06E568710}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Samples", "TinyBlueWhale.EngineQuery.Samples\TinyBlueWhale.EngineQuery.Samples.csproj", "{A028F77C-3FFD-4D2B-8521-59CC27E226D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +67,14 @@ Global
 		{9CA5264D-25F3-40BD-8F9B-3B147B93E5FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9CA5264D-25F3-40BD-8F9B-3B147B93E5FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9CA5264D-25F3-40BD-8F9B-3B147B93E5FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{430E7AEC-A8DB-4526-9CAA-C9D06E568710}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{430E7AEC-A8DB-4526-9CAA-C9D06E568710}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{430E7AEC-A8DB-4526-9CAA-C9D06E568710}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{430E7AEC-A8DB-4526-9CAA-C9D06E568710}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A028F77C-3FFD-4D2B-8521-59CC27E226D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A028F77C-3FFD-4D2B-8521-59CC27E226D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A028F77C-3FFD-4D2B-8521-59CC27E226D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A028F77C-3FFD-4D2B-8521-59CC27E226D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

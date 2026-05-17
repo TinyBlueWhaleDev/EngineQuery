@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadModels
+{
+    public sealed class CustomerInvoiceSummaryRow
+    {
+        public int CustomerId { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public int InvoiceCount { get; set; }
+    }
+}
