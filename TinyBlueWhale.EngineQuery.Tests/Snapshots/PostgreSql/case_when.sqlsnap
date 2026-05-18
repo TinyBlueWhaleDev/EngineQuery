@@ -1,4 +1,4 @@
-SELECT "o"."order_id" AS "OrderId", "o"."total", CASE WHEN ("o"."total" > @p0) THEN @p1 ELSE @p2 END AS "CustomerType"
+SELECT "o"."order_id" AS "OrderId", "o"."total" AS "Total", CASE WHEN ("o"."total" > @p0) THEN @p1 ELSE @p2 END AS "CustomerType"
 FROM "orders" AS "o"
 
 -- Parameters

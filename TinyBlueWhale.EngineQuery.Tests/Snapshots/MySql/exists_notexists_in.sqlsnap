@@ -1,10 +1,10 @@
-SELECT `u`.`user_id` AS `UserId`, `u`.`email`
+SELECT `u`.`user_id` AS `UserId`, `u`.`email` AS `Email`
 FROM `users` AS `u`
 WHERE EXISTS (SELECT 1
 FROM `orders` AS `o`
 WHERE ((`o`.`user_id` = `u`.`user_id`) AND (`o`.`total` > @p0))) AND NOT EXISTS (SELECT 1
 FROM `orders` AS `o2`
-WHERE ((`o2`.`user_id` = `u`.`user_id`) AND (`o2`.`total` <= @p1))) AND `u`.`user_id` IN (SELECT `oi`.`user_id`
+WHERE ((`o2`.`user_id` = `u`.`user_id`) AND (`o2`.`total` <= @p1))) AND `u`.`user_id` IN (SELECT `oi`.`user_id` AS `UserId`
 FROM `orders` AS `oi`
 WHERE (`oi`.`total` > @p2))
 

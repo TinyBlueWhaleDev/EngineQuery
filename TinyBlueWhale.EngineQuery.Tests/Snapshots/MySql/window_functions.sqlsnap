@@ -1,4 +1,4 @@
-SELECT `o`.`order_id` AS `OrderId`, `o`.`user_id`, `o`.`total`, ROW_NUMBER() OVER (PARTITION BY `o`.`user_id`
+SELECT `o`.`order_id` AS `OrderId`, `o`.`user_id` AS `UserId`, `o`.`total` AS `Total`, ROW_NUMBER() OVER (PARTITION BY `o`.`user_id`
 ORDER BY `o`.`total` DESC) AS `RowNumber`, RANK() OVER (PARTITION BY `o`.`user_id`
 ORDER BY `o`.`total` DESC) AS `OrderRank`, DENSE_RANK() OVER (PARTITION BY `o`.`user_id`
 ORDER BY `o`.`total` DESC) AS `DenseOrderRank`, LAG(`o`.`total`, @p0) OVER (PARTITION BY `o`.`user_id`
