@@ -2,23 +2,22 @@
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.MySql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Compilation
 {
     /// <summary>
     /// Compiles query definitions into MySQL command text.
     /// </summary>
-    public sealed class MySqlQueryCompiler(ISqlDatabaseDialect databaseDialect, IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(databaseDialect, providerCapabilities)
-    {
-        // Builds a MySQL LATERAL join clause for APPLY definitions.
-        protected override string BuildApplyClause(QueryApplyDefinition applyDefinition, string commandText)
-        {
-            var applyKeyword = applyDefinition.ApplyType == QueryApplyType.Cross
-                ? "JOIN LATERAL"
-                : "LEFT JOIN LATERAL";
-
-            return $"{applyKeyword} ({commandText}) AS {_databaseDialect.EscapeIdentifier(applyDefinition.Alias)} ON TRUE";
-        }
-    }
+    /// <remarks>
+    /// This compiler uses MySQL-specific APPLY behavior while reusing the default SQL builder pipeline.
+    /// </remarks>
+    public sealed class MySqlQueryCompiler(
+        ISqlDatabaseDialect databaseDialect,
+        IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
+            databaseDialect,
+            providerCapabilities,
+            MySqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));   
 }

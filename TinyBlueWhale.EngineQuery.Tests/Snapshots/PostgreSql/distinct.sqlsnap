@@ -1,2 +1,2 @@
-SELECT DISTINCT "u"."email"
+SELECT DISTINCT "u"."email" AS "Email"
 FROM "users" AS "u"

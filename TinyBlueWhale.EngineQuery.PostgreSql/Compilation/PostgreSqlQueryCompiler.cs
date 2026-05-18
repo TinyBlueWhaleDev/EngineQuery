@@ -2,23 +2,31 @@
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.PostgreSql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
 {
     /// <summary>
     /// Compiles query definitions into PostgreSQL command text.
     /// </summary>
-    public sealed class PostgreSqlQueryCompiler(ISqlDatabaseDialect databaseDialect, IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(databaseDialect, providerCapabilities)
-    {
-        // Builds a PostgreSQL LATERAL join clause for APPLY definitions.
-        protected override string BuildApplyClause(QueryApplyDefinition applyDefinition, string commandText)
-        {
-            var applyKeyword = applyDefinition.ApplyType == QueryApplyType.Cross
-                ? "JOIN LATERAL"
-                : "LEFT JOIN LATERAL";
-
-            return $"{applyKeyword} ({commandText}) AS {_databaseDialect.EscapeIdentifier(applyDefinition.Alias)} ON TRUE";
-        }
-    }
+    /// <remarks>
+    /// This compiler uses PostgreSQL-specific APPLY behavior while reusing the default SQL builder pipeline.
+    /// </remarks>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="PostgreSqlQueryCompiler"/> class.
+    /// </remarks>
+    /// <param name="databaseDialect">
+    /// PostgreSQL database dialect.
+    /// </param>
+    /// <param name="providerCapabilities">
+    /// PostgreSQL provider capabilities.
+    /// </param>
+    public sealed class PostgreSqlQueryCompiler(
+        ISqlDatabaseDialect databaseDialect,
+        IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
+            databaseDialect,
+            providerCapabilities,
+            PostgreSqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));    
 }

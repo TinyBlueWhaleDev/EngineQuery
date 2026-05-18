@@ -5,6 +5,7 @@ using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
+using TinyBlueWhale.EngineQuery.SqlServer.Composition;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
@@ -104,7 +105,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             public UnsupportedWindowFunctionQueryCompiler()
                 : base(
                     new SqlServerDatabaseDialect(),
-                    new UnsupportedWindowFunctionCapabilities())
+                    new UnsupportedWindowFunctionCapabilities(),
+                    SqlServerQueryCompilerFactory.CreateScriptBuilder(new SqlServerDatabaseDialect()))
             {
             }
         }

@@ -1,4 +1,4 @@
-SELECT "u"."user_id" AS "UserId", "u"."email", SUM("o"."total") AS "TotalAmount", COUNT("o"."order_id") AS "OrderCount"
+SELECT "u"."user_id" AS "UserId", "u"."email" AS "Email", SUM("o"."total") AS "TotalAmount", COUNT("o"."order_id") AS "OrderCount"
 FROM "users" AS "u"
 INNER JOIN "orders" AS "o" ON ("u"."user_id" = "o"."user_id")
 GROUP BY "u"."user_id", "u"."email"

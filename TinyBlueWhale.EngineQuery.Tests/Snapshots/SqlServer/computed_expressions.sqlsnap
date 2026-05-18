@@ -1,4 +1,4 @@
-SELECT [o].[order_id] AS [OrderId], [o].[total], ([o].[total] * @p0) AS [TotalWithTax]
+SELECT [o].[order_id] AS [OrderId], [o].[total] AS [Total], ([o].[total] * @p0) AS [TotalWithTax]
 FROM [orders] AS [o]
 WHERE (([o].[total] * @p1) > @p2)
 
