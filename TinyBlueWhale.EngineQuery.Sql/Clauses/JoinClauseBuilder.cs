@@ -78,17 +78,52 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
         private static string BuildJoinCondition(QueryJoinDefinition joinDefinition, QueryCompilationContext context)
         {
-            if (joinDefinition.JoinExpression.Body is not BinaryExpression binaryExpression)
-                throw new NotSupportedException($"Join expression '{joinDefinition.JoinExpression}' is not supported.");
+            return BuildJoinExpression(joinDefinition.JoinExpression.Body, joinDefinition, context);
+        }
 
-            if (binaryExpression.NodeType != ExpressionType.Equal)
-                throw new NotSupportedException($"Join operator '{binaryExpression.NodeType}' is not supported.");
+        private static string BuildJoinExpression(Expression expression, QueryJoinDefinition joinDefinition, QueryCompilationContext context)
+        {
+            expression = SqlComputedExpressionParser.UnwrapConvertExpression(expression);
+
+            if (expression is not BinaryExpression binaryExpression)
+                throw new NotSupportedException($"Join expression '{expression}' is not supported.");
+
+            if (binaryExpression.NodeType is ExpressionType.AndAlso or ExpressionType.OrElse)
+            {
+                var left = BuildJoinExpression(binaryExpression.Left, joinDefinition, context);
+
+                var right = BuildJoinExpression(binaryExpression.Right,joinDefinition, context);
+
+                var sqlOperator = binaryExpression.NodeType == ExpressionType.AndAlso
+                    ? "AND"
+                    : "OR";
+
+                return $"({left} {sqlOperator} {right})";
+            }
+
+            var comparisonOperator = ResolveJoinComparisonOperator(binaryExpression.NodeType);
 
             var leftColumn = BuildJoinColumnReference(binaryExpression.Left, joinDefinition, context);
+
             var rightColumn = BuildJoinColumnReference(binaryExpression.Right, joinDefinition, context);
 
-            return $"({leftColumn} = {rightColumn})";
+            return $"({leftColumn} {comparisonOperator} {rightColumn})";
         }
+
+        private static string ResolveJoinComparisonOperator(ExpressionType expressionType)
+        {
+            return expressionType switch
+            {
+                ExpressionType.Equal => "=",
+                ExpressionType.NotEqual => "<>",
+                ExpressionType.GreaterThan => ">",
+                ExpressionType.GreaterThanOrEqual => ">=",
+                ExpressionType.LessThan => "<",
+                ExpressionType.LessThanOrEqual => "<=",
+                _ => throw new NotSupportedException(
+                    $"Join operator '{expressionType}' is not supported.")
+            };
+        }     
 
         private static string BuildJoinColumnReference(Expression expression, QueryJoinDefinition joinDefinition, QueryCompilationContext context)
         {

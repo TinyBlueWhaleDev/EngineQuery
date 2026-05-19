@@ -556,5 +556,58 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 "coalesce_computed_expression",
                 sql);
         }
+
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Compound_Join_AndAlso()
+        {
+            var sql = CreateQueryBuilder()
+                .From<JoinOrder>(alias: "o")
+                .LeftJoin<JoinOrder, JoinUser>(
+                    alias: "u",
+                    on: (order, user) =>
+                        order.UserId == user.Id &&
+                        order.TenantId == user.TenantId)
+                .Select<JoinOrder>(order => new
+                {
+                    order.Id,
+                    order.UserId
+                })
+                .Select<JoinUser>(user => new
+                {
+                    UserEmail = user.Email
+                })
+                .Build();
+
+            AssertSnapshot(
+                "compound_join_andalso",
+                sql);
+        }
+
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Compound_Join_OrElse()
+        {
+            var sql = CreateQueryBuilder()
+                .From<JoinOrder>(alias: "o")
+                .LeftJoin<JoinOrder, JoinUser>(
+                    alias: "u",
+                    on: (order, user) =>
+                        order.UserId == user.Id ||
+                        order.ApproverUserId == user.Id)
+                .Select<JoinOrder>(order => new
+                {
+                    order.Id,
+                    order.UserId
+                })
+                .Select<JoinUser>(user => new
+                {
+                    UserEmail = user.Email
+                })
+                .Build();
+
+            AssertSnapshot(
+                "compound_join_orelse",
+                sql);
+        }
+
     }
 }
