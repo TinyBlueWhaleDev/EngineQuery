@@ -48,11 +48,25 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         // Parses binary expressions such as addition, subtraction, multiplication and division.
         private string ParseBinaryExpression(BinaryExpression binaryExpression)
         {
+            ArgumentNullException.ThrowIfNull(binaryExpression);
+
+            if (binaryExpression.NodeType == ExpressionType.Coalesce)
+                return ParseCoalesceExpression(binaryExpression);
+
             var left = ParseExpression(UnwrapConvertExpression(binaryExpression.Left));
             var right = ParseExpression(UnwrapConvertExpression(binaryExpression.Right));
             var sqlOperator = ResolveSqlOperator(binaryExpression.NodeType);
 
             return $"({left} {sqlOperator} {right})";
+        }
+
+        // Parses SQL COALESCE expressions.
+        private string ParseCoalesceExpression(BinaryExpression binaryExpression)
+        {
+            var left = ParseExpression(binaryExpression.Left);
+            var right = ParseExpression(binaryExpression.Right);
+
+            return $"COALESCE({left}, {right})";
         }
 
         // Parses member access expressions as SQL column references or captured values.

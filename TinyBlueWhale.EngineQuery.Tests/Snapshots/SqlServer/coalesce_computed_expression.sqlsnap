@@ -1,0 +1,5 @@
+SELECT COALESCE([u].[Email], @p0) AS [Nombre]
+FROM [Users] AS [u]
+
+-- Parameters
+@p0 =

@@ -541,5 +541,20 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 Assert.That(sql1.Parameters[0].Value, Is.EqualTo(sql2.Parameters[0].Value));
             });
         }
+
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Coalesce_Computed_Expression()
+        {
+            var sql = CreateQueryBuilder()
+                .From<User>(alias: "u")
+                .SelectComputed<User>(
+                    u => u.Email ?? string.Empty,
+                    "Nombre")
+                .Build();
+
+            AssertSnapshot(
+                "coalesce_computed_expression",
+                sql);
+        }
     }
 }
