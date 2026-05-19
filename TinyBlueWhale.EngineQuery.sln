@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Samples", "TinyBlueWhale.EngineQuery.Samples\TinyBlueWhale.EngineQuery.Samples.csproj", "{A028F77C-3FFD-4D2B-8521-59CC27E226D1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyBlueWhale.EngineQuery.Benchmarks", "TinyBlueWhale.EngineQuery.Benchmarks\TinyBlueWhale.EngineQuery.Benchmarks.csproj", "{8EDAB7CF-63D2-4325-AB4C-F95536502190}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{A028F77C-3FFD-4D2B-8521-59CC27E226D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A028F77C-3FFD-4D2B-8521-59CC27E226D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A028F77C-3FFD-4D2B-8521-59CC27E226D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EDAB7CF-63D2-4325-AB4C-F95536502190}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EDAB7CF-63D2-4325-AB4C-F95536502190}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EDAB7CF-63D2-4325-AB4C-F95536502190}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EDAB7CF-63D2-4325-AB4C-F95536502190}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
