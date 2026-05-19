@@ -9,7 +9,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Providers.MySql
 
     /// <summary>
     /// Runs MySQL edge-case snapshot tests.
-    /// </summary>
+    /// </summary>    
     [TestFixture]
     public sealed class MySqlQueryEdgeSnapshotTests : QueryCompilerEdgeSnapshotTests
     {
