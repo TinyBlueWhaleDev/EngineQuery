@@ -16,6 +16,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Models
         public int Id { get; set; }
         public string Email { get; set; } = string.Empty;
         public bool IsActive { get; set; }
+        public int TenantId { get; set; }
     }
 
     public sealed class JoinOrder
@@ -23,6 +24,8 @@ namespace TinyBlueWhale.EngineQuery.Tests.Models
         public int Id { get; set; }
         public int UserId { get; set; }
         public decimal Total { get; set; }
+        public int TenantId { get; set; }
+        public int ApproverUserId { get; set; }
     }
 
     public sealed class JoinOrderItem
