@@ -6,6 +6,15 @@ using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Grouping;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Ordering;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Projections;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.SetOperations;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
@@ -26,7 +35,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
         private readonly IEntityMetadataResolver? _metadataResolver;
-        private readonly HashSet<string> _registeredAliases = [];
+
+        private readonly QueryCommandBuilderContext _context;
+        private readonly QueryCommandBuilderComponents _components;
 
         #region Constructor
         /// <summary>
@@ -62,8 +73,18 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _queryDefinition.SourceDefinitions[typeof(T)] = querySource;
 
+            _context = new QueryCommandBuilderContext
+            {
+                QueryCompiler = _queryCompiler,
+                QueryDefinition = _queryDefinition,
+                MetadataResolver = _metadataResolver,
+                AliasRegistry = new QueryAliasRegistry()
+            };
+
+            _components = QueryCommandBuilderComponentFactory.Create(_context);
+
             if (!string.IsNullOrWhiteSpace(querySource.TableAlias))
-                _registeredAliases.Add(querySource.TableAlias);
+                _context.AliasRegistry.Register(querySource.TableAlias);
         }
 
 
@@ -105,6 +126,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 EntityType = typeof(T)
             };
 
+            _context = new QueryCommandBuilderContext
+            {
+                QueryCompiler = _queryCompiler,
+                QueryDefinition = _queryDefinition,
+                MetadataResolver = _metadataResolver,
+                AliasRegistry = new QueryAliasRegistry()
+            };
+
+            _components = QueryCommandBuilderComponentFactory.Create(_context);
+
             RegisterRootSource(tableName, tableAlias);
         }
 
@@ -119,7 +150,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> Distinct()
         {
-            _queryDefinition.IsDistinct = true;
+            _components.SelectProjectionBuilder.ApplyDistinct();
 
             return this;
         }
@@ -140,11 +171,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> Select(Expression<Func<T, object>> selector)
         {
-            ArgumentNullException.ThrowIfNull(selector);
-
-            var selectedProperties = SelectedPropertyExpressionExtractor.ExtractSelectedProperties(selector);
-
-            _queryDefinition.SelectDefinitions.AddRange(selectedProperties);
+            _components.SelectProjectionBuilder.Add(selector);
 
             return this;
         }
@@ -163,19 +190,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> Select<TEntity>(Expression<Func<TEntity, object>> selector)
         {
-            ArgumentNullException.ThrowIfNull(selector);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-            var selectedColumns = SelectedPropertyExpressionExtractor.ExtractSelectedProperties(selector);
-
-            foreach (var selectedColumn in selectedColumns)
-            {
-                _queryDefinition.SelectDefinitions.Add(
-                    selectedColumn with
-                    {
-                        Source = sourceDefinition
-                    });
-            }
+            _components.SelectProjectionBuilder.AddForSource(selector);
 
             return this;
         }
@@ -183,17 +198,21 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a LAG window function projection to the current query.
         /// </summary>
-        public IQueryCommandBuilder<T> SelectLag<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1)
+        public IQueryCommandBuilder<T> SelectLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1)
         {
-            return AddValueWindowFunction(QueryWindowFunction.Lag, expression, alias, windowBuilder, offset);
+            _components.WindowFunctionProjectionBuilder.AddLag(expression, alias, windowBuilder, offset);
+
+            return this;
         }
 
         /// <summary>
         /// Adds a LEAD window function projection to the current query.
         /// </summary>
-        public IQueryCommandBuilder<T> SelectLead<TEntity>(Expression<Func<TEntity, object>> expression,string alias,Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder,int offset = 1)
+        public IQueryCommandBuilder<T> SelectLead<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1)
         {
-            return AddValueWindowFunction(QueryWindowFunction.Lead, expression, alias, windowBuilder, offset);
+            _components.WindowFunctionProjectionBuilder.AddLead(expression, alias, windowBuilder, offset);
+
+            return this;
         }
 
         /// <summary>
@@ -201,7 +220,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> SelectFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
-            return AddValueWindowFunction(QueryWindowFunction.FirstValue, expression, alias, windowBuilder);
+            _components.WindowFunctionProjectionBuilder.AddFirstValue(expression, alias, windowBuilder);
+
+            return this;
         }
 
         /// <summary>
@@ -209,7 +230,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> SelectLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
-            return AddValueWindowFunction(QueryWindowFunction.LastValue, expression, alias, windowBuilder);
+            _components.WindowFunctionProjectionBuilder.AddLastValue( expression, alias, windowBuilder);
+
+            return this;
         }
 
         /// <summary>
@@ -217,75 +240,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> SelectNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(buckets);
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-            ArgumentNullException.ThrowIfNull(windowBuilder);
-
-            var builder = new WindowFunctionBuilder(ResolveQuerySource);
-
-            windowBuilder(builder);
-
-            var arguments = new List<QueryWindowFunctionArgumentDefinition>
-            {
-                new()
-                {
-                    ArgumentType = QueryWindowFunctionArgumentType.Constant,
-                    ConstantValue = buckets
-                }
-            };
-
-            _queryDefinition.WindowFunctionDefinitions.Add(
-                builder.BuildWindowFunctionDefinition(
-                    QueryWindowFunction.Ntile,
-                    alias,
-                    arguments));
-
-            return this;
-        }
-
-
-        // Adds a value-based SQL window function projection without offset arguments.
-        private QueryCommandBuilder<T> AddValueWindowFunction<TEntity>(QueryWindowFunction function, Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int? offset = null)
-        {
-            ArgumentNullException.ThrowIfNull(expression);
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-            ArgumentNullException.ThrowIfNull(windowBuilder);
-
-            if(offset.HasValue)
-                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(offset.Value);
-
-            var source = ResolveQuerySource<TEntity>();
-
-            var columns = QueryColumnExpressionExtractor.ExtractColumns(expression);
-
-            if (columns.Count != 1)
-                throw new InvalidOperationException("Window value functions require a single selected column.");
-
-            var builder = new WindowFunctionBuilder(ResolveQuerySource);
-
-            windowBuilder(builder);
-
-            var arguments = new List<QueryWindowFunctionArgumentDefinition>
-            {
-                new()
-                {
-                    ArgumentType = QueryWindowFunctionArgumentType.Column,
-                    Column = columns[0],
-                    Source = source
-                }
-            };
-
-            if (offset.HasValue)
-            {
-                arguments.Add(new QueryWindowFunctionArgumentDefinition 
-                {
-                    ArgumentType = QueryWindowFunctionArgumentType.Constant,
-                    ConstantValue = offset.Value
-                });
-            }
-
-
-            _queryDefinition.WindowFunctionDefinitions.Add(builder.BuildWindowFunctionDefinition(function, alias, arguments));
+            _components.WindowFunctionProjectionBuilder.AddNtile(buckets, alias, windowBuilder);
 
             return this;
         }
@@ -320,18 +275,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> SelectComputed<TEntity>(Expression<Func<TEntity, object>> expression, string alias)
         {
-            ArgumentNullException.ThrowIfNull(expression);
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-
-            _queryDefinition.ComputedExpressionDefinitions.Add(
-                new QueryComputedExpressionDefinition
-                {
-                    Expression = expression,
-                    Alias = alias,
-                    Source = sourceDefinition
-                });
+            _components.ComputedProjectionBuilder.Add(expression, alias);
 
             return this;
         }
@@ -358,20 +302,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> SelectAggregate<TEntity>(QueryAggregateFunction function, Expression<Func<TEntity, object>> selector, string alias)
         {
-            ArgumentNullException.ThrowIfNull(selector);
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-            var propertyName = QueryColumnExpressionExtractor.ExtractColumns(selector).Single().PropertyName;
-
-            _queryDefinition.AggregateDefinitions.Add(
-                new QueryAggregateDefinition
-                {
-                    Function = function,
-                    PropertyName = propertyName,
-                    Alias = alias,
-                    Source = sourceDefinition
-                });
+            _components.AggregateProjectionBuilder.Add(function, selector, alias);
 
             return this;
         }
@@ -405,24 +336,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, string alias)
         {
-            ArgumentNullException.ThrowIfNull(selector);
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-
-            var propertyName = QueryColumnExpressionExtractor
-                .ExtractColumns(selector)
-                .Single()
-                .PropertyName;
-
-            _queryDefinition.ScalarFunctionDefinitions.Add(
-                new QueryScalarFunctionDefinition
-                {
-                    Function = function,
-                    PropertyName = propertyName,
-                    Alias = alias,
-                    Source = sourceDefinition
-                });
+            _components.ScalarFunctionProjectionBuilder.Add(function, selector, alias);
 
             return this;
         }
@@ -453,19 +367,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object[]>> argumentsSelector, string alias)
         {
-            ArgumentNullException.ThrowIfNull(argumentsSelector);
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-
-            _queryDefinition.ScalarFunctionDefinitions.Add(
-                new QueryScalarFunctionDefinition
-                {
-                    Function = function,
-                    Arguments = ExtractScalarFunctionArguments(argumentsSelector),
-                    Alias = alias,
-                    Source = sourceDefinition
-                });
+            _components.ScalarFunctionProjectionBuilder.Add(function, argumentsSelector, alias);
 
             return this;
         }
@@ -502,20 +404,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias)
         {
-            ArgumentNullException.ThrowIfNull(condition);
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-
-            _queryDefinition.CaseWhenDefinitions.Add(
-                new QueryCaseWhenDefinition
-                {
-                    ConditionExpression = condition,
-                    WhenTrueValue = whenTrue,
-                    WhenFalseValue = whenFalse,
-                    Alias = alias,
-                    Source = sourceDefinition
-                });
+            _components.CaseWhenProjectionBuilder.Add(condition, whenTrue, whenFalse, alias);
 
             return this;
         }
@@ -537,23 +426,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> WhereExists<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
         {
-            ArgumentNullException.ThrowIfNull(subqueryBuilder);
-
-            var nestedQueryBuilder = new QueryBuilder(_queryCompiler, _metadataResolver);
-
-            var nestedCommandBuilder = subqueryBuilder(nestedQueryBuilder);
-
-            if (nestedCommandBuilder is not QueryCommandBuilder<TSubquery> concreteNestedCommandBuilder)
-                throw new InvalidOperationException("The EXISTS subquery builder returned an unsupported query command builder instance.");
-
-            var subqueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
-            subqueryDefinition.UseConstantSelectProjection = true;
-
-            _queryDefinition.ExistsDefinitions.Add(
-                new QueryExistsDefinition
-                {
-                    Subquery = subqueryDefinition
-                });
+            _components.ExistsClauseBuilder.Add(subqueryBuilder);
 
             return this;
         }
@@ -578,47 +451,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> WhereExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
         {
-            ArgumentNullException.ThrowIfNull(subqueryBuilder);
-
-            var outerSource = ResolveQuerySource<TOuter>();
-
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<TSubquery>(out var subqueryMetadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TSubquery).Name}' could not be resolved.");
-
-            var columnMappings = subqueryMetadata!.Properties.ToDictionary(
-                property => property.Key,
-                property => property.Value.ColumnName);
-
-            var nestedCommandBuilder = new QueryCommandBuilder<TSubquery>(
-                _queryCompiler,
-                subqueryMetadata.TableName,
-                alias,
-                columnMappings,
-                _metadataResolver);
-
-            nestedCommandBuilder.RegisterOuterSources(
-                new Dictionary<Type, QuerySourceDefinition>
-                {
-                    [typeof(TOuter)] = outerSource
-                });
-
-            var configuredNestedCommandBuilder = subqueryBuilder(nestedCommandBuilder);
-
-            if (configuredNestedCommandBuilder is not QueryCommandBuilder<TSubquery> concreteNestedCommandBuilder)
-                throw new InvalidOperationException("The EXISTS subquery builder returned an unsupported query command builder instance.");
-
-            var subqueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
-
-            subqueryDefinition.UseConstantSelectProjection = true;
-
-            _queryDefinition.ExistsDefinitions.Add(
-                new QueryExistsDefinition
-                {
-                    Subquery = subqueryDefinition
-                });
+            _components.ExistsClauseBuilder.AddCorrelated<TOuter, TSubquery>(alias, subqueryBuilder, isNegated: false);
 
             return this;
         }
@@ -652,46 +485,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> WhereIn<TOuter, TSubquery>(Expression<Func<TOuter, object>> outerSelector, string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
         {
-            ArgumentNullException.ThrowIfNull(outerSelector);
-            ArgumentNullException.ThrowIfNull(subqueryBuilder);
-
-            var outerSource = ResolveQuerySource<TOuter>();
-
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<TSubquery>(out var subqueryMetadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TSubquery).Name}' could not be resolved.");
-
-            var columnMappings = subqueryMetadata!.Properties.ToDictionary(
-                property => property.Key,
-                property => property.Value.ColumnName);
-
-            var nestedCommandBuilder = new QueryCommandBuilder<TSubquery>(
-                _queryCompiler,
-                subqueryMetadata.TableName,
-                alias,
-                columnMappings,
-                _metadataResolver);
-
-            nestedCommandBuilder.RegisterOuterSources(
-                new Dictionary<Type, QuerySourceDefinition>
-                {
-                    [typeof(TOuter)] = outerSource
-                });
-
-            var configuredNestedCommandBuilder = subqueryBuilder(nestedCommandBuilder);
-
-            if (configuredNestedCommandBuilder is not QueryCommandBuilder<TSubquery> concreteNestedCommandBuilder)
-                throw new InvalidOperationException("The IN subquery builder returned an unsupported query command builder instance.");
-
-            _queryDefinition.InSubqueryDefinitions.Add(
-                new QueryInSubqueryDefinition
-                {
-                    OuterSelector = outerSelector,
-                    OuterSource = outerSource,
-                    Subquery = concreteNestedCommandBuilder.BuildDefinition()
-                });
+            _components.InSubqueryClauseBuilder.Add(outerSelector, alias, subqueryBuilder);
 
             return this;
         }
@@ -716,86 +510,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> WhereNotExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
         {
-            ArgumentNullException.ThrowIfNull(subqueryBuilder);
-
-            var outerSource = ResolveQuerySource<TOuter>();
-
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<TSubquery>(out var subqueryMetadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TSubquery).Name}' could not be resolved.");
-
-            var columnMappings = subqueryMetadata!.Properties.ToDictionary(
-                property => property.Key,
-                property => property.Value.ColumnName);
-
-            var nestedCommandBuilder = new QueryCommandBuilder<TSubquery>(
-                _queryCompiler,
-                subqueryMetadata.TableName,
-                alias,
-                columnMappings,
-                _metadataResolver);
-
-            nestedCommandBuilder.RegisterOuterSources(
-                new Dictionary<Type, QuerySourceDefinition>
-                {
-                    [typeof(TOuter)] = outerSource
-                });
-
-            var configuredNestedCommandBuilder = subqueryBuilder(nestedCommandBuilder);
-
-            if (configuredNestedCommandBuilder is not QueryCommandBuilder<TSubquery> concreteNestedCommandBuilder)
-                throw new InvalidOperationException("The NOT EXISTS subquery builder returned an unsupported query command builder instance.");
-
-            var subqueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
-
-            subqueryDefinition.UseConstantSelectProjection = true;
-
-            _queryDefinition.ExistsDefinitions.Add(
-                new QueryExistsDefinition
-                {
-                    Subquery = subqueryDefinition,
-                    IsNegated = true
-                });
+            _components.ExistsClauseBuilder.AddCorrelated<TOuter, TSubquery>(alias, subqueryBuilder, isNegated: true);
 
             return this;
-        }
-
-        // Extracts scalar SQL function arguments from an array expression.
-        private static List<QueryScalarFunctionArgumentDefinition> ExtractScalarFunctionArguments<TEntity>(Expression<Func<TEntity, object[]>> expression)
-        {
-            return expression.Body switch
-            {
-                NewArrayExpression newArrayExpression => [.. newArrayExpression.Expressions.Select(CreateScalarFunctionArgument)],
-
-                _ => throw new NotSupportedException(
-                    $"Expression '{expression}' is not supported as a scalar function argument selector.")
-            };
-        }
-
-        // Creates a scalar SQL function argument definition from an expression.
-        private static QueryScalarFunctionArgumentDefinition CreateScalarFunctionArgument(Expression expression)
-        {
-            if (expression is UnaryExpression unaryExpression)
-                expression = unaryExpression.Operand;
-
-            if (expression is MemberExpression memberExpression)
-                return new QueryScalarFunctionArgumentDefinition
-                {
-                    PropertyName = memberExpression.Member.Name
-                };
-            
-
-            if (expression is ConstantExpression constantExpression)
-                return new QueryScalarFunctionArgumentDefinition
-                {
-                    ConstantValue = constantExpression.Value
-                };
-            
-
-            throw new NotSupportedException($"Scalar function argument expression '{expression}' is not supported.");
-        }
+        }              
 
         #endregion
 
@@ -820,7 +538,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> InnerJoin<TSource, TJoin>(string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
-            return AddJoin(QueryJoinType.Inner, alias, on);
+            _components.JoinClauseBuilder.Add(QueryJoinType.Inner, alias, on);
+
+            return this;
         }
 
         /// <summary>
@@ -843,7 +563,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> LeftJoin<TSource, TJoin>(string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
-            return AddJoin(QueryJoinType.Left, alias, on);
+            _components.JoinClauseBuilder.Add(QueryJoinType.Left, alias, on);
+
+            return this;
         }
 
         /// <summary>
@@ -869,7 +591,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> InnerJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
-            return AddJoin(QueryJoinType.Inner, tableName, alias, on);
+            _components.JoinClauseBuilder.AddTable(QueryJoinType.Inner, tableName, alias, on);
+
+            return this;
         }
 
         /// <summary>
@@ -895,7 +619,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> LeftJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
-            return AddJoin(QueryJoinType.Left, tableName, alias, on);
+            _components.JoinClauseBuilder.AddTable(QueryJoinType.Left, tableName, alias, on);
+
+            return this;    
         }
 
         /// <summary>
@@ -903,7 +629,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> CrossApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
         {
-            return AddApply(QueryApplyType.Cross, alias, typeof(TOuter), applyBuilder);
+            _components.ApplyClauseBuilder.Add<TOuter, TApply>(QueryApplyType.Cross, alias, applyBuilder);
+
+            return this;
         }
 
         /// <summary>
@@ -911,179 +639,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> OuterApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
         {
-            return AddApply(QueryApplyType.Outer, alias, typeof(TOuter), applyBuilder);
-        }
-
-        // Adds an APPLY or provider-equivalent LATERAL subquery join to the current query.
-        private QueryCommandBuilder<T> AddApply<TApply>(QueryApplyType applyType, string alias, Type outerEntityType, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-            ArgumentNullException.ThrowIfNull(outerEntityType);
-            ArgumentNullException.ThrowIfNull(applyBuilder);
-
-            var outerSource = ResolveQuerySource(
-                outerEntityType);
-
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<TApply>(out var applyMetadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TApply).Name}' could not be resolved.");
-
-            var columnMappings = applyMetadata!.Properties.ToDictionary(
-                property => property.Key,
-                property => property.Value.ColumnName);
-
-            var applyCommandBuilder = new QueryCommandBuilder<TApply>(
-                _queryCompiler,
-                applyMetadata.TableName,
-                alias,
-                columnMappings,
-                _metadataResolver);
-
-            applyCommandBuilder.RegisterOuterSources(
-                new Dictionary<Type, QuerySourceDefinition>
-                {
-                    [outerEntityType] = outerSource
-                });
-
-            var configuredApplyCommandBuilder = applyBuilder(
-                applyCommandBuilder);
-
-            if (configuredApplyCommandBuilder is not QueryCommandBuilder<TApply> concreteApplyCommandBuilder)
-                throw new InvalidOperationException("The APPLY builder returned an unsupported query command builder instance.");
-
-            var applyQueryDefinition = concreteApplyCommandBuilder.BuildDefinition();
-
-            applyQueryDefinition.ForceSelectAliases = true;
-
-            _queryDefinition.ApplyDefinitions.Add(
-                new QueryApplyDefinition
-                {
-                    ApplyType = applyType,
-                    Alias = alias,
-                    Subquery = applyQueryDefinition
-                });
+            _components.ApplyClauseBuilder.Add<TOuter, TApply>(QueryApplyType.Outer, alias, applyBuilder);
 
             return this;
-        }
-
-        // Adds a metadata-driven join definition.
-        private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string? alias, Expression<Func<TSource, TJoin, bool>> on)
-        {
-            ArgumentNullException.ThrowIfNull(on);
-
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<TJoin>(out var joinMetadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TJoin).Name}' could not be resolved.");
-
-            return AddJoin(joinType, joinMetadata!.TableName, alias, on);
-        }
-
-        // Adds an explicit table join definition.
-        private QueryCommandBuilder<T> AddJoin<TSource, TJoin>(QueryJoinType joinType, string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
-            ArgumentNullException.ThrowIfNull(on);
-
-            var joinAlias = ResolveJoinAlias(alias);
-            var sourceAlias = ResolveSourceAlias<TSource>();
-
-            var sourceColumnMappings = ResolveColumnMappings<TSource>();
-            var joinColumnMappings = ResolveColumnMappings<TJoin>();
-
-            _queryDefinition.JoinDefinitions.Add(
-                new QueryJoinDefinition
-                {
-                    JoinType = joinType,
-                    TableName = tableName,
-                    TableAlias = joinAlias,
-                    SourceType = typeof(TSource),
-                    SourceAlias = sourceAlias,
-                    SourceColumnMappings = sourceColumnMappings,
-                    JoinTypeEntity = typeof(TJoin),
-                    JoinColumnMappings = joinColumnMappings,
-                    JoinExpression = on
-                });
-
-            RegisterJoinSource<TJoin>(tableName, joinAlias, joinColumnMappings);
-
-            return this;
-        }
-
-
-        // Registers a joined query source in the current query scope.
-        private void RegisterJoinSource<TEntity>(string tableName, string tableAlias, IReadOnlyDictionary<string, string> columnMappings)
-        {
-            _queryDefinition.SourceDefinitions[typeof(TEntity)] =
-                new QuerySourceDefinition
-                {
-                    EntityType = typeof(TEntity),
-                    TableName = tableName,
-                    TableAlias = tableAlias,
-                    ColumnMappings = columnMappings
-                };
-        }
-
-        // Resolves column mappings for an entity participating in the query.
-        private IReadOnlyDictionary<string, string> ResolveColumnMappings<TEntity>()
-        {
-            if (typeof(TEntity) == typeof(T))
-                return _queryDefinition.ColumnMappings;
-
-            if (_metadataResolver is not null && _metadataResolver.TryResolve<TEntity>(out var metadata))
-            {
-                return metadata!.Properties.ToDictionary(
-                    property => property.Key,
-                    property => property.Value.ColumnName);
-            }
-
-            return new Dictionary<string, string>();
-        }
-
-        // Resolves or generates a SQL alias for joined tables.
-        private string ResolveJoinAlias(string? alias)
-        {
-            var resolvedAlias = string.IsNullOrWhiteSpace(alias)
-                ? QueryAliasGeneratorHelper.Generate(_registeredAliases.Count)
-                : alias;
-
-            if (!_registeredAliases.Add(resolvedAlias))
-                throw new InvalidOperationException($"Alias '{resolvedAlias}' is already registered.");
-
-            return resolvedAlias;
-        }
-
-
-        // Resolves the alias associated with a previously registered query entity.
-        private string ResolveSourceAlias<TSource>()
-        {
-            if (typeof(TSource) == typeof(T))
-                return EnsureRootAlias();
-
-            var joinDefinition = _queryDefinition.JoinDefinitions
-                .LastOrDefault(join => join.JoinTypeEntity == typeof(TSource));
-
-            return joinDefinition is null
-                ? throw new InvalidOperationException($"Entity type '{typeof(TSource).Name}' is not available in the current query scope.")
-                : joinDefinition.TableAlias;
-        }
-
-        // Ensures the root query source has a deterministic alias when joins exist.
-        private string EnsureRootAlias()
-        {
-            if (!string.IsNullOrWhiteSpace(_queryDefinition.TableAlias))
-                return _queryDefinition.TableAlias;
-
-            var alias = QueryAliasGeneratorHelper.Generate(0);
-
-            _queryDefinition.TableAlias = alias;
-
-            _registeredAliases.Add(alias);
-
-            return alias;
         }
 
         #endregion
@@ -1100,7 +658,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> Where(Expression<Func<T, bool>> predicate)
         {
-            return AddWhere(predicate);
+            _components.WhereClauseBuilder.Add(predicate);
+            return this;
         }
 
         /// <summary>
@@ -1117,23 +676,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> Where<TSource>(Expression<Func<TSource, bool>> predicate)
         {
-            return AddWhere(predicate);
-        }
-
-        // Adds a WHERE definition using the metadata of the specified query source.
-        private QueryCommandBuilder<T> AddWhere<TEntity>(Expression<Func<TEntity, bool>> predicate)
-        {
-            ArgumentNullException.ThrowIfNull(predicate);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-
-            _queryDefinition.WhereDefinitions.Add(
-                new QueryWhereDefinition
-                {
-                    PredicateExpression = predicate,
-                    Source = sourceDefinition
-                });
-
+            _components.WhereClauseBuilder.Add(predicate);
             return this;
         }
 
@@ -1154,9 +697,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> WhereIf(bool condition, Expression<Func<T, bool>> predicate)
         {
-            ArgumentNullException.ThrowIfNull(predicate);
-
-            return condition ? AddWhere(predicate) : this;
+            _components.WhereClauseBuilder.AddIf(condition, predicate);
+            return this;
         }
 
 
@@ -1177,7 +719,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> WhereIf<TEntity>(bool condition,Expression<Func<TEntity, bool>> predicate)
         {
-            return condition ? AddWhere(predicate) : this;
+            _components.WhereClauseBuilder.AddIfForSource(condition, predicate);
+
+            return this;
         }
 
         /// <summary>
@@ -1203,20 +747,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> WhereFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value)
         {
-            ArgumentNullException.ThrowIfNull(selector);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-            var propertyName = QueryColumnExpressionExtractor.ExtractColumns(selector).Single().PropertyName;
-
-            _queryDefinition.WhereScalarFunctionDefinitions.Add(
-                new QueryWhereScalarFunctionDefinition
-                {
-                    Function = function,
-                    PropertyName = propertyName,
-                    ComparisonOperator = comparisonOperator,
-                    Value = value,
-                    Source = sourceDefinition
-                });
+            _components.WhereClauseBuilder.AddFunction(function, selector, comparisonOperator, value);
 
             return this;
         }
@@ -1235,19 +766,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> WhereComputed<TEntity>(Expression<Func<TEntity, bool>> expression)
         {
-            ArgumentNullException.ThrowIfNull(expression);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-
-            _queryDefinition.WhereComputedExpressionDefinitions.Add(
-                new QueryWhereComputedExpressionDefinition
-                {
-                    Expression = expression,
-                    Sources = new Dictionary<ParameterExpression, QuerySourceDefinition>
-                    {
-                        [expression.Parameters.Single()] = sourceDefinition
-                    }
-                });
+            _components.WhereClauseBuilder.AddComputed(expression);
 
             return this;
         }
@@ -1269,22 +788,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> WhereComputed<TLeft, TRight>(Expression<Func<TLeft, TRight, bool>> expression)
         {
-            ArgumentNullException.ThrowIfNull(expression);
-
-            var leftSource = ResolveQuerySource<TLeft>();
-            var rightSource = ResolveQuerySource<TRight>();
-
-            _queryDefinition.WhereComputedExpressionDefinitions.Add(
-                new QueryWhereComputedExpressionDefinition
-                {
-                    Expression = expression,
-                    Sources = new Dictionary<ParameterExpression, QuerySourceDefinition>
-                    {
-                        [expression.Parameters[0]] = leftSource,
-                        [expression.Parameters[1]] = rightSource
-                    }
-                });
-
+            _components.WhereClauseBuilder.AddComputed(expression);
             return this;
         }
 
@@ -1305,7 +809,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IOrderedQueryCommandBuilder<T> OrderBy(Expression<Func<T, object>> keySelector)
         {
-            return AddOrderingDefinition<T>(keySelector, QueryOrderingDirection.Ascending);
+            _components.OrderByClauseBuilder.AddAscending(keySelector);
+
+            return this;
         }
 
         /// <summary>
@@ -1322,7 +828,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IOrderedQueryCommandBuilder<T> OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
-            return AddOrderingDefinition<TEntity>(keySelector, QueryOrderingDirection.Ascending);
+            _components.OrderByClauseBuilder.AddAscendingForSource(keySelector);
+
+            return this;
         }
 
 
@@ -1340,7 +848,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IOrderedQueryCommandBuilder<T> OrderByDescending(Expression<Func<T, object>> keySelector)
         {
-            return AddOrderingDefinition<T>(keySelector, QueryOrderingDirection.Descending);
+            _components.OrderByClauseBuilder.AddDescending(keySelector);
+
+            return this;
         }
 
         /// <summary>
@@ -1357,7 +867,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IOrderedQueryCommandBuilder<T> OrderByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
-            return AddOrderingDefinition<TEntity>(keySelector, QueryOrderingDirection.Descending);
+            _components.OrderByClauseBuilder.AddDescendingForSource(keySelector);
+
+            return this;
         }
 
         /// <summary>
@@ -1371,7 +883,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IOrderedQueryCommandBuilder<T> ThenBy(Expression<Func<T, object>> keySelector)
         {
-            return AddOrderingDefinition<T>(keySelector, QueryOrderingDirection.Ascending);
+            _components.OrderByClauseBuilder.AddAscending(keySelector);
+
+            return this;
         }
 
         /// <summary>
@@ -1388,7 +902,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IOrderedQueryCommandBuilder<T> ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
-            return AddOrderingDefinition<TEntity>(keySelector, QueryOrderingDirection.Ascending);
+            _components.OrderByClauseBuilder.AddAscendingForSource(keySelector);
+
+            return this;
         }
 
         /// <summary>
@@ -1402,7 +918,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IOrderedQueryCommandBuilder<T> ThenByDescending(Expression<Func<T, object>> keySelector)
         {
-            return AddOrderingDefinition<T>(keySelector, QueryOrderingDirection.Descending);
+            _components.OrderByClauseBuilder.AddDescending(keySelector);
+
+            return this;
         }
 
         /// <summary>
@@ -1419,27 +937,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IOrderedQueryCommandBuilder<T> ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
-            return AddOrderingDefinition<TEntity>(keySelector, QueryOrderingDirection.Descending);
-        }
-
-        // Adds an ORDER BY definition using the metadata of the specified query source.
-        private QueryCommandBuilder<T> AddOrderingDefinition<TEntity>(Expression<Func<TEntity, object>> keySelector, QueryOrderingDirection orderingDirection)
-        {
-            ArgumentNullException.ThrowIfNull(keySelector);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-            var orderingColumns = QueryColumnExpressionExtractor.ExtractColumns(keySelector);
-
-            _queryDefinition.OrderingDefinitions.Add(
-                new QueryOrderingDefinition
-                {
-                    Columns = orderingColumns,
-                    Direction = orderingDirection,
-                    Source = sourceDefinition
-                });
+            _components.OrderByClauseBuilder.AddDescendingForSource(keySelector);
 
             return this;
-        }     
+        }
 
         #endregion
 
@@ -1450,7 +951,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> GroupBy(Expression<Func<T, object>> selector)
         {
-            return AddGroupByDefinition(selector);
+            _components.GroupByClauseBuilder.Add(selector);
+
+            return this;
         }
 
         /// <summary>
@@ -1458,27 +961,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> GroupBy<TEntity>(Expression<Func<TEntity, object>> selector)
         {
-            return AddGroupByDefinition(selector);
-        }
-
-        // Adds a GROUP BY definition using the metadata of the specified query source.
-        private QueryCommandBuilder<T> AddGroupByDefinition<TEntity>(Expression<Func<TEntity, object>> selector)
-        {
-            ArgumentNullException.ThrowIfNull(selector);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-            var groupByColumns = QueryColumnExpressionExtractor.ExtractColumns(selector);
-
-            _queryDefinition.GroupByDefinitions.Add(
-                new QueryGroupByDefinition
-                {
-                    Columns = groupByColumns,
-                    Source = sourceDefinition
-                });
+            _components.GroupByClauseBuilder.Add(selector);
 
             return this;
         }
-
         #endregion
 
         #region Union Overloads
@@ -1488,7 +974,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> Union<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
         {
-            return AddSetOperation(QuerySetOperation.Union, setBuilder);
+            _components.SetOperationClauseBuilder.Add(QuerySetOperation.Union, setBuilder);
+
+            return this;
         }
 
         /// <summary>
@@ -1496,7 +984,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> UnionAll<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
         {
-            return AddSetOperation(QuerySetOperation.UnionAll, setBuilder);
+            _components.SetOperationClauseBuilder.Add(QuerySetOperation.UnionAll, setBuilder);
+
+            return this;
         }
 
         /// <summary>
@@ -1504,7 +994,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> Intersect<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
         {
-            return AddSetOperation(QuerySetOperation.Intersect, setBuilder);
+            _components.SetOperationClauseBuilder.Add(QuerySetOperation.Intersect, setBuilder);
+
+            return this;
         }
 
         /// <summary>
@@ -1512,33 +1004,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> Except<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
         {
-            return AddSetOperation(QuerySetOperation.Except, setBuilder);
-        }
-
-        // Adds a SQL set operation query to the current query.
-        private QueryCommandBuilder<T> AddSetOperation<TSet>(QuerySetOperation operation, Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
-        {
-            ArgumentNullException.ThrowIfNull(setBuilder);
-
-            var nestedQueryBuilder = new QueryBuilder(_queryCompiler, _metadataResolver);
-
-            var setCommandBuilder = setBuilder(nestedQueryBuilder);
-
-            if (setCommandBuilder is not QueryCommandBuilder<TSet> concreteSetCommandBuilder)
-                throw new InvalidOperationException("The set operation builder returned an unsupported query command builder instance.");
-
-            var setQueryDefinition = concreteSetCommandBuilder.BuildDefinition();
-
-            setQueryDefinition.ForceSelectAliases = true;
-
-            _queryDefinition.ForceSelectAliases = true;
-
-            _queryDefinition.SetOperationDefinitions.Add(
-                new QuerySetOperationDefinition
-                {
-                    Operation = operation,
-                    Query = setQueryDefinition
-                });
+            _components.SetOperationClauseBuilder.Add(QuerySetOperation.Except, setBuilder);
 
             return this;
         }
@@ -1569,20 +1035,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IQueryCommandBuilder<T> HavingAggregate<TEntity>(QueryAggregateFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value)
         {
-            ArgumentNullException.ThrowIfNull(selector);
-
-            var sourceDefinition = ResolveQuerySource<TEntity>();
-            var propertyName = QueryColumnExpressionExtractor.ExtractColumns(selector).Single().PropertyName;
-
-            _queryDefinition.HavingAggregateDefinitions.Add(
-                new QueryHavingAggregateDefinition
-                {
-                    Function = function,
-                    PropertyName = propertyName,
-                    ComparisonOperator = comparisonOperator,
-                    Value = value,
-                    Source = sourceDefinition
-                });
+            _components.HavingClauseBuilder.AddAggregate(function, selector, comparisonOperator, value);
 
             return this;
         }
@@ -1603,14 +1056,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> Skip(int count)
         {
-            if (count < 0)
-                throw new ArgumentOutOfRangeException(nameof(count), "Skip count cannot be negative.");
-
-            _queryDefinition.Pagination =
-                _queryDefinition.Pagination with
-                {
-                    Skip = count
-                };
+            _components.PaginationClauseBuilder.SetSkip(count);
 
             return this;
         }
@@ -1629,14 +1075,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public IQueryCommandBuilder<T> Take(int count)
         {
-            if (count <= 0)
-                throw new ArgumentOutOfRangeException(nameof(count), "Take count must be greater than zero.");
-
-            _queryDefinition.Pagination =
-                _queryDefinition.Pagination with
-                {
-                    Take = count
-                };
+            _components.PaginationClauseBuilder.SetTake(count);
 
             return this;
         }
@@ -1648,7 +1087,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> SelectRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
-            return AddWindowFunction(QueryWindowFunction.RowNumber, alias, windowBuilder);
+            _components.WindowFunctionProjectionBuilder.AddRankingFunction(QueryWindowFunction.RowNumber, alias, windowBuilder);
+
+            return this;
         }
 
         /// <summary>
@@ -1656,7 +1097,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> SelectRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
-            return AddWindowFunction(QueryWindowFunction.Rank, alias, windowBuilder);
+            _components.WindowFunctionProjectionBuilder.AddRankingFunction(QueryWindowFunction.Rank, alias, windowBuilder);
+
+            return this;
         }
 
         /// <summary>
@@ -1664,20 +1107,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </summary>
         public IQueryCommandBuilder<T> SelectDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
-            return AddWindowFunction(QueryWindowFunction.DenseRank, alias, windowBuilder);
-        }
-
-        // Adds a SQL window function projection to the current query.
-        private QueryCommandBuilder<T> AddWindowFunction(QueryWindowFunction function, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-            ArgumentNullException.ThrowIfNull(windowBuilder);
-
-            var builder = new WindowFunctionBuilder(ResolveQuerySource);
-
-            windowBuilder(builder);
-
-            _queryDefinition.WindowFunctionDefinitions.Add(builder.BuildWindowFunctionDefinition(function,alias));
+            _components.WindowFunctionProjectionBuilder.AddRankingFunction(QueryWindowFunction.DenseRank, alias, windowBuilder);
 
             return this;
         }
@@ -1711,15 +1141,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 };
 
             _queryDefinition.TableAlias = resolvedAlias;
-            _registeredAliases.Add(resolvedAlias);
+            _context.AliasRegistry.Register(resolvedAlias);
         }
 
-        // Resolves a query source previously registered in the current query scope.
-        private QuerySourceDefinition ResolveQuerySource<TEntity>()
-        {
-            var type = typeof(TEntity);
-            return ResolveQuerySource(type);            
-        }
 
         // Resolves a query source using a runtime entity type.
         private QuerySourceDefinition ResolveQuerySource(Type entityType)
