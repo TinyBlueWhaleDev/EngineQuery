@@ -1,9 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>TinyBlueWhale.EngineQuery.Metadata</PackageId>
+    <Version>1.0.0-preview</Version>
+    <Authors>TinyBlueWhaleDev</Authors>
+    <Company>TinyBlueWhaleDev</Company>
+    <Product>TinyBlueWhale.EngineQuery.Metadata</Product>
+    <Description>Metadata abstractions and resolvers for EngineQuery SQL generation.</Description>
+    <PackageTags>sql;query-builder;metadata;fluent-mapping;attributes;enginequery</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup> 
+
+  <ItemGroup>
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Abstractions\TinyBlueWhale.EngineQuery.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>

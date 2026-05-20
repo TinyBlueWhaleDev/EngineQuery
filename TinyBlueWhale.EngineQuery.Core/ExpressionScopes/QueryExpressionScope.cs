@@ -3,6 +3,9 @@ using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
 namespace TinyBlueWhale.EngineQuery.Core.ExpressionScopes
 {
+    /// <summary>
+    /// Represents the current expression parameter scope used during query parsing.
+    /// </summary>
     public sealed class QueryExpressionScope
     {
         private readonly Dictionary<ParameterExpression, QuerySourceDefinition> _sources = [];

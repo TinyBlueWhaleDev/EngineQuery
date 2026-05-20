@@ -40,8 +40,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             return BuildQuery(queryBuilder);
         }
 
-        private static GeneratedSqlQuery BuildPostgreSqlQuery(
-            FluentEntityMetadataResolver metadataResolver)
+        private static GeneratedSqlQuery BuildPostgreSqlQuery(FluentEntityMetadataResolver metadataResolver)
         {
             var queryBuilder = new QueryBuilder(
                 new PostgreSqlQueryCompiler(
@@ -51,8 +50,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             return BuildQuery(queryBuilder);
         }
 
-        private static GeneratedSqlQuery BuildMySqlQuery(
-            FluentEntityMetadataResolver metadataResolver)
+        private static GeneratedSqlQuery BuildMySqlQuery(FluentEntityMetadataResolver metadataResolver)
         {
             var queryBuilder = new QueryBuilder(
                 new MySqlQueryCompiler(
@@ -62,8 +60,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             return BuildQuery(queryBuilder);
         }
 
-        private static GeneratedSqlQuery BuildQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildQuery(QueryBuilder queryBuilder)
         {
             return queryBuilder
                 .From<FluentAuditRecord>()
@@ -97,9 +94,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             return new FluentEntityMetadataResolver(registry);
         }
 
-        private static void Print(
-            string providerName,
-            GeneratedSqlQuery sql)
+        private static void Print(string providerName, GeneratedSqlQuery sql)
         {
             Console.WriteLine($"--- {providerName} ---");
             Console.WriteLine(sql.CommandText);

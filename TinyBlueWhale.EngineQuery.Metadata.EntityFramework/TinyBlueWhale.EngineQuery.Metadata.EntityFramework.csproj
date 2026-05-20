@@ -1,18 +1,41 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>TinyBlueWhale.EngineQuery.Metadata.EntityFramework</PackageId>
+    <Version>1.0.0-preview</Version>
+    <Authors>TinyBlueWhaleDev</Authors>
+    <Company>TinyBlueWhaleDev</Company>
+    <Product>TinyBlueWhale.EngineQuery.Metadata.EntityFramework</Product>
+    <Description>Entity Framework Core metadata resolver for EngineQuery.</Description>
+    <PackageTags>sql;query-builder;entity-framework;ef-core;metadata;dapper;cqrs;enginequery</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.16" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.16" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.16" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Metadata\TinyBlueWhale.EngineQuery.Metadata.csproj" />
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Core\TinyBlueWhale.EngineQuery.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

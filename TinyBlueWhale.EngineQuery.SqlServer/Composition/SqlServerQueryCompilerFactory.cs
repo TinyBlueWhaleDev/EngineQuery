@@ -10,10 +10,21 @@ using TinyBlueWhale.EngineQuery.SqlServer.Clauses;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Composition
 {
+    /// <summary>
+    /// Creates SQL Server query compiler components.
+    /// </summary>
     public static class SqlServerQueryCompilerFactory
     {
-        public static IQueryScriptBuilder CreateScriptBuilder(
-            ISqlDatabaseDialect databaseDialect)
+        /// <summary>
+        /// Creates the SQL script builder used by the SQL Server query compiler.
+        /// </summary>
+        /// <param name="databaseDialect">
+        /// Database dialect used during SQL generation.
+        /// </param>
+        /// <returns>
+        /// Configured SQL script builder instance.
+        /// </returns>
+        public static IQueryScriptBuilder CreateScriptBuilder(ISqlDatabaseDialect databaseDialect)
         {
             return QueryCompilerFactory.CreateScriptBuilder(
                 databaseDialect,

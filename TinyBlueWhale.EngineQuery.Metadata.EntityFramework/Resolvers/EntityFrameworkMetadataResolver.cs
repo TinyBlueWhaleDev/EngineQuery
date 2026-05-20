@@ -9,10 +9,21 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Resolvers
     /// <summary>
     /// Resolves EngineQuery entity metadata from an Entity Framework Core model.
     /// </summary>
-    public sealed class EntityFrameworkMetadataResolver : IEntityMetadataResolver
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="EntityFrameworkMetadataResolver"/> class.
+    /// </remarks>
+    /// <param name="model">
+    /// Entity Framework Core model.
+    /// </param>
+    /// <param name="options">
+    /// Resolver options.
+    /// </param>
+    public sealed class EntityFrameworkMetadataResolver(
+        IModel model,
+        EntityFrameworkMetadataResolverOptions options) : IEntityMetadataResolver
     {
-        private readonly IModel _model;
-        private readonly EntityFrameworkMetadataResolverOptions _options;
+        private readonly IModel _model = model ?? throw new ArgumentNullException(nameof(model));
+        private readonly EntityFrameworkMetadataResolverOptions _options = options ?? throw new ArgumentNullException(nameof(options));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EntityFrameworkMetadataResolver"/> class.
@@ -23,23 +34,6 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Resolvers
         public EntityFrameworkMetadataResolver(IModel model)
             : this(model, EntityFrameworkMetadataResolverOptions.Default)
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EntityFrameworkMetadataResolver"/> class.
-        /// </summary>
-        /// <param name="model">
-        /// Entity Framework Core model.
-        /// </param>
-        /// <param name="options">
-        /// Resolver options.
-        /// </param>
-        public EntityFrameworkMetadataResolver(
-            IModel model,
-            EntityFrameworkMetadataResolverOptions options)
-        {
-            _model = model ?? throw new ArgumentNullException(nameof(model));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         /// <summary>

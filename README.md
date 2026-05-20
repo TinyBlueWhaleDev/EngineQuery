@@ -1,488 +1,430 @@
 # TinyBlueWhale.EngineQuery
 
-Typed provider-agnostic SQL script generation engine for .NET.
+Provider-agnostic high-performance SQL query builder for .NET.
 
-EngineQuery generates deterministic SQL command text and parameters from strongly typed C# expressions.
+EngineQuery generates deterministic SQL for SQL Server, PostgreSQL and MySQL using strongly typed expressions, advanced SQL capabilities and provider-specific dialect compilation.
 
-It is designed for .NET applications that need SQL control without spreading hardcoded SQL strings across the codebase.
+Built for real-world Dapper, CQRS and SQL-heavy enterprise applications.
 
----
-
-## Why EngineQuery Exists
-
-A common architecture in .NET systems is:
-
-```txt
-EF Core for writes
-Dapper for reads
-```
-
-This works well.
-
-EF Core handles change tracking, transactions, migrations and write-side consistency.
-
-Dapper gives full SQL control and high-performance read models.
-
-But as the read side grows, teams often end up with:
-
-* large SQL strings embedded in code
-* duplicated queries
-* fragile aliases
-* hardcoded table names
-* hardcoded column names
-* runtime-only SQL errors
-* provider-specific incompatibilities
-* painful database migrations
-* difficult refactors
-
-EngineQuery was created to solve that specific problem.
-
-The goal is simple:
-
-```txt
-Generate provider-compatible SQL scripts using typed expressions instead of magic strings.
-```
+[![NuGet](https://img.shields.io/nuget/v/TinyBlueWhale.EngineQuery.DependencyInjection.svg)](https://www.nuget.org/packages/TinyBlueWhale.EngineQuery.DependencyInjection)
+[![Downloads](https://img.shields.io/nuget/dt/TinyBlueWhale.EngineQuery.DependencyInjection.svg)](https://www.nuget.org/packages/TinyBlueWhale.EngineQuery.DependencyInjection)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
 
-## What EngineQuery Is
+# Why EngineQuery?
 
-EngineQuery is a SQL script generation engine.
+EngineQuery was created to solve a common problem in modern .NET applications:
 
-It generates:
+Generating maintainable, provider-specific and deterministic SQL without the overhead and limitations of a full ORM.
 
-* SQL command text
-* SQL parameters
+Most applications eventually reach scenarios where:
 
-The generated output can be passed to:
+* LINQ becomes difficult to maintain
+* ORM-generated SQL becomes unpredictable
+* Reporting queries become too complex
+* Provider-specific SQL behavior matters
+* Performance tuning becomes critical
+* Dapper requires excessive manual SQL maintenance
 
-* Dapper
-* ADO.NET
-* EF Core raw SQL
-* custom execution pipelines
-
----
-
-## What EngineQuery Is Not
-
-EngineQuery is not an ORM.
-
-EngineQuery does not:
-
-* execute SQL
-* open connections
-* manage transactions
-* track entities
-* materialize objects
-* replace EF Core
-* replace Dapper
-* implement repositories
-* implement Unit of Work
-* run migrations
-
-EngineQuery only generates SQL scripts.
+EngineQuery bridges the gap between handwritten SQL and full ORM abstractions.
 
 ---
 
-## Current V1 Scope
+# Features
 
-V1 is focused only on:
-
-```txt
-Typed provider-agnostic SELECT query generation.
-```
-
-Write-side generation is intentionally not part of V1.
-
-Out of scope for V1:
-
-* INSERT generation
-* UPDATE generation
-* DELETE generation
-* MERGE generation
-* UPSERT generation
-* query execution
-* ORM behavior
-
----
-
-## Supported Providers
-
-| Provider   | Status    |
-| ---------- | --------- |
-| SQL Server | Supported |
-| PostgreSQL | Supported |
-| MySQL      | Supported |
-
----
-
-## Supported .NET Versions
-
-| Target | Status    |
-| ------ | --------- |
-| .NET 8 | Supported |
-| .NET 9 | Supported |
-
----
-
-## Package Ecosystem
-
-EngineQuery is split into focused packages.
-
-| Package                                  | Purpose                                        |
-| ---------------------------------------- | ---------------------------------------------- |
-| `TinyBlueWhale.EngineQuery.Abstractions` | Public contracts, models and shared enums      |
-| `TinyBlueWhale.EngineQuery.Core`         | Query builders, query definitions and metadata |
-| `TinyBlueWhale.EngineQuery.Sql`          | Shared SQL compilation infrastructure          |
-| `TinyBlueWhale.EngineQuery.SqlServer`    | SQL Server dialect, compiler and capabilities  |
-| `TinyBlueWhale.EngineQuery.PostgreSql`   | PostgreSQL dialect, compiler and capabilities  |
-| `TinyBlueWhale.EngineQuery.MySql`        | MySQL dialect, compiler and capabilities       |
-
----
-
-## Installation
-
-### Core Packages
-
-```bash
-dotnet add package TinyBlueWhale.EngineQuery.Abstractions
-dotnet add package TinyBlueWhale.EngineQuery.Core
-dotnet add package TinyBlueWhale.EngineQuery.Sql
-```
-
-### SQL Server
-
-```bash
-dotnet add package TinyBlueWhale.EngineQuery.SqlServer
-```
-
-### PostgreSQL
-
-```bash
-dotnet add package TinyBlueWhale.EngineQuery.PostgreSql
-```
-
-### MySQL
-
-```bash
-dotnet add package TinyBlueWhale.EngineQuery.MySql
-```
-
----
-
-## Feature Matrix
-
-| Feature                    |   SQL Server |   PostgreSQL |         MySQL |
-| -------------------------- | -----------: | -----------: | ------------: |
-| SELECT                     |          Yes |          Yes |           Yes |
-| WHERE                      |          Yes |          Yes |           Yes |
-| JOIN                       |          Yes |          Yes |           Yes |
-| GROUP BY                   |          Yes |          Yes |           Yes |
-| HAVING                     |          Yes |          Yes |           Yes |
-| DISTINCT                   |          Yes |          Yes |           Yes |
-| Pagination                 | OFFSET/FETCH | LIMIT/OFFSET |  LIMIT/OFFSET |
-| Aggregate Functions        |          Yes |          Yes |           Yes |
-| Scalar Functions           |          Yes |          Yes |           Yes |
-| Computed Expressions       |          Yes |          Yes |           Yes |
-| CASE WHEN                  |          Yes |          Yes |           Yes |
-| EXISTS / NOT EXISTS        |          Yes |          Yes |           Yes |
-| IN Subqueries              |          Yes |          Yes |           Yes |
-| Derived Tables             |          Yes |          Yes |           Yes |
-| CTE                        |          Yes |          Yes |      MySQL 8+ |
-| Recursive CTE              |          Yes |          Yes |      MySQL 8+ |
-| UNION                      |          Yes |          Yes |           Yes |
-| UNION ALL                  |          Yes |          Yes |           Yes |
-| INTERSECT                  |          Yes |          Yes | MySQL 8.0.31+ |
-| EXCEPT                     |          Yes |          Yes | MySQL 8.0.31+ |
-| CROSS APPLY / LATERAL      |        APPLY |      LATERAL | MySQL 8.0.14+ |
-| OUTER APPLY / LEFT LATERAL |        APPLY |      LATERAL | MySQL 8.0.14+ |
-| Window Functions           |          Yes |          Yes |      MySQL 8+ |
-| Version Capabilities       |          Yes |          Yes |           Yes |
-
----
-
-## Query Features
-
-### Core Query Features
-
-* SELECT projections
-* WHERE expressions
-* ORDER BY
-* THEN BY
-* Pagination
-* DISTINCT
-* INNER JOIN
-* LEFT JOIN
-* GROUP BY
-* HAVING
-
-### Advanced Query Features
-
+* Strongly typed query builder
+* SQL Server support
+* PostgreSQL support
+* MySQL support
+* Provider-specific SQL dialect generation
+* Deterministic SQL output
+* Window functions
+* Recursive CTEs
+* EXISTS / NOT EXISTS
+* APPLY / LATERAL
+* CASE WHEN
+* GROUP BY / HAVING
 * Aggregate functions
+* Compound JOIN conditions
 * Scalar functions
 * Computed expressions
-* CASE WHEN expressions
-* EXISTS
-* NOT EXISTS
-* IN subqueries
-* Correlated subqueries
-* Derived tables
-* Common Table Expressions
-* Recursive Common Table Expressions
-* UNION
-* UNION ALL
-* INTERSECT
-* EXCEPT
-* CROSS APPLY
-* OUTER APPLY
-* LATERAL joins
-* Window functions
-
-### Window Functions
-
-* ROW_NUMBER
-* RANK
-* DENSE_RANK
-* LAG
-* LEAD
-* FIRST_VALUE
-* LAST_VALUE
-* NTILE
+* UNION / INTERSECT / EXCEPT
+* Fluent metadata
+* Attribute metadata
+* Entity Framework metadata integration
+* Dependency injection support
+* Multi-provider architecture
+* Minimal allocations
+* Lightweight infrastructure
 
 ---
 
-## Quick Start
+# Supported Frameworks
 
-### Entity
+* .NET 8
+* .NET 9
 
-```csharp
-public sealed class User
+---
+
+# Installation
+
+## Recommended Setup
+
+```bash id="x1d0rn"
+dotnet add package TinyBlueWhale.EngineQuery.DependencyInjection
+```
+
+---
+
+# Package Structure
+
+| Package                                            | Purpose                        |
+| -------------------------------------------------- | ------------------------------ |
+| TinyBlueWhale.EngineQuery.DependencyInjection      | Plug-and-play setup            |
+| TinyBlueWhale.EngineQuery.Core                     | Query builder core             |
+| TinyBlueWhale.EngineQuery.SqlServer                | SQL Server provider            |
+| TinyBlueWhale.EngineQuery.MySql                    | MySQL provider                 |
+| TinyBlueWhale.EngineQuery.PostgreSql               | PostgreSQL provider            |
+| TinyBlueWhale.EngineQuery.Metadata                 | Metadata mapping               |
+| TinyBlueWhale.EngineQuery.Metadata.EntityFramework | EF Core metadata integration   |
+| TinyBlueWhale.EngineQuery.Abstractions             | Shared contracts               |
+| TinyBlueWhale.EngineQuery.Sql                      | SQL compilation infrastructure |
+
+---
+
+# Choosing Packages
+
+| Scenario                       | Recommended Package      |
+| ------------------------------ | ------------------------ |
+| Plug-and-play setup            | DependencyInjection      |
+| Manual setup                   | Core                     |
+| SQL Server only                | SqlServer                |
+| PostgreSQL only                | PostgreSql               |
+| MySQL only                     | MySql                    |
+| EF Core metadata reuse         | Metadata.EntityFramework |
+| Custom provider implementation | Sql + Abstractions       |
+
+---
+
+# Quick Start
+
+## Dependency Injection
+
+```csharp id="l1j2ov"
+services.AddEngineQuery(options =>
 {
-    public int Id { get; set; }
+    options.Add(QueryEngineProvider.SqlServer, metadata =>
+    {
+        metadata.UseFluentMetadata(BuildMetadataResolver.Create);
+    });
+});
+```
 
-    public string Email { get; set; } = string.Empty;
+---
 
-    public bool IsActive { get; set; }
+# Building Queries
 
-    public DateTime CreatedAt { get; set; }
+```csharp id="f0w97i"
+public sealed class UserReportService
+{
+    private readonly IQueryEngine _queryEngine;
+
+    public UserReportService(IQueryEngine queryEngine)
+    {
+        _queryEngine = queryEngine;
+    }
+
+    public GeneratedSqlQuery Build()
+    {
+        return _queryEngine
+            .From<User>(alias: "u")
+            .Select<User>(user => new
+            {
+                user.Id,
+                user.Email
+            })
+            .Where<User>(user => user.IsActive)
+            .OrderBy<User>(user => user.Id)
+            .Build();
+    }
 }
 ```
 
-### Metadata Configuration
+---
 
-EngineQuery uses metadata to map C# properties to SQL tables and columns.
+# Generated SQL
 
-```csharp
-var registry = new EntityMetadataRegistry();
-
-registry.Entity<User>()
-    .ToTable("users")
-    .Property(x => x.Id).HasColumnName("user_id")
-    .Property(x => x.Email).HasColumnName("email")
-    .Property(x => x.IsActive).HasColumnName("is_active")
-    .Property(x => x.CreatedAt).HasColumnName("created_at");
-
-var metadataResolver = new FluentEntityMetadataResolver(registry);
-```
-
-### SQL Server Query Builder
-
-```csharp
-var queryBuilder = new QueryBuilder(
-    new SqlServerQueryCompiler(
-        new SqlServerDatabaseDialect(),
-        new SqlServerProviderCapabilities()),
-    metadataResolver);
+```sql id="q0g0u0"
+SELECT [u].[Id],
+       [u].[Email]
+FROM [Users] AS [u]
+WHERE [u].[IsActive] = 1
+ORDER BY [u].[Id] ASC
 ```
 
 ---
 
-## Basic SELECT Example
+# Multi-Provider Setup
 
-```csharp
-var generatedQuery = queryBuilder
-    .From<User>(alias: "u")
-    .Select<User>(u => new
+```csharp id="m74qg0"
+services.AddEngineQuery(options =>
+{
+    options.Add(QueryEngineProvider.SqlServer, metadata =>
     {
-        UserId = u.Id,
-        u.Email
-    })
-    .Where<User>(u => u.IsActive)
-    .OrderByDescending<User>(u => u.CreatedAt)
-    .Skip(20)
-    .Take(10)
+        metadata.UseFluentMetadata(BuildSqlServerMetadata.Create);
+    });
+
+    options.Add(QueryEngineProvider.MySql, metadata =>
+    {
+        metadata.UseAttributeMetadata();
+    });
+
+    options.Add(QueryEngineProvider.PostgreSql, metadata =>
+    {
+        metadata.UseFluentMetadata(BuildPostgreSqlMetadata.Create);
+    });
+});
+```
+
+---
+
+# Selecting Providers Dynamically
+
+```csharp id="r3dyct"
+public sealed class ReportService
+{
+    private readonly IQueryEngineFactory _factory;
+
+    public ReportService(IQueryEngineFactory factory)
+    {
+        _factory = factory;
+    }
+
+    public GeneratedSqlQuery Build()
+    {
+        var queryEngine = _factory.Create(QueryEngineProvider.SqlServer);
+
+        return queryEngine
+            .From<User>(alias: "u")
+            .Build();
+    }
+}
+```
+
+---
+
+# Metadata Strategies
+
+EngineQuery supports multiple metadata resolution strategies.
+
+---
+
+## Fluent Metadata
+
+```csharp id="h5tkxv"
+registry.Entity<User>()
+    .ToTable("Users")
+    .Property(user => user.Id)
+    .HasColumnName("UserId");
+```
+
+---
+
+## Attribute Metadata
+
+```csharp id="bd1n5l"
+[Table("Users")]
+public sealed class User
+{
+    [Column("UserId")]
+    public int Id { get; set; }
+}
+```
+
+---
+
+## Entity Framework Metadata
+
+```csharp id="bspx3y"
+services.AddEngineQuery(options =>
+{
+    options.Add(QueryEngineProvider.SqlServer, metadata =>
+    {
+        metadata.UseEntityFrameworkMetadata<ApplicationDbContext>();
+    });
+});
+```
+
+---
+
+# Advanced Features
+
+## Window Functions
+
+```csharp id="9twgx0"
+queryBuilder
+    .From<Order>(alias: "o")
+    .SelectRowNumber(
+        "RowNumber",
+        window => window
+            .PartitionBy<Order>(order => order.CustomerId)
+            .OrderByDescending<Order>(order => order.CreatedAt))
     .Build();
 ```
 
-Generated SQL Server output:
+---
 
-```sql
-SELECT [u].[user_id] AS [UserId], [u].[email]
-FROM [users] AS [u]
-WHERE ([u].[is_active] = @p0)
-ORDER BY [u].[created_at] DESC
-OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY
-```
+## Recursive Common Table Expressions
 
-Parameters:
-
-```txt
-@p0 = True
-```
-
-Generated PostgreSQL output:
-
-```sql
-SELECT "u"."user_id" AS "UserId", "u"."email"
-FROM "users" AS "u"
-WHERE ("u"."is_active" = @p0)
-ORDER BY "u"."created_at" DESC
-LIMIT 10 OFFSET 20
-```
-
-Generated MySQL output:
-
-```sql
-SELECT `u`.`user_id` AS `UserId`, `u`.`email`
-FROM `users` AS `u`
-WHERE (`u`.`is_active` = @p0)
-ORDER BY `u`.`created_at` DESC
-LIMIT 10 OFFSET 20
+```csharp id="7jlwm5"
+queryBuilder
+    .WithRecursive<CategoryNode>(
+        "CategoryTree",
+        anchor => anchor,
+        recursive => recursive)
+    .Build();
 ```
 
 ---
 
-## Why Not Just Dapper?
+## EXISTS
 
-Dapper is excellent for execution.
-
-EngineQuery is not trying to replace Dapper.
-
-EngineQuery helps before execution by generating SQL and parameters from typed expressions.
-
-A typical usage is:
-
-```txt
-EngineQuery generates SQL
-Dapper executes SQL
+```csharp id="6z8s0f"
+queryBuilder
+    .From<User>(alias: "u")
+    .WhereExists<Order>(
+        subquery => subquery
+            .From<Order>(alias: "o")
+            .Where<Order>(order => order.UserId == 1))
+    .Build();
 ```
 
 ---
 
-## Why Not Just EF Core?
+## APPLY / LATERAL
 
-EF Core is excellent for write-side workflows, tracking, migrations and transactional consistency.
-
-EngineQuery is useful when you want explicit SQL control for read-side queries without embedding raw SQL strings everywhere.
-
-A typical architecture is:
-
-```txt
-EF Core for writes
-EngineQuery + Dapper for reads
+```csharp id="l69dfx"
+queryBuilder
+    .From<User>(alias: "u")
+    .CrossApply<Order>(
+        "orders",
+        apply => apply
+            .From<Order>(alias: "o"))
+    .Build();
 ```
 
 ---
 
-## Testing
+## Aggregate Functions
 
-EngineQuery uses provider-specific snapshot testing.
-
-The test suite validates:
-
-* SQL Server output
-* PostgreSQL output
-* MySQL output
-* deterministic SQL generation
-* provider capabilities
-* provider version gates
-* edge cases
-* negative validations
-
-Run tests:
-
-```bash
-dotnet test
-```
-
-Regenerate snapshots intentionally:
-
-```powershell
-$env:ENGINEQUERY_UPDATE_SNAPSHOTS="true"
-dotnet test
-$env:ENGINEQUERY_UPDATE_SNAPSHOTS=$null
+```csharp id="3grc50"
+queryBuilder
+    .From<Order>(alias: "o")
+    .SelectSum<Order>(
+        order => order.Total,
+        "TotalSales")
+    .GroupBy<Order>(order => order.CustomerId)
+    .Build();
 ```
 
 ---
 
-## Current Limitations
+## CASE WHEN
 
-V1 limitations:
-
-* SELECT generation only
-* no SQL execution
-* no INSERT generation
-* no UPDATE generation
-* no DELETE generation
-* no MERGE / UPSERT generation
-* no LINQ provider implementation
-* no query materialization
-* no entity tracking
-* no transaction management
+```csharp id="jjlwm3"
+queryBuilder
+    .From<Order>(alias: "o")
+    .SelectCase(
+        "Status",
+        builder => builder
+            .When<Order>(order => order.Total > 1000, "VIP")
+            .Else("Standard"))
+    .Build();
+```
 
 ---
 
-## Roadmap
+# Designed For
 
-### V1
+* Dapper applications
+* CQRS read models
+* Reporting systems
+* High-performance APIs
+* SQL-heavy applications
+* Enterprise reporting
+* Legacy SQL migrations
+* Multi-provider architectures
+* Provider-specific SQL optimization
 
-Status: feature frozen.
+---
 
-* Typed SELECT query generation
-* Multi-provider SQL generation
-* Advanced SELECT features
+# Not Intended For
+
+EngineQuery is not an ORM.
+
+It does not provide:
+
+* Change tracking
+* Lazy loading
+* Entity persistence
+* IQueryable providers
+* Automatic migrations
+* LINQ execution providers
+
+---
+
+# Architecture
+
+EngineQuery uses a provider-agnostic query compilation pipeline.
+
+The architecture is composed of:
+
+* Query builders
+* Query definitions
+* SQL clause builders
+* SQL dialects
 * Provider capabilities
-* Version capabilities
-* Deterministic parameter generation
-* Deterministic SQL formatting
-* Snapshot validation
+* Metadata resolvers
+* Query compilers
 
-### V2
-
-Planned:
-
-* INSERT script generation
-* UPDATE script generation
-* DELETE script generation
-* write-side provider capabilities
-* write-side snapshots
-
-### V3
-
-Planned:
-
-* UPSERT / MERGE script generation
-* custom SQL function registry
-* controlled raw SQL escape hatches
-* advanced provider extensibility
+This allows deterministic SQL generation while maintaining provider-specific behavior.
 
 ---
 
-## Contributing
+# Benchmarks
 
-Feedback, issues, ideas and constructive criticism are welcome.
+Benchmarks are available in the repository benchmark project.
 
-If you find an unsupported query scenario or provider-specific SQL issue, please open an issue with:
+Current benchmark scenarios include:
 
-* provider
-* provider version
-* generated SQL
-* expected SQL
-* minimal C# query example
-* package version
+* Basic select queries
+* JOIN aggregation
+* EXISTS subqueries
+* Derived tables
+* Common table expressions
+* Window functions
+* Set operations
 
 ---
 
-## License
+# Samples
+
+Sample applications are available in the repository:
+
+* Playground
+* Sample applications
+* Provider comparison validators
+* Benchmark project
+
+---
+
+# Repository
+
+https://github.com/TinyBlueWhaleDev/EngineQuery
+
+---
+
+# License
 
 MIT

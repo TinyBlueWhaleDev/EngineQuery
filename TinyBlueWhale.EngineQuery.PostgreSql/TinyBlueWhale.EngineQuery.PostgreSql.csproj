@@ -1,14 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>TinyBlueWhale.EngineQuery.PostgreSql</PackageId>
+    <Version>1.0.0-preview</Version>
+    <Authors>TinyBlueWhaleDev</Authors>
+    <Company>TinyBlueWhaleDev</Company>
+    <Product>TinyBlueWhale.EngineQuery.PostgreSql</Product>
+    <Description>PostgreSQL provider for EngineQuery deterministic SQL generation.</Description>
+    <PackageTags>sql;query-builder;postgresql;postgres;dapper;cqrs;enginequery</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Core\TinyBlueWhale.EngineQuery.Core.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Sql\TinyBlueWhale.EngineQuery.Sql.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

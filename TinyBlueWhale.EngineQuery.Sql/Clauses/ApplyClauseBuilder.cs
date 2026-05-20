@@ -91,6 +91,21 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             };
         }
 
+        /// <summary>
+        /// Builds an APPLY clause for the current provider dialect.
+        /// </summary>
+        /// <param name="applyDefinition">
+        /// APPLY definition metadata.
+        /// </param>
+        /// <param name="commandText">
+        /// SQL command text used by the APPLY source.
+        /// </param>
+        /// <param name="context">
+        /// Current query compilation context.
+        /// </param>
+        /// <returns>
+        /// Generated APPLY clause SQL.
+        /// </returns>
         protected virtual string BuildApplyClause(QueryApplyDefinition applyDefinition, string commandText, QueryCompilationContext context)
         {
             var applyKeyword = ResolveApplyKeyword(applyDefinition.ApplyType);

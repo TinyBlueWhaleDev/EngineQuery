@@ -1,22 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-    
+    <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
-
-    <AnalysisLevel>latest</AnalysisLevel>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>TinyBlueWhale.EngineQuery.SqlServer</PackageId>
+    <Version>1.0.0-preview</Version>
+    <Authors>TinyBlueWhaleDev</Authors>
+    <Company>TinyBlueWhaleDev</Company>
+    <Product>TinyBlueWhale.EngineQuery.SqlServer</Product>
+    <Description>SQL Server provider for EngineQuery deterministic SQL generation.</Description>
+    <PackageTags>sql;query-builder;sqlserver;mssql;dapper;cqrs;enginequery</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Abstractions\TinyBlueWhale.EngineQuery.Abstractions.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Core\TinyBlueWhale.EngineQuery.Core.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Sql\TinyBlueWhale.EngineQuery.Sql.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
