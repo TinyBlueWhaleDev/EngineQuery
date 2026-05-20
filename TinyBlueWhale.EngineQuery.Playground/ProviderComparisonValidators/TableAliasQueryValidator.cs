@@ -1,20 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.Metadata.Fluent;
-using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
-using TinyBlueWhale.EngineQuery.MySql.Compilation;
-using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
-using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
-using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
-using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
+
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 {

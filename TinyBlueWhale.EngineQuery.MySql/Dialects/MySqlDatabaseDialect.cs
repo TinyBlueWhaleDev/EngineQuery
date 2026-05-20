@@ -7,10 +7,38 @@ using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Dialects
 {
+    /// <summary>
+    /// MySql implementation of database-specific SQL syntax rules.
+    /// </summary>
+    /// <remarks>
+    /// Responsible for generating MySql compatible fragments such as
+    /// escaped identifiers and pagination clauses.
+    /// </remarks>
     public sealed class MySqlDatabaseDialect : ISqlDatabaseDialect
     {
+        /// <summary>
+        /// Escapes a SQL identifier using MySql bracket syntax.
+        /// </summary>
+        /// <param name="identifier">
+        /// Identifier to escape.
+        /// </param>
+        /// <returns>
+        /// Escaped MySql identifier.
+        /// </returns>
         public string EscapeIdentifier(string identifier) => $"`{identifier}`";
 
+        /// <summary>
+        /// Builds a MySql pagination clause using LIMIT/OFFSET syntax.
+        /// </summary>
+        /// <param name="skip">
+        /// Number of rows to skip.
+        /// </param>
+        /// <param name="take">
+        /// Maximum number of rows to return.
+        /// </param>
+        /// <returns>
+        /// MySql pagination clause.
+        /// </returns>
         public string BuildPaginationClause(int? skip, int? take)
         {
             if (!skip.HasValue && !take.HasValue)

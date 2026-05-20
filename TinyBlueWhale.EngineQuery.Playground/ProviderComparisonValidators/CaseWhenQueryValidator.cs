@@ -32,8 +32,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query with CASE WHEN SQL projections.
-        private static GeneratedSqlQuery BuildQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildQuery(QueryBuilder queryBuilder)
         {
             return queryBuilder
                 .From<JoinOrder>(alias: "o")
