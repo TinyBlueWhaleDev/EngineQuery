@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Core\TinyBlueWhale.EngineQuery.Core.csproj" />
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.DependencyInjection\TinyBlueWhale.EngineQuery.DependencyInjection.csproj" />
   </ItemGroup>
 
   <ItemGroup>

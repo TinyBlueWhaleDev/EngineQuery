@@ -9,6 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.16" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.16" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.16" />
   </ItemGroup>
 
@@ -16,6 +18,7 @@
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Abstractions\TinyBlueWhale.EngineQuery.Abstractions.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Core\TinyBlueWhale.EngineQuery.Core.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.DependencyInjection\TinyBlueWhale.EngineQuery.DependencyInjection.csproj" />
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Metadata.EntityFramework\TinyBlueWhale.EngineQuery.Metadata.EntityFramework.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.MySql\TinyBlueWhale.EngineQuery.MySql.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.PostgreSql\TinyBlueWhale.EngineQuery.PostgreSql.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.SqlServer\TinyBlueWhale.EngineQuery.SqlServer.csproj" />

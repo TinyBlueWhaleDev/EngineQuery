@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
+using TinyBlueWhale.EngineQuery.Metadata.Models;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
 {
