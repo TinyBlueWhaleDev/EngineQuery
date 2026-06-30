@@ -6,6 +6,10 @@ using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using TinyBlueWhale.EngineQuery.Playground.Models;
+using TinyBlueWhale.EngineQuery.Metadata.Models;
+using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
+using TinyBlueWhale.EngineQuery.Playground.EntityFramework;
+using Microsoft.EntityFrameworkCore;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 {        
@@ -20,6 +24,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             ValidateSingleProviderDirectInjection();
             ValidateMultiProviderFactoryResolution();
             ValidateMultipleMetadataRequiresExplicitStrategy();
+            ValidateEntityFrameworkMetadataResolution();
         }
 
         // Validates direct IQueryEngine injection when only one provider and metadata strategy are registered.
@@ -125,6 +130,35 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                BuildQuery(factory.Create(
                    QueryEngineProvider.SqlServer,
                    MetadataStrategy.Attribute)));
+        }
+
+        /// <summary>
+        /// Validates Entity Framework metadata resolution through EngineQuery dependency injection.
+        /// </summary>
+        private static void ValidateEntityFrameworkMetadataResolution()
+        {
+            var services = new ServiceCollection();
+
+            services.AddDbContext<EngineQueryValidationDbContext>(options =>
+            {
+                options.UseInMemoryDatabase(nameof(EngineQueryValidationDbContext));
+            });
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer, metadata =>
+                {
+                    metadata.UseEntityFrameworkMetadata<EngineQueryValidationDbContext>();
+                });
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var queryEngine = serviceProvider.GetRequiredService<IQueryEngine>();
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server Entity Framework Metadata",
+                BuildQuery(queryEngine));
         }
 
         // Builds a validation query.

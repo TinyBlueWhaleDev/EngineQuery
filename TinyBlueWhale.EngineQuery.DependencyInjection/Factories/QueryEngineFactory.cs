@@ -2,6 +2,7 @@
 using TinyBlueWhale.EngineQuery.DependencyInjection.Configuration;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
+using TinyBlueWhale.EngineQuery.Metadata.Models;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Factories
 {
