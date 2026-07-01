@@ -60,7 +60,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                 .Select(selectDefinition => BuildSelectColumn(queryDefinition, selectDefinition, context));
 
             var aggregateColumns = queryDefinition.AggregateDefinitions
-                .Select(BuildAggregateColumn);
+                .Select(aggregateDefinition => BuildAggregateColumn(aggregateDefinition, context));
 
             var scalarFunctionColumns = queryDefinition.ScalarFunctionDefinitions
                 .Select(functionDefinition => BuildScalarFunctionColumn(functionDefinition, context));
@@ -121,15 +121,44 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return QueryColumnMappingHelper.ResolveColumnName(queryDefinition, selectDefinition.PropertyName);
         }
 
-        private string BuildAggregateColumn(QueryAggregateDefinition aggregateDefinition)
+        private string BuildAggregateColumn(QueryAggregateDefinition aggregateDefinition, QueryCompilationContext context)
         {
-            var columnReference = _columnReferenceBuilder.Build(
+            var aggregateExpression = aggregateDefinition.Expression is not null
+                ? BuildAggregateComputedExpression(aggregateDefinition, context)
+                : BuildAggregateColumnReference(aggregateDefinition);
+
+            var functionName = SqlFunctionNameResolver.ResolveAggregateFunctionName(
+                aggregateDefinition.Function);
+
+            return $"{functionName}({aggregateExpression}) AS {context.DatabaseDialect.EscapeIdentifier(aggregateDefinition.Alias)}";
+        }
+
+        private static string BuildAggregateComputedExpression(QueryAggregateDefinition aggregateDefinition, QueryCompilationContext context)
+        {
+            var expressionScope = new QueryExpressionScope();
+
+            expressionScope.Register(
+                (ParameterExpression)aggregateDefinition.Expression!.Parameters.Single(),
+                aggregateDefinition.Source);
+
+            var parser = new SqlComputedExpressionParser(
+                context.DatabaseDialect,
+                context.Parameters,
+                aggregateDefinition.Source.ColumnMappings,
+                aggregateDefinition.Source.TableAlias,
+                expressionScope);
+
+            return parser.Parse(aggregateDefinition.Expression.Body);
+        }
+
+        private string BuildAggregateColumnReference(QueryAggregateDefinition aggregateDefinition)
+        {
+            if (string.IsNullOrWhiteSpace(aggregateDefinition.PropertyName))
+                throw new InvalidOperationException("Aggregate property name is required for column-based aggregate projections.");
+
+            return _columnReferenceBuilder.Build(
                 aggregateDefinition.Source,
                 aggregateDefinition.PropertyName);
-
-            var functionName = SqlFunctionNameResolver.ResolveAggregateFunctionName(aggregateDefinition.Function);
-
-            return $"{functionName}({columnReference}) AS {_columnReferenceBuilder.Build(aggregateDefinition.Alias, null)}";
         }
 
         private string BuildScalarFunctionColumn(QueryScalarFunctionDefinition functionDefinition, QueryCompilationContext context)
