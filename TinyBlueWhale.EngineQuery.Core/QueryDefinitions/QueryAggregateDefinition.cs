@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
@@ -18,9 +19,14 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public required QueryAggregateFunction Function { get; init; }
 
         /// <summary>
-        /// Gets the entity property name used by the aggregate function.
+        /// Gets the source property name used by simple column aggregates.
         /// </summary>
-        public required string PropertyName { get; init; }
+        public string? PropertyName { get; init; }
+
+        /// <summary>
+        /// Gets the aggregate expression used by computed aggregate projections.
+        /// </summary>
+        public LambdaExpression? Expression { get; init; }
 
         /// <summary>
         /// Gets the required SQL alias assigned to the aggregate result.
