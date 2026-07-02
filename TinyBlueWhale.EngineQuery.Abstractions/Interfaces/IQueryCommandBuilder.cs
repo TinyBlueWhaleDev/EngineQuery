@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
@@ -84,7 +84,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, string alias);
+        IQueryCommandBuilder<T> SelectScalarFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, string alias);
 
         /// <summary>
         /// Adds a scalar SQL function projection using multiple function arguments for an entity available in the current query scope.
@@ -104,7 +104,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object[]>> argumentsSelector, string alias);
+        IQueryCommandBuilder<T> SelectScalarFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object[]>> argumentsSelector, string alias);
 
         /// <summary>
         /// Adds a computed SELECT expression for an entity available in the current query scope.
@@ -144,7 +144,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias);
+        IQueryCommandBuilder<T> SelectCaseWhen<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias);
 
         /// <summary>
         /// Adds a <c>LAG</c> window function projection to the current query.
@@ -406,7 +406,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        IQueryCommandBuilder<T> WhereFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value);
+        IQueryCommandBuilder<T> WhereScalarFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value);
 
         /// <summary>
         /// Adds a WHERE condition based on a computed expression for an entity available in the current query scope.

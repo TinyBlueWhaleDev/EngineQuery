@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Parameters;

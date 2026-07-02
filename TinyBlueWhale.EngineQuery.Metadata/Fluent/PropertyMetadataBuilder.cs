@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
 {
     /// <summary>
@@ -15,7 +10,6 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
     public sealed class PropertyMetadataBuilder<TEntity>
     {
         private readonly EntityMetadataBuilder<TEntity> _entityBuilder;
-
         private readonly string _propertyName;
 
         /// <summary>

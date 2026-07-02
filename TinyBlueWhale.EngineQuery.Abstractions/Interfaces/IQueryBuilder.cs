@@ -1,4 +1,4 @@
-﻿namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
+namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
     /// <summary>
     /// Represents the main entry point for creating strongly typed query builders.
@@ -28,7 +28,7 @@
         /// <typeparam name="T">
         /// Entity type used as the source of the query.
         /// </typeparam>
-        /// /// <param name="alias">
+        /// <param name="alias">
         /// Optional table alias used to qualify generated SQL column references.
         /// </param>
         /// <returns>

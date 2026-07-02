@@ -1,7 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.SetOperations

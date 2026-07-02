@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -136,7 +136,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                     OrderId = o.Id,
                     o.Total
                 })
-                .SelectCase<JoinOrder>(
+                .SelectCaseWhen<JoinOrder>(
                     condition: o => o.Total <= 0 || o.Total > 10000,
                     whenTrue: "REVIEW",
                     whenFalse: "NORMAL",

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -190,11 +190,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 {
                     UserId = u.Id
                 })
-                .SelectFunction<JoinUser>(
+                .SelectScalarFunction<JoinUser>(
                     QueryScalarFunction.Upper,
                     u => u.Email,
                     "NormalizedEmail")
-                .SelectFunction<JoinUser>(
+                .SelectScalarFunction<JoinUser>(
                     QueryScalarFunction.Length,
                     u => u.Email,
                     "EmailLength")
@@ -237,7 +237,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                     OrderId = o.Id,
                     o.Total
                 })
-                .SelectCase<JoinOrder>(
+                .SelectCaseWhen<JoinOrder>(
                     condition: o => o.Total > 1000,
                     whenTrue: "VIP",
                     whenFalse: "STANDARD",

@@ -44,15 +44,15 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 {
                     UserId = u.Id
                 })
-                .SelectFunction<JoinUser>(
+                .SelectScalarFunction<JoinUser>(
                     QueryScalarFunction.Upper,
                     u => u.Email,
                     alias: "NormalizedEmail")
-                .SelectFunction<JoinUser>(
+                .SelectScalarFunction<JoinUser>(
                     QueryScalarFunction.Length,
                     u => u.Email,
                     alias: "EmailLength")
-                .SelectFunction<JoinUser>(
+                .SelectScalarFunction<JoinUser>(
                     QueryScalarFunction.Trim,
                     u => u.Email,
                     alias: "TrimmedEmail")
