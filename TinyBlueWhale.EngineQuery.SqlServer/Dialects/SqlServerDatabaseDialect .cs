@@ -1,4 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Dialects
 {

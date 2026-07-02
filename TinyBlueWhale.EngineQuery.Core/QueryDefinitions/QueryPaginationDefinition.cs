@@ -1,4 +1,4 @@
-﻿
+
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
     /// <summary>

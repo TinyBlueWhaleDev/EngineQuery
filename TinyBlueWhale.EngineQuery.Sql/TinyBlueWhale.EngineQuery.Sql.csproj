@@ -4,24 +4,31 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
     <PackageId>TinyBlueWhale.EngineQuery.Sql</PackageId>
-    <Version>1.0.0-preview</Version>
-    <Authors>TinyBlueWhaleDev</Authors>
-    <Company>TinyBlueWhaleDev</Company>
-    <Product>TinyBlueWhale.EngineQuery.Sql</Product>
+    <Version>1.0.0</Version>
+    <Authors>Marco Garza</Authors>
+    <Company>TinyBlueWhale</Company>
+    <Product>EngineQuery</Product>
+    <Copyright>Copyright © TinyBlueWhale. All rights reserved.</Copyright>
+
     <Description>SQL compilation pipeline, clause builders and expression parsing for EngineQuery.</Description>
-    <PackageTags>sql;query-builder;sql-generation;expression-parser;clause-builder;enginequery</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>dotnet;sql;query-builder;sql-generation;expression-parser;clause-builder;enginequery</PackageTags>
+
     <RepositoryUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>            
+    
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>    
   </PropertyGroup>
 
   <ItemGroup>

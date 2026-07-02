@@ -41,12 +41,12 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     OrderId = o.Id,
                     o.Total
                 })
-                .SelectCase<JoinOrder>(
+                .SelectCaseWhen<JoinOrder>(
                     o => o.Total > 1000 && o.Total < 5000,
                     whenTrue: "VIP",
                     whenFalse: "STANDARD",
                     alias: "CustomerType")
-                .SelectCase<JoinOrder>(
+                .SelectCaseWhen<JoinOrder>(
                     o => o.Total <= 0,
                     whenTrue: "INVALID",
                     whenFalse: "VALID",
