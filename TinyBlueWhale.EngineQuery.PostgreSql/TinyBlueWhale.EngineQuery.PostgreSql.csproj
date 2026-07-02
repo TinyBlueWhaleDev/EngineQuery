@@ -4,24 +4,31 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
     <PackageId>TinyBlueWhale.EngineQuery.PostgreSql</PackageId>
-    <Version>1.0.0-preview</Version>
-    <Authors>TinyBlueWhaleDev</Authors>
-    <Company>TinyBlueWhaleDev</Company>
-    <Product>TinyBlueWhale.EngineQuery.PostgreSql</Product>
+    <Version>1.0.0</Version>
+    <Authors>Marco Garza</Authors>
+    <Company>TinyBlueWhale</Company>
+    <Product>EngineQuery</Product>
+    <Copyright>Copyright © TinyBlueWhale. All rights reserved.</Copyright>
+
     <Description>PostgreSQL provider for EngineQuery deterministic SQL generation.</Description>
-    <PackageTags>sql;query-builder;postgresql;postgres;dapper;cqrs;enginequery</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>dotnet;sql;query-builder;postgresql;postgres;dapper;cqrs;enginequery</PackageTags>
+
     <RepositoryUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/TinyBlueWhaleDev/EngineQuery</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,9 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
-using TinyBlueWhale.EngineQuery.Sql.Composition;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Composition;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation

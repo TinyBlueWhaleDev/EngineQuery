@@ -1,10 +1,7 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.MySql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Compilation
 {

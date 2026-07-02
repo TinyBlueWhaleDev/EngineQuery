@@ -42,12 +42,12 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     UserId = u.Id,
                     u.Email
                 })
-                .WhereFunction<JoinUser>(
+                .WhereScalarFunction<JoinUser>(
                     QueryScalarFunction.Lower,
                     u => u.Email,
                     QueryComparisonOperator.Equal,
                     "admin@test.com")
-                .WhereFunction<JoinUser>(
+                .WhereScalarFunction<JoinUser>(
                     QueryScalarFunction.Length,
                     u => u.Email,
                     QueryComparisonOperator.GreaterThan,

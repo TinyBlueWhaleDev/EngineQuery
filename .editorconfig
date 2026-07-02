@@ -1,0 +1,43 @@
+# EditorConfig helps maintain consistent coding styles for the EngineQuery repository.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,slnx,xml}]
+indent_style = space
+indent_size = 2
+
+[*.{json,yml,yaml,md}]
+indent_style = space
+indent_size = 2
+
+# C# coding conventions.
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# Prefer explicit accessibility for non-interface members.
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+
+# Prefer object initializers when possible.
+dotnet_style_object_initializer = true:suggestion
+
+# Prefer collection expressions when possible.
+dotnet_style_prefer_collection_expression = true:suggestion
+
+# Prefer null propagation when possible.
+dotnet_style_null_propagation = true:suggestion
+
+# Prefer pattern matching when possible.
+dotnet_style_prefer_pattern_matching = true:suggestion
+
+# Analyzer severity.
+dotnet_analyzer_diagnostic.category-Style.severity = suggestion
+dotnet_analyzer_diagnostic.category-Design.severity = suggestion

@@ -1,20 +1,11 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Enums;
-using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Grouping;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Ordering;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Projections;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.SetOperations;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
@@ -106,7 +97,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver used for metadata-driven joins.
         /// </param>
-        public QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName, string? tableAlias = null,  IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName, string? tableAlias = null,  IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
@@ -334,7 +325,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when <typeparamref name="TEntity"/> is not available in the current query scope.
         /// </exception>
-        public IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, string alias)
+        public IQueryCommandBuilder<T> SelectScalarFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, string alias)
         {
             _components.ScalarFunctionProjectionBuilder.Add(function, selector, alias);
 
@@ -365,7 +356,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="alias"/> is null, empty or whitespace.
         /// </exception>
-        public IQueryCommandBuilder<T> SelectFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object[]>> argumentsSelector, string alias)
+        public IQueryCommandBuilder<T> SelectScalarFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object[]>> argumentsSelector, string alias)
         {
             _components.ScalarFunctionProjectionBuilder.Add(function, argumentsSelector, alias);
 
@@ -402,7 +393,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when <typeparamref name="TEntity"/> is not available in the current query scope.
         /// </exception>
-        public IQueryCommandBuilder<T> SelectCase<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias)
+        public IQueryCommandBuilder<T> SelectCaseWhen<TEntity>(Expression<Func<TEntity, bool>> condition, object? whenTrue, object? whenFalse, string alias)
         {
             _components.CaseWhenProjectionBuilder.Add(condition, whenTrue, whenFalse, alias);
 
@@ -745,7 +736,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        public IQueryCommandBuilder<T> WhereFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value)
+        public IQueryCommandBuilder<T> WhereScalarFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value)
         {
             _components.WhereClauseBuilder.AddFunction(function, selector, comparisonOperator, value);
 
@@ -1115,6 +1106,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Compiles the current query definition into SQL command text and parameters.
         /// </summary>
+        /// <remarks>
+        /// This method only compiles the captured query definition into a provider-specific SQL command.
+        /// It does not execute the generated SQL against a database. Execution is the responsibility
+        /// of the consuming data access technology, such as Dapper or ADO.NET.
+        /// </remarks>
         /// <returns>
         /// Generated SQL query command.
         /// </returns>

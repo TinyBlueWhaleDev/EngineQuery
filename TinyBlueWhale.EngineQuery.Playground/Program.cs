@@ -37,3 +37,4 @@ FirstLastValueWindowFunctionQueryValidator.Run();
 NtileWindowFunctionQueryValidator.Run();
 ProviderCapabilityQueryValidator.Run();
 DependencyInjectionQueryValidator.Run();
+AggregateComputedExpressionQueryValidator.Run();

@@ -43,7 +43,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 {
                     UserId = u.Id
                 })
-                .SelectFunction<JoinUser>(
+                .SelectScalarFunction<JoinUser>(
     QueryScalarFunction.Coalesce,
     u => new object[]
     {
@@ -51,7 +51,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         "NO_EMAIL"
     },
     alias: "SafeEmail")
-.SelectFunction<JoinUser>(
+.SelectScalarFunction<JoinUser>(
     QueryScalarFunction.Concat,
     u => new object[]
     {

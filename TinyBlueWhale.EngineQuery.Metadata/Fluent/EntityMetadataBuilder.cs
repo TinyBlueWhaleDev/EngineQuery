@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
 
 namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
@@ -18,9 +13,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
     public sealed class EntityMetadataBuilder<TEntity>
     {
         private readonly EntityMetadataRegistry _registry;
-
         private readonly Dictionary<string, EntityPropertyMetadata> _properties = [];
-
         private string _tableName = typeof(TEntity).Name;
 
         /// <summary>
@@ -52,7 +45,6 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
             _tableName = tableName;
-
             Save();
 
             return this;
@@ -88,7 +80,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <param name="columnName">
         /// Database column name.
         /// </param>
-        public void SetColumnName(string propertyName, string columnName)
+        internal void SetColumnName(string propertyName, string columnName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
             ArgumentException.ThrowIfNullOrWhiteSpace(columnName);
