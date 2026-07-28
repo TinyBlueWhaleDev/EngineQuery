@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
 
     <PackageId>TinyBlueWhale.EngineQuery.SqlServer</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>Marco Garza</Authors>
     <Company>TinyBlueWhale</Company>
     <Product>EngineQuery</Product>

@@ -1,14 +1,12 @@
 using TinyBlueWhale.EngineQuery.Labs.Configuration;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence;
-using TinyBlueWhale.MiniBus;
 using TinyBlueWhale.MinimalApi.Extensions;
 using TinyBlueWhale.MinimalApi.Versioning.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddTinyBlueWhaleMinimalApi(typeof(Program).Assembly)
-    .AddMiniBus(typeof(Program).Assembly)
+    .AddTinyBlueWhaleMinimalApi(typeof(Program).Assembly)    
     .AddLabPersistence(builder.Configuration);
 
 builder.Services.AddSwaggerGen();
