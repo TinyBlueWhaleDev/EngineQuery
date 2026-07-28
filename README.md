@@ -11,7 +11,7 @@ Generate SQL for SQL Server, PostgreSQL and MySQL without sacrificing readabilit
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-8%20%7C%209-512BD4)]()
 
-> **EngineQuery 1.0** is the first stable release and is production-ready for deterministic SQL generation.
+> **EngineQuery 1.0.1** is the current stable release and is production-ready for deterministic SQL generation.
 
 ---
 
@@ -930,6 +930,31 @@ var query = queryBuilder
     .Build();
 ```
 
+## Logical Predicate Composition
+
+EngineQuery supports composing logical predicate groups using strongly typed expressions.
+
+Logical operators can be specified explicitly through `QueryLogicalOperator`.
+
+```csharp
+var query = queryBuilder
+    .From<JoinOrder>(alias: "o")
+    .InnerJoin<JoinOrder, JoinCustomer>(
+        alias: "c",
+        on: (order, customer) => order.CustomerId == customer.Id)
+    .Where(o => o.Status == OrderStatus.Active)
+    .Where(
+        o => o.OrderNumber.Contains(search),
+        QueryLogicalOperator.Or)
+    .Where<JoinCustomer>(
+        customer =>
+            customer.FirstName.Contains(search)
+            || customer.LastName.Contains(search)
+            || customer.Email.Contains(search),
+        QueryLogicalOperator.Or)
+    .Build();
+```
+
 ---
 
 # Common Table Expressions
@@ -1166,13 +1191,13 @@ The `TinyBlueWhale.EngineQuery.Metadata.EntityFramework` package allows EngineQu
 
 Yes.
 
-EngineQuery 1.0 is intended for production use in applications requiring deterministic SQL generation.
+EngineQuery 1.0.1 is intended for production use in applications requiring deterministic SQL generation.
 
 ---
 
 # Project Status
 
-EngineQuery 1.0 is the first stable release.
+EngineQuery 1.0.1 is the current stable release.
 
 ## Supported Frameworks
 
@@ -1206,6 +1231,8 @@ EngineQuery 1.0 is the first stable release.
 | Computed Expressions | ✅ |
 | Aggregate Functions | ✅ |
 | CASE WHEN | ✅ |
+| Dynamic WHERE Composition | ✅ |
+| Logical Predicate Groups (AND / OR) | ✅ |
 | Scalar Functions | ✅ |
 | Window Functions | ✅ |
 | Common Table Expressions | ✅ |
@@ -1225,11 +1252,16 @@ The repository includes multiple resources for learning and validating EngineQue
 | Resource | Description |
 |----------|-------------|
 | README | Project overview and getting started |
-| Playground | Executable examples |
-| Tests | API validation |
+| Playground | Executable feature validation |
+| Tests | Automated SQL generation validation |
 | Provider Validators | SQL comparison across providers |
 | Benchmarks | Performance evaluation |
 | CHANGELOG | Release history |
+| Labs | End-to-end real-world usage examples |
+
+The Labs solution contains complete end-to-end scenarios demonstrating how EngineQuery integrates with Dapper in real applications.
+
+Lab001 compares handwritten SQL with EngineQuery while producing equivalent SQL and results.
 
 ---
 
