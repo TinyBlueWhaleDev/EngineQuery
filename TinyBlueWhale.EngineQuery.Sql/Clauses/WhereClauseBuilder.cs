@@ -1,3 +1,4 @@
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
@@ -64,9 +65,48 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
+            
+            var predicateConditions = BuildPredicateConditions(queryDefinition, context);
 
-            var whereConditions = queryDefinition.WhereDefinitions
-                .Select(whereDefinition =>
+            var functionConditions = queryDefinition.WhereScalarFunctionDefinitions
+                .Select(functionDefinition => BuildWhereScalarFunctionCondition(functionDefinition, context));
+
+            var computedConditions =queryDefinition.WhereComputedExpressionDefinitions
+                .Select(computedDefinition => BuildWhereComputedExpressionCondition(computedDefinition, context));
+
+            var existsConditions = queryDefinition.ExistsDefinitions
+                .Select(existsDefinition => BuildExistsCondition(existsDefinition, context));
+
+            var inConditions =queryDefinition.InSubqueryDefinitions
+                .Select(inDefinition => BuildInSubqueryCondition(inDefinition, context));
+
+            var conditions = predicateConditions
+                .Concat(functionConditions)
+                .Concat(computedConditions)
+                .Concat(existsConditions)
+                .Concat(inConditions);
+
+            return "WHERE " + string.Join(" AND ", conditions);
+        }
+
+        /// <summary>
+        /// Compiles predicate WHERE definitions and groups consecutive
+        /// logical OR operations.
+        /// </summary>
+        /// <param name="queryDefinition">
+        /// Query definition containing predicate metadata.
+        /// </param>
+        /// <param name="context">
+        /// Current SQL compilation context.
+        /// </param>
+        /// <returns>
+        /// SQL predicate conditions ready to be connected by root-level
+        /// logical AND operations.
+        /// </returns>
+        private static List<string>BuildPredicateConditions(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
+        {
+            var compiledConditions = queryDefinition.WhereDefinitions.Select(
+                whereDefinition =>
                 {
                     var parser = new QueryWhereClauseExpressionParser(
                         context.DatabaseDialect,
@@ -74,47 +114,106 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                         whereDefinition.Source.ColumnMappings ?? queryDefinition.ColumnMappings,
                         whereDefinition.Source.TableAlias ?? queryDefinition.TableAlias);
 
-                    return parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
-                });
+                    var sqlCondition =parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
 
-            var functionConditions = queryDefinition.WhereScalarFunctionDefinitions
-                .Select(functionDefinition => BuildWhereScalarFunctionCondition(functionDefinition, context));
+                    return new CompiledPredicateCondition(sqlCondition,whereDefinition.LogicalOperator);
+                }).ToList();
 
-            var computedConditions = queryDefinition.WhereComputedExpressionDefinitions
-                .Select(computedDefinition => BuildWhereComputedExpressionCondition(computedDefinition, context));
-
-            var existsConditions = queryDefinition.ExistsDefinitions
-                .Select(existsDefinition => BuildExistsCondition(existsDefinition, context));
-
-            var inConditions = queryDefinition.InSubqueryDefinitions
-                .Select(inDefinition => BuildInSubqueryCondition(inDefinition, context));
-
-            return "WHERE " + string.Join(" AND ", whereConditions
-                .Concat(functionConditions)
-                .Concat(computedConditions)
-                .Concat(existsConditions)
-                .Concat(inConditions));
+            return GroupOrConditions(compiledConditions);
         }
 
-        private string BuildWhereScalarFunctionCondition(QueryWhereScalarFunctionDefinition functionDefinition, QueryCompilationContext context)
+        /// <summary>
+        /// Groups linear OR predicate sequences while preserving SQL
+        /// operator precedence.
+        /// </summary>
+        /// <param name="conditions">
+        /// Compiled predicates in their original query construction order.
+        /// </param>
+        /// <returns>
+        /// Root predicate segments that can safely be joined using
+        /// logical AND operations.
+        /// </returns>
+        private static List<string> GroupOrConditions(IReadOnlyList<CompiledPredicateCondition> conditions)
+        {
+            if (conditions.Count == 0)
+                return [];
+
+            var groupedConditions = new List<string>();
+
+            for (var index = 0; index < conditions.Count; index++)
+            {
+                var currentCondition = conditions[index];
+
+                var nextConditionUsesOr = index + 1 < conditions.Count && conditions[index + 1].LogicalOperator == QueryLogicalOperator.Or;
+
+                if (!nextConditionUsesOr)
+                {
+                    groupedConditions.Add(currentCondition.Sql);
+
+                    continue;
+                }
+
+                var orConditions = new List<string> { currentCondition.Sql };                
+
+                while (index + 1 < conditions.Count && conditions[index + 1].LogicalOperator == QueryLogicalOperator.Or)
+                {
+                    index++;
+
+                    orConditions.Add(conditions[index].Sql);
+                }
+                
+                groupedConditions.Add("(" + string.Join(" OR ", orConditions) +")");
+            }
+
+            return groupedConditions;
+        }
+
+        /// <summary>
+        /// Builds a scalar SQL function WHERE condition.
+        /// </summary>
+        /// <param name="functionDefinition">
+        /// Scalar function filter definition.
+        /// </param>
+        /// <param name="context">
+        /// Current SQL compilation context.
+        /// </param>
+        /// <returns>
+        /// Compiled scalar function condition.
+        /// </returns>
+        private string BuildWhereScalarFunctionCondition(QueryWhereScalarFunctionDefinition functionDefinition,
+            QueryCompilationContext context)
         {
             var columnReference = _columnReferenceBuilder.Build(functionDefinition.Source, functionDefinition.PropertyName);
 
             var parameterName = context.AddParameter(functionDefinition.Value);
-            var functionName = SqlFunctionNameResolver.ResolveScalarFunctionName(functionDefinition.Function, context.DatabaseDialect);
+
+            var functionName = SqlFunctionNameResolver.ResolveScalarFunctionName(functionDefinition.Function,context.DatabaseDialect);
+
             var comparisonOperator = SqlComparisonOperatorResolver.Resolve(functionDefinition.ComparisonOperator);
 
-            return $"{functionName}({columnReference}) {comparisonOperator} {parameterName}";
+            return $"{functionName}({columnReference}) " + $"{comparisonOperator} {parameterName}";
         }
 
-        private static string BuildWhereComputedExpressionCondition(
-            QueryWhereComputedExpressionDefinition computedDefinition,
+        /// <summary>
+        /// Builds a computed expression WHERE condition.
+        /// </summary>
+        /// <param name="computedDefinition">
+        /// Computed expression filter definition.
+        /// </param>
+        /// <param name="context">
+        /// Current SQL compilation context.
+        /// </param>
+        /// <returns>
+        /// Compiled computed expression condition.
+        /// </returns>
+        private static string BuildWhereComputedExpressionCondition(QueryWhereComputedExpressionDefinition computedDefinition,
             QueryCompilationContext context)
         {
             var expressionScope = new QueryExpressionScope();
 
-            foreach (var source in computedDefinition.Sources)
+            foreach ( var source in computedDefinition.Sources)
                 expressionScope.Register(source.Key, source.Value);
+
 
             var parser = new SqlComputedExpressionParser(
                 context.DatabaseDialect,
@@ -126,22 +225,63 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return parser.Parse(computedDefinition.Expression.Body);
         }
 
+        /// <summary>
+        /// Builds an EXISTS or NOT EXISTS WHERE condition.
+        /// </summary>
+        /// <param name="existsDefinition">
+        /// EXISTS filter definition.
+        /// </param>
+        /// <param name="context">
+        /// Current SQL compilation context.
+        /// </param>
+        /// <returns>
+        /// Compiled EXISTS condition.
+        /// </returns>
         private string BuildExistsCondition(QueryExistsDefinition existsDefinition, QueryCompilationContext context)
         {
             var commandText = _subqueryCompiler.CompileAndReindex(existsDefinition.Subquery, context);
 
-            var existsKeyword = existsDefinition.IsNegated ? "NOT EXISTS" : "EXISTS";
+            var existsKeyword = existsDefinition.IsNegated
+                ? "NOT EXISTS"
+                : "EXISTS";
 
             return $"{existsKeyword} ({commandText})";
         }
 
-        private string BuildInSubqueryCondition(QueryInSubqueryDefinition inDefinition, QueryCompilationContext context)
+        /// <summary>
+        /// Builds an IN subquery WHERE condition.
+        /// </summary>
+        /// <param name="inDefinition">
+        /// IN subquery filter definition.
+        /// </param>
+        /// <param name="context">
+        /// Current SQL compilation context.
+        /// </param>
+        /// <returns>
+        /// Compiled IN subquery condition.
+        /// </returns>
+        private string BuildInSubqueryCondition(QueryInSubqueryDefinition inDefinition,QueryCompilationContext context)
         {
             var propertyName = ExpressionColumnSelector.ExtractSinglePropertyName(inDefinition.OuterSelector);
+
             var outerColumnReference = _columnReferenceBuilder.Build(inDefinition.OuterSource, propertyName);
+
             var commandText = _subqueryCompiler.CompileAndReindex(inDefinition.Subquery, context);
 
             return $"{outerColumnReference} IN ({commandText})";
         }
+
+        /// <summary>
+        /// Represents a compiled predicate condition and the logical
+        /// operator that connects it with the preceding predicate.
+        /// </summary>
+        /// <param name="Sql">
+        /// Compiled SQL predicate.
+        /// </param>
+        /// <param name="LogicalOperator">
+        /// Logical operator associated with the predicate.
+        /// </param>
+        private sealed record CompiledPredicateCondition(string Sql, QueryLogicalOperator LogicalOperator);
     }
+
 }
