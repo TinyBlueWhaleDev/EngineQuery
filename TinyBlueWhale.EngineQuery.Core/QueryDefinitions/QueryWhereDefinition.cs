@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
@@ -16,5 +17,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the query source associated with the selected column.
         /// </summary>
         public required QuerySourceDefinition Source { get; init; }
+
+        /// <summary>
+        /// Gets the logical operator used to connect this predicate
+        /// with the predicate that immediately precedes it.
+        /// </summary>
+        public QueryLogicalOperator LogicalOperator { get; init; } = QueryLogicalOperator.And;
     }
 }

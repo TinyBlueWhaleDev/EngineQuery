@@ -1,4 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
+using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
 
 BasicSelectQueryValidator.Run();
 TableAliasQueryValidator.Run();
@@ -38,3 +38,6 @@ NtileWindowFunctionQueryValidator.Run();
 ProviderCapabilityQueryValidator.Run();
 DependencyInjectionQueryValidator.Run();
 AggregateComputedExpressionQueryValidator.Run();
+DynamicOrderingPaginationQueryValidator.Run();
+WhereStringContainsQueryValidator.Run();
+WhereLogicalOperatorQueryValidator.Run();

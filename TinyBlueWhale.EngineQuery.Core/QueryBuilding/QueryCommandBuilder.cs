@@ -654,6 +654,27 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         /// <summary>
+        /// Adds a WHERE predicate for the root entity using the specified
+        /// logical operator.
+        /// </summary>
+        /// <param name="predicate">
+        /// Predicate expression describing the SQL filter condition.
+        /// </param>
+        /// <param name="logicalOperator">
+        /// Logical operator used to connect the predicate with the
+        /// preceding WHERE predicate.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> Where(Expression<Func<T, bool>> predicate, QueryLogicalOperator logicalOperator)
+        {
+            _components.WhereClauseBuilder.Add(predicate, logicalOperator);
+
+            return this;
+        }
+
+        /// <summary>
         /// Adds a WHERE predicate for an entity already available in the current query scope.
         /// </summary>
         /// <typeparam name="TSource">
@@ -668,6 +689,29 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public IQueryCommandBuilder<T> Where<TSource>(Expression<Func<TSource, bool>> predicate)
         {
             _components.WhereClauseBuilder.Add(predicate);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a WHERE predicate for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Entity type associated with the filtered columns.
+        /// </typeparam>
+        /// <param name="predicate">
+        /// Predicate expression describing the SQL filter condition.
+        /// </param>
+        /// <param name="logicalOperator">
+        /// Logical operator used to connect the predicate with the
+        /// preceding WHERE predicate.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> Where<TSource>(Expression<Func<TSource, bool>> predicate,
+            QueryLogicalOperator logicalOperator)
+        {
+            _components.WhereClauseBuilder.Add(predicate, logicalOperator);
             return this;
         }
 
@@ -692,6 +736,30 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
+        /// <summary>
+        /// Adds a conditional WHERE predicate for the root entity using
+        /// the specified logical operator.
+        /// </summary>
+        /// <param name="condition">
+        /// Indicates whether the predicate should be added.
+        /// </param>
+        /// <param name="predicate">
+        /// Predicate expression describing the SQL filter condition.
+        /// </param>
+        /// <param name="logicalOperator">
+        /// Logical operator used to connect the predicate with the
+        /// preceding WHERE predicate.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> WhereIf(bool condition, Expression<Func<T, bool>> predicate, QueryLogicalOperator logicalOperator)
+        {
+            _components.WhereClauseBuilder.AddIf(condition, predicate, logicalOperator);
+
+            return this;
+        }
+
 
         /// <summary>
         /// Adds a WHERE predicate for an entity available in the current query scope only when the specified condition is true.
@@ -711,6 +779,33 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public IQueryCommandBuilder<T> WhereIf<TEntity>(bool condition,Expression<Func<TEntity, bool>> predicate)
         {
             _components.WhereClauseBuilder.AddIfForSource(condition, predicate);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a conditional WHERE predicate for an entity available in
+        /// the current query scope using the specified logical operator.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the predicate.
+        /// </typeparam>
+        /// <param name="condition">
+        /// Indicates whether the predicate should be added.
+        /// </param>
+        /// <param name="predicate">
+        /// Predicate expression describing the SQL filter condition.
+        /// </param>
+        /// <param name="logicalOperator">
+        /// Logical operator used to connect the predicate with the
+        /// preceding WHERE predicate.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        public IQueryCommandBuilder<T> WhereIf<TEntity>(bool condition, Expression<Func<TEntity, bool>> predicate, QueryLogicalOperator logicalOperator)
+        {
+            _components.WhereClauseBuilder.AddIfForSource(condition, predicate, logicalOperator);
 
             return this;
         }
