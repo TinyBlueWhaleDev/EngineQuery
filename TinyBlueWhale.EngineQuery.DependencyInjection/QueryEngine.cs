@@ -69,5 +69,17 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection
         {
             return _innerQueryBuilder.InsertInto<T>();
         }
+
+        /// <inheritdoc />
+        public IUpdateCommandBuilder<T> Update<T>(string tableName)
+        {
+            return _innerQueryBuilder.Update<T>(tableName);
+        }
+
+        /// <inheritdoc />
+        public IUpdateCommandBuilder<T> Update<T>()
+        {
+            return _innerQueryBuilder.Update<T>();
+        }
     }
 }

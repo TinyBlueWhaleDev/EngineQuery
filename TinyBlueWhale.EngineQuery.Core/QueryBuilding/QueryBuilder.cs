@@ -342,5 +342,47 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return new InsertCommandBuilder<T>(_queryCompiler, metadata.TableName, columnMappings);
         }
+
+        /// <summary>
+        /// Creates a new UPDATE command builder using an explicit table name.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target UPDATE table.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the UPDATE command.
+        /// </param>
+        /// <returns>
+        /// Fluent UPDATE command builder.
+        /// </returns>
+        public IUpdateCommandBuilder<T> Update<T>(string tableName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+
+            return new UpdateCommandBuilder<T>(_queryCompiler, tableName, metadataResolver: _metadataResolver);
+        }
+
+        /// <summary>
+        /// Creates a new UPDATE command builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target UPDATE table.
+        /// </typeparam>
+        /// <returns>
+        /// Fluent UPDATE command builder.
+        /// </returns>
+        public IUpdateCommandBuilder<T> Update<T>()
+        {
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<T>(out var metadata))
+                throw new InvalidOperationException($"Metadata for entity type '{typeof(T).Name}' could not be resolved.");
+
+            var columnMappings = metadata!.Properties
+                .ToDictionary(property => property.Key, property => property.Value.ColumnName);
+
+            return new UpdateCommandBuilder<T>(_queryCompiler, metadata.TableName, columnMappings, _metadataResolver);
+        }
     }
 }
