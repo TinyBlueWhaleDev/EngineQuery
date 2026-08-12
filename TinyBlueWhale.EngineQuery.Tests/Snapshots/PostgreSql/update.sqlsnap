@@ -1,0 +1,8 @@
+UPDATE "Users"
+SET "Email" = @p0, "IsActive" = @p1
+WHERE ("Users"."Id" = @p2)
+
+-- Parameters
+@p0 = updated@test.com
+@p1 = False
+@p2 = 10

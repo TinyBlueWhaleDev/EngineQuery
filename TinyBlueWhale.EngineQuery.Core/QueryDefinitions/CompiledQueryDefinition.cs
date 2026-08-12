@@ -161,5 +161,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// </summary>
         public QueryInsertDefinition? InsertDefinition { get; set; }
 
+        /// <summary>
+        /// Gets or sets the UPDATE-specific intent associated with the compiled query definition.
+        /// </summary>
+        public QueryUpdateDefinition? UpdateDefinition { get; set; }
+
     }
 }

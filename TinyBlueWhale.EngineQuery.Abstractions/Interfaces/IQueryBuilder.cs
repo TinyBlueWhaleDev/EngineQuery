@@ -143,5 +143,30 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Fluent INSERT command builder.
         /// </returns>
         IInsertCommandBuilder<T> InsertInto<T>();
+
+        /// <summary>
+        /// Creates a new UPDATE command builder for the specified entity type and table name.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target UPDATE table.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the UPDATE command.
+        /// </param>
+        /// <returns>
+        /// Fluent UPDATE command builder.
+        /// </returns>
+        IUpdateCommandBuilder<T> Update<T>(string tableName);
+
+        /// <summary>
+        /// Creates a new UPDATE command builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target UPDATE table.
+        /// </typeparam>
+        /// <returns>
+        /// Fluent UPDATE command builder.
+        /// </returns>
+        IUpdateCommandBuilder<T> Update<T>();
     }
 }

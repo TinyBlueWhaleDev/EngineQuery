@@ -26,6 +26,29 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             ValidateMultipleMetadataRequiresExplicitStrategy();
             ValidateEntityFrameworkMetadataResolution();
             ValidateInsertCommandDirectInjection();
+            ValidateUpdateCommandDirectInjection();
+        }
+
+        // Validates UPDATE command generation through direct IQueryEngine injection.
+        private static void ValidateUpdateCommandDirectInjection()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer, metadata =>
+                {
+                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var queryEngine = serviceProvider.GetRequiredService<IQueryEngine>();
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server Update Command",
+                BuildUpdateCommand(queryEngine));
         }
 
         // Validates INSERT command generation through direct IQueryEngine injection.
@@ -213,6 +236,16 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             return queryBuilder
                 .InsertInto<JoinUser>()
                 .Set(user => user.Email, "admin@test.com")
+                .Build();
+        }
+
+        // Builds a validation UPDATE command.
+        private static GeneratedSqlQuery BuildUpdateCommand(IQueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .Update<JoinUser>()
+                .Set(user => user.Email, "updated@test.com")
+                .Where(user => user.Id == 10)
                 .Build();
         }
     }

@@ -13,6 +13,197 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     /// </summary>
     public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerProviderTestBase
     {
+
+        /// <summary>
+        /// Validates nullable UPDATE value generation.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Update_With_Null_Value()
+        {
+            var sql = CreateQueryBuilder()
+                .Update<Category>()
+                .Set(category => category.ParentId, null)
+                .Where(category => category.Id == 10)
+                .Build();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sql.Parameters, Has.Count.EqualTo(2));
+                Assert.That(sql.Parameters[0].Value, Is.Null);
+                Assert.That(sql.Parameters[1].Value, Is.EqualTo(10));
+            });
+        }
+
+        /// <summary>
+        /// Validates that UPDATE assignments only accept direct entity properties.
+        /// </summary>
+        [Test]
+        public void Update_Should_Reject_Non_Property_Selector()
+        {
+            var command = CreateQueryBuilder()
+                .Update<User>();
+
+            var exception = Assert.Throws<ArgumentException>(() =>
+                command.Set(user => user.Email.ToLower(), "updated@test.com"));
+
+            Assert.That(
+                exception!.Message,
+                Does.StartWith("The UPDATE selector must reference a direct entity property."));
+        }
+
+        /// <summary>
+        /// Validates that an UPDATE column cannot receive multiple value assignments.
+        /// </summary>
+        [Test]
+        public void Update_Should_Reject_Duplicate_Value_Assignments()
+        {
+            var command = CreateQueryBuilder()
+                .Update<User>()
+                .Set(user => user.Email, "first@test.com");
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                command.Set(user => user.Email, "second@test.com"));
+
+            Assert.That(
+                exception!.Message,
+                Is.EqualTo("Column 'Email' already has an UPDATE value assignment."));
+        }
+
+        /// <summary>
+        /// Validates that UPDATE commands require at least one WHERE predicate.
+        /// </summary>
+        [Test]
+        public void Update_Should_Reject_Command_Without_Where_Predicate()
+        {
+            var command = CreateQueryBuilder()
+                .Update<User>()
+                .Set(user => user.Email, "updated@test.com");
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                command.Build());
+
+            Assert.That(
+                exception!.Message,
+                Is.EqualTo("At least one WHERE predicate must be configured before building an UPDATE command."));
+        }
+
+        /// <summary>
+        /// Validates that UPDATE commands require at least one value assignment.
+        /// </summary>
+        [Test]
+        public void Update_Should_Reject_Command_Without_Value_Assignments()
+        {
+            var command = CreateQueryBuilder()
+                .Update<User>()
+                .Where(user => user.Id == 10);
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                command.Build());
+
+            Assert.That(
+                exception!.Message,
+                Is.EqualTo("At least one value must be configured before building an UPDATE command."));
+        }
+
+        /// <summary>
+        /// Validates UPDATE command generation using an explicit table name.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Update_Using_Explicit_Table_Name()
+        {
+            var sql = CreateQueryBuilder()
+                .Update<User>("CustomUsers")
+                .Set(user => user.Email, "updated@test.com")
+                .Where(user => user.Id == 10)
+                .Build();
+
+            Assert.That(
+                sql.CommandText,
+                Does.Contain("CustomUsers"));
+        }
+
+        /// <summary>
+        /// Validates logical operator composition for UPDATE WHERE predicates.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Update_With_Logical_Operators()
+        {
+            var sql = CreateQueryBuilder()
+                .Update<User>()
+                .Set(user => user.IsActive, false)
+                .Where(user => user.Age < 18)
+                .Where(user => user.IsDeleted, QueryLogicalOperator.Or)
+                .Build();
+
+            Assert.That(
+                sql.CommandText,
+                Does.Contain(" OR "));
+        }
+
+        /// <summary>
+        /// Validates conditional WHERE generation for strongly typed UPDATE commands.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Update_With_WhereIf()
+        {
+            var sql = CreateQueryBuilder()
+                .Update<User>()
+                .Set(user => user.IsActive, false)
+                .WhereIf(true, user => user.Age >= 18)
+                .WhereIf(false, user => user.IsDeleted)
+                .Build();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sql.CommandText, Does.Contain("Age"));
+                Assert.That(sql.CommandText, Does.Not.Contain("IsDeleted"));
+                Assert.That(sql.Parameters, Has.Count.EqualTo(2));
+            });
+        }
+
+        /// <summary>
+        /// Validates SQL generation for strongly typed UPDATE commands.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Update()
+        {
+            var sql = CreateQueryBuilder()
+                .Update<User>()
+                .Set(user => user.Email, "updated@test.com")
+                .Set(user => user.IsActive, false)
+                .Where(user => user.Id == 10)
+                .Build();
+
+            AssertSnapshot(
+                "update",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates parameter generation for strongly typed UPDATE commands.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Update_Parameters_In_Clause_Order()
+        {
+            var sql = CreateQueryBuilder()
+                .Update<User>()
+                .Set(user => user.Email, "updated@test.com")
+                .Set(user => user.IsActive, false)
+                .Where(user => user.Id == 10)
+                .Build();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sql.Parameters, Has.Count.EqualTo(3));
+                Assert.That(sql.Parameters[0].Name, Is.EqualTo("@p0"));
+                Assert.That(sql.Parameters[0].Value, Is.EqualTo("updated@test.com"));
+                Assert.That(sql.Parameters[1].Name, Is.EqualTo("@p1"));
+                Assert.That(sql.Parameters[1].Value, Is.EqualTo(false));
+                Assert.That(sql.Parameters[2].Name, Is.EqualTo("@p2"));
+                Assert.That(sql.Parameters[2].Value, Is.EqualTo(10));
+            });
+        }
+
         /// <summary>
         /// Validates SQL generation for strongly typed INSERT commands.
         /// </summary>

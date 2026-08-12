@@ -24,6 +24,12 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// <param name="insertClauseBuilder">
     /// SQL INSERT clause builder.
     /// </param>
+    /// /// <param name="updateClauseBuilder">
+    /// SQL UPDATE clause builder.
+    /// </param>
+    /// <param name="whereClauseBuilder">
+    /// SQL WHERE clause builder used by command-specific compilation pipelines.
+    /// </param>
     /// <param name="bodyClauseBuilders">
     /// Ordered SQL clause builders used after FROM and before set operations or CTE wrapping.
     /// </param>
@@ -40,6 +46,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         IRequiredSqlClauseBuilder selectClauseBuilder,
         IRequiredSqlClauseBuilder fromClauseBuilder,
         IRequiredSqlClauseBuilder insertClauseBuilder,
+        IRequiredSqlClauseBuilder updateClauseBuilder,
+        IOptionalSqlClauseBuilder whereClauseBuilder,
         IReadOnlyList<IOptionalSqlClauseBuilder> bodyClauseBuilders,
         SetOperationClauseBuilder setOperationClauseBuilder,
         CteClauseBuilder cteClauseBuilder) : IQueryScriptBuilder
@@ -47,6 +55,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         private readonly IRequiredSqlClauseBuilder _selectClauseBuilder = selectClauseBuilder ?? throw new ArgumentNullException(nameof(selectClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _fromClauseBuilder = fromClauseBuilder ?? throw new ArgumentNullException(nameof(fromClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _insertClauseBuilder = insertClauseBuilder ?? throw new ArgumentNullException(nameof(insertClauseBuilder));
+        private readonly IRequiredSqlClauseBuilder _updateClauseBuilder = updateClauseBuilder ?? throw new ArgumentNullException( nameof(updateClauseBuilder));
+        private readonly IOptionalSqlClauseBuilder _whereClauseBuilder = whereClauseBuilder ?? throw new ArgumentNullException(nameof(whereClauseBuilder));
         private readonly IReadOnlyList<IOptionalSqlClauseBuilder> _bodyClauseBuilders = bodyClauseBuilders ?? throw new ArgumentNullException(nameof(bodyClauseBuilders));
         private readonly SetOperationClauseBuilder _setOperationClauseBuilder = setOperationClauseBuilder ?? throw new ArgumentNullException(nameof(setOperationClauseBuilder));
         private readonly CteClauseBuilder _cteClauseBuilder = cteClauseBuilder ?? throw new ArgumentNullException(nameof(cteClauseBuilder));
@@ -75,6 +85,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             {
                 QueryCommandType.Select => BuildSelectQuery(queryDefinition, context),
                 QueryCommandType.Insert => _insertClauseBuilder.Build(queryDefinition, context),
+                QueryCommandType.Update => BuildUpdateCommand(queryDefinition, context),
                 _ => throw new NotSupportedException($"SQL command type '{queryDefinition.CommandType}' is not supported.")
             };
         }
@@ -112,6 +123,20 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             }
 
             return commandText;
+        }
+
+        // Builds the UPDATE command pipeline using the shared WHERE clause implementation.
+        private string BuildUpdateCommand(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
+        {
+            var sqlLines = new List<string>
+            {
+                _updateClauseBuilder.Build(queryDefinition, context)
+            };
+
+            if (_whereClauseBuilder.CanBuild(queryDefinition))
+                sqlLines.Add(_whereClauseBuilder.Build(queryDefinition, context));
+
+            return string.Join(Environment.NewLine, sqlLines);
         }
     }
 }
