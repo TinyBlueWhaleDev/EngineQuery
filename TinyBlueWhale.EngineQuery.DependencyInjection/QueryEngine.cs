@@ -1,4 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection
@@ -56,6 +56,18 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection
                 baseQueryBuilder,
                 recursiveQueryBuilder);
             return this;
+        }
+
+        /// <inheritdoc />
+        public IInsertCommandBuilder<T> InsertInto<T>(string tableName)
+        {
+            return _innerQueryBuilder.InsertInto<T>(tableName);
+        }
+
+        /// <inheritdoc />
+        public IInsertCommandBuilder<T> InsertInto<T>()
+        {
+            return _innerQueryBuilder.InsertInto<T>();
         }
     }
 }

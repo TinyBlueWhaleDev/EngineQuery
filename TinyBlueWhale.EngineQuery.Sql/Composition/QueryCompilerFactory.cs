@@ -50,6 +50,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
                 parameterRewriter);
 
             var selectClauseBuilder = new SelectClauseBuilder(columnReferenceBuilder);
+            var insertClauseBuilder = new InsertClauseBuilder();
             var fromClauseBuilder = new FromClauseBuilder(subqueryCompiler);
             var joinClauseBuilder = new JoinClauseBuilder();
 
@@ -75,6 +76,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
             scriptBuilder = new QueryScriptBuilder(
                 selectClauseBuilder,
                 fromClauseBuilder,
+                insertClauseBuilder,
                 [
                     joinClauseBuilder,
                     applyClauseBuilder,

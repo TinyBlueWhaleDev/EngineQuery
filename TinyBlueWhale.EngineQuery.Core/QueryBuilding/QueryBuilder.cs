@@ -1,4 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
@@ -301,5 +301,46 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return commandBuilder;
         }
 
+
+        /// <summary>
+        /// Creates a new INSERT command builder using an explicit table name.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target INSERT table.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the INSERT command.
+        /// </param>
+        /// <returns>
+        /// Fluent INSERT command builder.
+        /// </returns>
+        public IInsertCommandBuilder<T> InsertInto<T>(string tableName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+
+            return new InsertCommandBuilder<T>(_queryCompiler, tableName);
+        }
+        /// <summary>
+        /// Creates a new INSERT command builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target INSERT table.
+        /// </typeparam>
+        /// <returns>
+        /// Fluent INSERT command builder.
+        /// </returns>
+        public IInsertCommandBuilder<T> InsertInto<T>()
+        {
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<T>(out var metadata))
+                throw new InvalidOperationException($"Metadata for entity type '{typeof(T).Name}' could not be resolved.");
+
+            var columnMappings = metadata!.Properties
+                .ToDictionary(property => property.Key, property => property.Value.ColumnName);
+
+            return new InsertCommandBuilder<T>(_queryCompiler, metadata.TableName, columnMappings);
+        }
     }
 }

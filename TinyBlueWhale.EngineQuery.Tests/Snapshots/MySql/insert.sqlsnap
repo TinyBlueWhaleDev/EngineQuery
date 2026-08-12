@@ -1,0 +1,7 @@
+INSERT INTO `Users` (`Email`, `Age`, `IsActive`)
+VALUES (@p0, @p1, @p2)
+
+-- Parameters
+@p0 = admin@test.com
+@p1 = 35
+@p2 = True

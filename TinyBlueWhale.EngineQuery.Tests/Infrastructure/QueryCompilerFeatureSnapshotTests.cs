@@ -13,6 +13,49 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     /// </summary>
     public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerProviderTestBase
     {
+        /// <summary>
+        /// Validates SQL generation for strongly typed INSERT commands.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<User>()
+                .Set(user => user.Email, "admin@test.com")
+                .Set(user => user.Age, 35)
+                .Set(user => user.IsActive, true)
+                .Build();
+
+            AssertSnapshot(
+                "insert",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates parameter generation for strongly typed INSERT commands.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Insert_Parameters_In_Assignment_Order()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<User>()
+                .Set(user => user.Email, "admin@test.com")
+                .Set(user => user.Age, 35)
+                .Set(user => user.IsActive, true)
+                .Build();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sql.Parameters, Has.Count.EqualTo(3));
+                Assert.That(sql.Parameters[0].Name, Is.EqualTo("@p0"));
+                Assert.That(sql.Parameters[0].Value, Is.EqualTo("admin@test.com"));
+                Assert.That(sql.Parameters[1].Name, Is.EqualTo("@p1"));
+                Assert.That(sql.Parameters[1].Value, Is.EqualTo(35));
+                Assert.That(sql.Parameters[2].Name, Is.EqualTo("@p2"));
+                Assert.That(sql.Parameters[2].Value, Is.EqualTo(true));
+            });
+        }
+
         [Test]
         public void ToSql_Should_Match_Snapshot_For_Select_All()
         {

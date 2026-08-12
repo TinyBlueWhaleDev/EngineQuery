@@ -1,4 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
@@ -25,6 +25,29 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             ValidateMultiProviderFactoryResolution();
             ValidateMultipleMetadataRequiresExplicitStrategy();
             ValidateEntityFrameworkMetadataResolution();
+            ValidateInsertCommandDirectInjection();
+        }
+
+        // Validates INSERT command generation through direct IQueryEngine injection.
+        private static void ValidateInsertCommandDirectInjection()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer, metadata =>
+                {
+                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var queryEngine = serviceProvider.GetRequiredService<IQueryEngine>();
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server Insert Command",
+                BuildInsertCommand(queryEngine));
         }
 
         // Validates direct IQueryEngine injection when only one provider and metadata strategy are registered.
@@ -181,6 +204,15 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 })
                 .Where<JoinOrder>(order => order.Total > 100)
                 .OrderByDescending<JoinOrder>(order => order.Total)
+                .Build();
+        }
+
+        // Builds a validation INSERT command.
+        private static GeneratedSqlQuery BuildInsertCommand(IQueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .InsertInto<JoinUser>()
+                .Set(user => user.Email, "admin@test.com")
                 .Build();
         }
     }
