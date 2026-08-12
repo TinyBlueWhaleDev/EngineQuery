@@ -1,4 +1,6 @@
 
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
     /// <summary>
@@ -9,7 +11,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
     /// It is not exposed to consumers of the public API.
     /// </remarks>
     public sealed class CompiledQueryDefinition
-    {        
+    {
+        /// <summary>
+        /// Gets or sets the SQL command type represented by the query definition.
+        /// </summary>
+        public QueryCommandType CommandType { get; set; } = QueryCommandType.Select;
 
         /// <summary>
         /// Gets or sets the source table name associated with the query.
@@ -149,6 +155,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets or sets whether selected columns should always be projected using CLR property aliases.
         /// </summary>
         public bool ForceSelectAliases { get; set; }
+
+        /// <summary>
+        /// Gets or sets the INSERT-specific command definition.
+        /// </summary>
+        public QueryInsertDefinition? InsertDefinition { get; set; }
 
     }
 }

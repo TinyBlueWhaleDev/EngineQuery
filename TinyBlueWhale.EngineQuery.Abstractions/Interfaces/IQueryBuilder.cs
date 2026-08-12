@@ -117,5 +117,31 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IQueryBuilder WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
             Func<IQueryBuilder, IQueryCommandBuilder<TBaseRoot>> baseQueryBuilder,
             Func<IQueryBuilder, IQueryCommandBuilder<TRecursiveRoot>> recursiveQueryBuilder);
+
+
+        /// <summary>
+        /// Creates a new INSERT command builder for the specified entity type and table name.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target INSERT table.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the INSERT command.
+        /// </param>
+        /// <returns>
+        /// Fluent INSERT command builder.
+        /// </returns>
+        IInsertCommandBuilder<T> InsertInto<T>(string tableName);
+
+        /// <summary>
+        /// Creates a new INSERT command builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target INSERT table.
+        /// </typeparam>
+        /// <returns>
+        /// Fluent INSERT command builder.
+        /// </returns>
+        IInsertCommandBuilder<T> InsertInto<T>();
     }
 }

@@ -1,3 +1,4 @@
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Clauses;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -20,6 +21,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// <param name="fromClauseBuilder">
     /// SQL FROM clause builder.
     /// </param>
+    /// <param name="insertClauseBuilder">
+    /// SQL INSERT clause builder.
+    /// </param>
     /// <param name="bodyClauseBuilders">
     /// Ordered SQL clause builders used after FROM and before set operations or CTE wrapping.
     /// </param>
@@ -35,12 +39,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     public sealed class QueryScriptBuilder(
         IRequiredSqlClauseBuilder selectClauseBuilder,
         IRequiredSqlClauseBuilder fromClauseBuilder,
+        IRequiredSqlClauseBuilder insertClauseBuilder,
         IReadOnlyList<IOptionalSqlClauseBuilder> bodyClauseBuilders,
         SetOperationClauseBuilder setOperationClauseBuilder,
         CteClauseBuilder cteClauseBuilder) : IQueryScriptBuilder
     {
         private readonly IRequiredSqlClauseBuilder _selectClauseBuilder = selectClauseBuilder ?? throw new ArgumentNullException(nameof(selectClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _fromClauseBuilder = fromClauseBuilder ?? throw new ArgumentNullException(nameof(fromClauseBuilder));
+        private readonly IRequiredSqlClauseBuilder _insertClauseBuilder = insertClauseBuilder ?? throw new ArgumentNullException(nameof(insertClauseBuilder));
         private readonly IReadOnlyList<IOptionalSqlClauseBuilder> _bodyClauseBuilders = bodyClauseBuilders ?? throw new ArgumentNullException(nameof(bodyClauseBuilders));
         private readonly SetOperationClauseBuilder _setOperationClauseBuilder = setOperationClauseBuilder ?? throw new ArgumentNullException(nameof(setOperationClauseBuilder));
         private readonly CteClauseBuilder _cteClauseBuilder = cteClauseBuilder ?? throw new ArgumentNullException(nameof(cteClauseBuilder));
@@ -65,6 +71,17 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
 
+            return queryDefinition.CommandType switch
+            {
+                QueryCommandType.Select => BuildSelectQuery(queryDefinition, context),
+                QueryCommandType.Insert => _insertClauseBuilder.Build(queryDefinition, context),
+                _ => throw new NotSupportedException($"SQL command type '{queryDefinition.CommandType}' is not supported.")
+            };
+        }
+
+        // Builds the existing SELECT query pipeline without altering its current clause order or behavior.
+        private string BuildSelectQuery(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
+        {
             var sqlLines = new List<string>
             {
                 _selectClauseBuilder.Build(queryDefinition, context),
