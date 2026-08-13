@@ -27,6 +27,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// /// <param name="updateClauseBuilder">
     /// SQL UPDATE clause builder.
     /// </param>
+    /// /// <param name="deleteClauseBuilder">
+    /// SQL DELETE clause builder.
+    /// </param>
     /// <param name="whereClauseBuilder">
     /// SQL WHERE clause builder used by command-specific compilation pipelines.
     /// </param>
@@ -47,6 +50,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         IRequiredSqlClauseBuilder fromClauseBuilder,
         IRequiredSqlClauseBuilder insertClauseBuilder,
         IRequiredSqlClauseBuilder updateClauseBuilder,
+        IRequiredSqlClauseBuilder deleteClauseBuilder,
         IOptionalSqlClauseBuilder whereClauseBuilder,
         IReadOnlyList<IOptionalSqlClauseBuilder> bodyClauseBuilders,
         SetOperationClauseBuilder setOperationClauseBuilder,
@@ -56,6 +60,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         private readonly IRequiredSqlClauseBuilder _fromClauseBuilder = fromClauseBuilder ?? throw new ArgumentNullException(nameof(fromClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _insertClauseBuilder = insertClauseBuilder ?? throw new ArgumentNullException(nameof(insertClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _updateClauseBuilder = updateClauseBuilder ?? throw new ArgumentNullException( nameof(updateClauseBuilder));
+        private readonly IRequiredSqlClauseBuilder _deleteClauseBuilder = deleteClauseBuilder ?? throw new ArgumentNullException(nameof(deleteClauseBuilder));
         private readonly IOptionalSqlClauseBuilder _whereClauseBuilder = whereClauseBuilder ?? throw new ArgumentNullException(nameof(whereClauseBuilder));
         private readonly IReadOnlyList<IOptionalSqlClauseBuilder> _bodyClauseBuilders = bodyClauseBuilders ?? throw new ArgumentNullException(nameof(bodyClauseBuilders));
         private readonly SetOperationClauseBuilder _setOperationClauseBuilder = setOperationClauseBuilder ?? throw new ArgumentNullException(nameof(setOperationClauseBuilder));
@@ -86,6 +91,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
                 QueryCommandType.Select => BuildSelectQuery(queryDefinition, context),
                 QueryCommandType.Insert => _insertClauseBuilder.Build(queryDefinition, context),
                 QueryCommandType.Update => BuildUpdateCommand(queryDefinition, context),
+                QueryCommandType.Delete => BuildDeleteCommand(queryDefinition, context),
                 _ => throw new NotSupportedException($"SQL command type '{queryDefinition.CommandType}' is not supported.")
             };
         }
@@ -131,6 +137,20 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             var sqlLines = new List<string>
             {
                 _updateClauseBuilder.Build(queryDefinition, context)
+            };
+
+            if (_whereClauseBuilder.CanBuild(queryDefinition))
+                sqlLines.Add(_whereClauseBuilder.Build(queryDefinition, context));
+
+            return string.Join(Environment.NewLine, sqlLines);
+        }
+
+        // Builds the DELETE command pipeline using the shared WHERE clause implementation.
+        private string BuildDeleteCommand(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
+        {
+            var sqlLines = new List<string>
+            {
+                _deleteClauseBuilder.Build(queryDefinition, context)
             };
 
             if (_whereClauseBuilder.CanBuild(queryDefinition))

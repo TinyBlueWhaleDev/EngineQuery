@@ -81,5 +81,17 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection
         {
             return _innerQueryBuilder.Update<T>();
         }
+
+        /// <inheritdoc />
+        public IDeleteCommandBuilder<T> DeleteFrom<T>(string tableName)
+        {
+            return _innerQueryBuilder.DeleteFrom<T>(tableName);
+        }
+
+        /// <inheritdoc />
+        public IDeleteCommandBuilder<T> DeleteFrom<T>()
+        {
+            return _innerQueryBuilder.DeleteFrom<T>();
+        }
     }
 }

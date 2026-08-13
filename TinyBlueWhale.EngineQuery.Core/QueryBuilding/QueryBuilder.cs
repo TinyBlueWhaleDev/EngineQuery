@@ -384,5 +384,57 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return new UpdateCommandBuilder<T>(_queryCompiler, metadata.TableName, columnMappings, _metadataResolver);
         }
+
+        /// <summary>
+        /// Creates a new DELETE command builder using an explicit table name.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target DELETE table.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the DELETE command.
+        /// </param>
+        /// <returns>
+        /// Fluent DELETE command builder.
+        /// </returns>
+        public IDeleteCommandBuilder<T> DeleteFrom<T>(string tableName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+
+            return new DeleteCommandBuilder<T>(
+                _queryCompiler,
+                tableName,
+                metadataResolver: _metadataResolver);
+        }
+
+        /// <summary>
+        /// Creates a new DELETE command builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target DELETE table.
+        /// </typeparam>
+        /// <returns>
+        /// Fluent DELETE command builder.
+        /// </returns>
+        public IDeleteCommandBuilder<T> DeleteFrom<T>()
+        {
+            if (_metadataResolver is null)
+                throw new InvalidOperationException("No entity metadata resolver is configured.");
+
+            if (!_metadataResolver.TryResolve<T>(out var metadata))
+                throw new InvalidOperationException(
+                    $"Metadata for entity type '{typeof(T).Name}' could not be resolved.");
+
+            var columnMappings = metadata!.Properties
+                .ToDictionary(
+                    property => property.Key,
+                    property => property.Value.ColumnName);
+
+            return new DeleteCommandBuilder<T>(
+                _queryCompiler,
+                metadata.TableName,
+                columnMappings,
+                _metadataResolver);
+        }
     }
 }
