@@ -168,5 +168,30 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Fluent UPDATE command builder.
         /// </returns>
         IUpdateCommandBuilder<T> Update<T>();
+
+        /// <summary>
+        /// Creates a new DELETE command builder for the specified entity type and table name.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target DELETE table.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the DELETE command.
+        /// </param>
+        /// <returns>
+        /// Fluent DELETE command builder.
+        /// </returns>
+        IDeleteCommandBuilder<T> DeleteFrom<T>(string tableName);
+
+        /// <summary>
+        /// Creates a new DELETE command builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type associated with the target DELETE table.
+        /// </typeparam>
+        /// <returns>
+        /// Fluent DELETE command builder.
+        /// </returns>
+        IDeleteCommandBuilder<T> DeleteFrom<T>();
     }
 }

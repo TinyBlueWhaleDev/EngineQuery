@@ -15,6 +15,109 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     {
 
         /// <summary>
+        /// Validates SQL generation for strongly typed DELETE commands.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Delete()
+        {
+            var sql = CreateQueryBuilder()
+                .DeleteFrom<User>()
+                .Where(user => user.Id == 10)
+                .Build();
+
+            AssertSnapshot(
+                "delete",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates parameter generation for strongly typed DELETE commands.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Delete_Parameters_In_Clause_Order()
+        {
+            var sql = CreateQueryBuilder()
+                .DeleteFrom<User>()
+                .Where(user => user.Id == 10)
+                .Where(user => user.IsDeleted, QueryLogicalOperator.Or)
+                .Build();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sql.Parameters, Has.Count.EqualTo(2));
+                Assert.That(sql.Parameters[0].Name, Is.EqualTo("@p0"));
+                Assert.That(sql.Parameters[0].Value, Is.EqualTo(10));
+                Assert.That(sql.Parameters[1].Name, Is.EqualTo("@p1"));
+                Assert.That(sql.Parameters[1].Value, Is.EqualTo(true));
+            });
+        }
+
+        /// <summary>
+        /// Validates conditional WHERE generation for strongly typed DELETE commands.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Delete_With_WhereIf()
+        {
+            var sql = CreateQueryBuilder()
+                .DeleteFrom<User>()
+                .WhereIf(true, user => user.Age >= 18)
+                .WhereIf(false, user => user.IsDeleted)
+                .Build();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sql.CommandText, Does.Contain("Age"));
+                Assert.That(sql.CommandText, Does.Not.Contain("IsDeleted"));
+                Assert.That(sql.Parameters, Has.Count.EqualTo(1));
+            });
+        }
+
+        /// <summary>
+        /// Validates logical operator composition for DELETE WHERE predicates.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Delete_With_Logical_Operators()
+        {
+            var sql = CreateQueryBuilder()
+                .DeleteFrom<User>()
+                .Where(user => user.Age < 18)
+                .Where(user => user.IsDeleted, QueryLogicalOperator.Or)
+                .Build();
+
+            Assert.That(sql.CommandText, Does.Contain(" OR "));
+        }
+
+        /// <summary>
+        /// Validates DELETE command generation using an explicit table name.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_Delete_Using_Explicit_Table_Name()
+        {
+            var sql = CreateQueryBuilder()
+                .DeleteFrom<User>("CustomUsers")
+                .Where(user => user.Id == 10)
+                .Build();
+
+            Assert.That(sql.CommandText, Does.Contain("CustomUsers"));
+        }
+
+        /// <summary>
+        /// Validates that DELETE commands require at least one WHERE predicate.
+        /// </summary>
+        [Test]
+        public void Delete_Should_Reject_Command_Without_Where_Predicate()
+        {
+            var command = CreateQueryBuilder()
+                .DeleteFrom<User>();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => command.Build());
+
+            Assert.That(
+                exception!.Message,
+                Is.EqualTo("At least one WHERE predicate must be configured before building a DELETE command."));
+        }
+
+        /// <summary>
         /// Validates nullable UPDATE value generation.
         /// </summary>
         [Test]

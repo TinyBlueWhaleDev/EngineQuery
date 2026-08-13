@@ -43,3 +43,4 @@ WhereStringContainsQueryValidator.Run();
 WhereLogicalOperatorQueryValidator.Run();
 InsertCommandQueryValidator.Run();
 UpdateCommandQueryValidator.Run();
+DeleteCommandQueryValidator.Run();

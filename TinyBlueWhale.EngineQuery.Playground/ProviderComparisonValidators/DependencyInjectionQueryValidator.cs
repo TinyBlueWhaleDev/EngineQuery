@@ -27,6 +27,29 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             ValidateEntityFrameworkMetadataResolution();
             ValidateInsertCommandDirectInjection();
             ValidateUpdateCommandDirectInjection();
+            ValidateDeleteCommandDirectInjection(); 
+        }
+
+        // Validates DELETE command generation through direct IQueryEngine injection.
+        private static void ValidateDeleteCommandDirectInjection()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer, metadata =>
+                {
+                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var queryEngine = serviceProvider.GetRequiredService<IQueryEngine>();
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server Delete Command",
+                BuildDeleteCommand(queryEngine));
         }
 
         // Validates UPDATE command generation through direct IQueryEngine injection.
@@ -245,6 +268,15 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             return queryBuilder
                 .Update<JoinUser>()
                 .Set(user => user.Email, "updated@test.com")
+                .Where(user => user.Id == 10)
+                .Build();
+        }
+
+        // Builds a validation DELETE command.
+        private static GeneratedSqlQuery BuildDeleteCommand(IQueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .DeleteFrom<JoinUser>()
                 .Where(user => user.Id == 10)
                 .Build();
         }
