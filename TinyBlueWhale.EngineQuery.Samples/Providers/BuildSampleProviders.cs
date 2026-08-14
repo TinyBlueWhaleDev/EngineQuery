@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TinyBlueWhale.EngineQuery.Samples.EntityFramework;
 using Microsoft.Data.SqlClient;
 using MySqlConnector;
@@ -55,12 +55,23 @@ namespace TinyBlueWhale.EngineQuery.Samples.Providers
                     BuildQueryBuilder = CreateMySqlQueryBuilder,
                     OpenConnection = () => new MySqlConnection(connectionStrings.MySql),
                     BuildParameter = (name,value) => new MySqlParameter(name,value ?? DBNull.Value),
-                    BuildDbContextOptions =
-                        () => new DbContextOptionsBuilder<SampleDbContext>()
-                        .UseMySql(connectionStrings.MySql,ServerVersion.AutoDetect(connectionStrings.MySql))
-                        .Options
+                    BuildDbContextOptions = () => CreateMySqlDbContextOptions(connectionStrings.MySql)
                 }
             ];
+
+        // Builds Entity Framework Core options for the MySQL provider supported by the current target framework.
+        private static DbContextOptions<SampleDbContext> CreateMySqlDbContextOptions(string connectionString)
+        {
+#if NET8_0
+            return new DbContextOptionsBuilder<SampleDbContext>()
+                .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+                .Options;
+#else
+            return new DbContextOptionsBuilder<SampleDbContext>()
+                .UseMySQL(connectionString)
+                .Options;
+#endif
+        }
 
         private static QueryBuilder CreateSqlServerQueryBuilder(IEntityMetadataResolver metadataResolver)
         {
