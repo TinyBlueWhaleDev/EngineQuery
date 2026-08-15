@@ -14,7 +14,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// <typeparam name="T">
     /// Entity type associated with the target INSERT table.
     /// </typeparam>
-    public interface IInsertCommandBuilder<T>
+    public interface IInsertCommandBuilder<T> : IQueryCompositionCommandBuilder<T, IInsertCommandBuilder<T>>
     {
         /// <summary>
         /// Adds a value assignment for the selected entity property.
@@ -32,6 +32,56 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Current INSERT command builder instance.
         /// </returns>
         IInsertCommandBuilder<T> Set<TProperty>(Expression<Func<T, TProperty>> selector, TProperty value);
+
+        /// <summary>
+        /// Defines the target columns associated with the INSERT command.
+        /// </summary>
+        /// <param name="selector">
+        /// Expression used to determine which target entity properties should be included in the generated SQL INSERT clause.
+        /// </param>
+        /// <returns>
+        /// Current INSERT command builder instance.
+        /// </returns>
+        IInsertCommandBuilder<T> Columns(Expression<Func<T, object>> selector);
+
+        /// <summary>
+        /// Configures the INSERT command to include identity columns.
+        /// </summary>
+        /// <returns>
+        /// Current INSERT command builder instance.
+        /// </returns>
+        IInsertCommandBuilder<T> IncludeIdentityColumns();
+
+        /// <summary>
+        /// Configures an INSERT SELECT source using an explicit table name.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Entity type used as the source of the INSERT SELECT command.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the INSERT SELECT source.
+        /// </param>
+        /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
+        /// <returns>
+        /// Current INSERT command builder instance.
+        /// </returns>
+        IInsertCommandBuilder<T> From<TSource>(string tableName, string? alias = null);
+
+        /// <summary>
+        /// Configures an INSERT SELECT source using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// Entity type used as the source of the INSERT SELECT command.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
+        /// <returns>
+        /// Current INSERT command builder instance.
+        /// </returns>
+        IInsertCommandBuilder<T> From<TSource>(string? alias = null);
 
         /// <summary>
         /// Builds the current INSERT command into SQL command text and parameters.

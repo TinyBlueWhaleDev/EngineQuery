@@ -318,7 +318,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            return new InsertCommandBuilder<T>(_queryCompiler, tableName);
+            return new InsertCommandBuilder<T>(_queryCompiler, tableName, metadataResolver: _metadataResolver);
         }
         /// <summary>
         /// Creates a new INSERT command builder using resolved entity metadata.
@@ -340,7 +340,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             var columnMappings = metadata!.Properties
                 .ToDictionary(property => property.Key, property => property.Value.ColumnName);
 
-            return new InsertCommandBuilder<T>(_queryCompiler, metadata.TableName, columnMappings);
+            return new InsertCommandBuilder<T>(_queryCompiler, metadata.TableName, columnMappings, metadataResolver: _metadataResolver);
         }
 
         /// <summary>

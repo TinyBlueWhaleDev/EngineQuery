@@ -15,5 +15,20 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the values assigned to target INSERT columns.
         /// </summary>
         public List<QueryInsertValueDefinition> ValueDefinitions { get; } = [];
+
+        /// <summary>
+        /// Gets the explicitly configured target INSERT columns.
+        /// </summary>
+        public List<QueryInsertColumnDefinition> ColumnDefinitions { get; } = [];
+
+        /// <summary>
+        /// Gets or sets whether identity columns should be included in the INSERT command.
+        /// </summary>
+        public bool IncludeIdentityColumns { get; set; }
+
+        /// <summary>
+        /// Gets or sets the source definition associated with an INSERT SELECT command.
+        /// </summary>
+        public QuerySourceDefinition? SourceDefinition { get; set; }
     }
 }
