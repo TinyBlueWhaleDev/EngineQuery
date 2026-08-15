@@ -149,7 +149,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// <summary>
         /// Gets or sets the root entity type associated with the query.
         /// </summary>
-        public required Type EntityType { get; init; }
+        public required Type EntityType { get; set; }
 
         /// <summary>
         /// Gets or sets whether selected columns should always be projected using CLR property aliases.

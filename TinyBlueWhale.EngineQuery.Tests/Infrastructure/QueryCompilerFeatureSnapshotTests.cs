@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
@@ -13,6 +14,340 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     /// </summary>
     public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerProviderTestBase
     {
+
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Join()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>()
+                .Columns(order => new
+                {
+                    order.UserId,
+                    order.Total
+                })
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .Select<JoinOrder>(order => new
+                {
+                    order.Total
+                })
+                .Where<JoinUser>(user => user.IsActive)
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_join",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates that INSERT SELECT preserves the INSERT target while using the configured source as the query root.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Preserve_Insert_Target_When_Select_Source_Uses_A_Different_Entity()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>()
+                .Columns(order => new
+                {
+                    order.UserId,
+                    order.Total
+                })
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .Select<JoinOrder>(order => new
+                {
+                    order.Total
+                })
+                .Build();
+
+            Assert.That(sql.CommandText, Does.Contain("orders"));
+            Assert.That(sql.CommandText, Does.Contain("users"));
+        }
+
+        /// <summary>
+        /// Validates that INSERT value assignments cannot be combined with an INSERT SELECT source.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Value_Assignments_Were_Configured_First()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .Set(user => user.Email, "admin@test.com")
+                .From<JoinUser>(alias: "u"));
+
+            Assert.That(exception!.Message, Is.EqualTo("An INSERT SELECT source cannot be combined with INSERT value assignments."));
+        }
+
+        /// <summary>
+        /// Validates that INSERT value assignments cannot be added after configuring an INSERT SELECT source.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Value_Assignment_Is_Added_After_Source()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var commandBuilder = queryBuilder
+                .InsertInto<JoinUser>()
+                .From<JoinUser>(alias: "u");
+
+            var exception = Assert.Throws<InvalidOperationException>(() => commandBuilder
+                .Set(user => user.Email, "admin@test.com"));
+
+            Assert.That(exception!.Message, Is.EqualTo("INSERT value assignments cannot be combined with an INSERT SELECT source."));
+        }
+
+        /// <summary>
+        /// Validates that an INSERT SELECT command cannot configure more than one root source.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_A_Second_Source_Is_Configured()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var commandBuilder = queryBuilder
+                .InsertInto<JoinOrder>()
+                .From<JoinUser>(alias: "u");
+
+            var exception = Assert.Throws<InvalidOperationException>(() => commandBuilder
+                .From<JoinOrder>(alias: "o"));
+
+            Assert.That(exception!.Message, Is.EqualTo("The INSERT SELECT source is already configured."));
+        }
+
+        /// <summary>
+        /// Validates that an INSERT command requires either value assignments or a SELECT source before compilation.
+        /// </summary>
+        [Test]
+        public void Insert_Should_Throw_When_No_Values_Or_Select_Source_Are_Configured()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .Build());
+
+            Assert.That(exception!.Message, Is.EqualTo("At least one value or SELECT source must be configured before building an INSERT command."));
+        }
+
+        /// <summary>
+        /// Validates that explicit INSERT SELECT target columns cannot be combined with INSERT value assignments.
+        /// </summary>
+        [Test]
+        public void Insert_Should_Throw_When_Columns_Are_Added_After_Value_Assignments()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var commandBuilder = queryBuilder
+                .InsertInto<JoinUser>()
+                .Set(user => user.Email, "admin@test.com");
+
+            var exception = Assert.Throws<InvalidOperationException>(() => commandBuilder
+                .Columns(user => new
+                {
+                    user.Id,
+                    user.Email
+                }));
+
+            Assert.That(exception!.Message, Is.EqualTo("INSERT SELECT columns cannot be combined with INSERT value assignments."));
+        }
+
+        /// <summary>
+        /// Validates that INSERT value assignments cannot be combined with explicitly configured INSERT SELECT target columns.
+        /// </summary>
+        [Test]
+        public void Insert_Should_Throw_When_Value_Assignment_Is_Added_After_Columns()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var commandBuilder = queryBuilder
+                .InsertInto<JoinUser>()
+                .Columns(user => new
+                {
+                    user.Id,
+                    user.Email
+                });
+
+            var exception = Assert.Throws<InvalidOperationException>(() => commandBuilder
+                .Set(user => user.Email, "admin@test.com"));
+
+            Assert.That(exception!.Message, Is.EqualTo("INSERT value assignments cannot be combined with explicitly configured INSERT SELECT columns."));
+        }
+
+        /// <summary>
+        /// Validates that the same target INSERT column cannot be configured more than once.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Target_Column_Is_Configured_More_Than_Once()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var commandBuilder = queryBuilder
+                .InsertInto<JoinUser>()
+                .Columns(user => new
+                {
+                    user.Id,
+                    user.Email
+                });
+
+            var exception = Assert.Throws<InvalidOperationException>(() => commandBuilder
+                .Columns(user => user.Email));
+
+            Assert.That(exception!.Message, Is.EqualTo("Property 'Email' is already configured as an INSERT target column."));
+        }
+
+        /// <summary>
+        /// Validates that INSERT SELECT target column expressions cannot be null.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Columns_Selector_Is_Null()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            Expression<Func<JoinUser, object>> selector = null!;
+
+            Assert.Throws<ArgumentNullException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .Columns(selector));
+        }
+
+        /// <summary>
+        /// Validates that INSERT SELECT target columns must reference direct entity properties.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Columns_Selector_Does_Not_Reference_Direct_Properties()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var exception = Assert.Throws<ArgumentException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .Columns(user => new
+                {
+                    Value = user.Email!.Length
+                }));
+
+            Assert.That(exception!.Message, Does.Contain("The INSERT columns selector must reference direct entity properties."));
+        }
+
+        /// <summary>
+        /// Validates that INSERT SELECT source aliases cannot contain whitespace-only values.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Source_Alias_Is_Whitespace()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            Assert.Throws<ArgumentException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .From<JoinUser>(alias: " "));
+        }
+
+        /// <summary>
+        /// Validates that INSERT SELECT explicit source table names cannot be empty.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Source_Table_Name_Is_Empty()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            Assert.Throws<ArgumentException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .From<JoinUser>("", alias: "u"));
+        }
+
+        /// <summary>
+        /// Validates that adding joined sources does not replace the configured INSERT SELECT root source.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Preserve_Root_Source_After_Join()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>()
+                .Columns(order => new
+                {
+                    order.UserId,
+                    order.Total
+                })
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .Select<JoinOrder>(order => new
+                {
+                    order.Total
+                })
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_join_root_source",
+                sql);
+        }
+
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select()
+        {
+            var query = CreateQueryBuilder()
+                .InsertInto<JoinUser>()
+                .Columns(user => new
+                {
+                    user.Id,
+                    user.Email
+                })
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(user => new
+                {
+                    user.Id,
+                    user.Email
+                })
+                .Where<JoinUser>(user => user.IsActive)
+                .Build();
+
+            AssertSnapshot(
+                "insert_select",
+                query);
+        }
+
+        [Test]
+        public void Build_Should_Throw_When_Insert_Values_And_Select_Source_Are_Combined()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .Set(user => user.Email, "user@test.com")
+                .From<JoinUser>(alias: "u")
+                .Build());
+
+            Assert.That(exception!.Message, Is.EqualTo("An INSERT SELECT source cannot be combined with INSERT value assignments."));
+        }
+
+        [Test]
+        public void Build_Should_Throw_When_Insert_Select_Source_Is_Not_Configured()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .Columns(user => new
+                {
+                    user.Id,
+                    user.Email
+                })
+                .Build());
+
+            Assert.That(exception!.Message, Is.EqualTo("At least one value or SELECT source must be configured before building an INSERT command."));
+        }
 
         /// <summary>
         /// Validates SQL generation for strongly typed DELETE commands.

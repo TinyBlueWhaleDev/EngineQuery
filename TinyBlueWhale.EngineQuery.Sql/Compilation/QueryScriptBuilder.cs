@@ -48,7 +48,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     public sealed class QueryScriptBuilder(
         IRequiredSqlClauseBuilder selectClauseBuilder,
         IRequiredSqlClauseBuilder fromClauseBuilder,
-        IRequiredSqlClauseBuilder insertClauseBuilder,
+        InsertClauseBuilder insertClauseBuilder,
         IRequiredSqlClauseBuilder updateClauseBuilder,
         IRequiredSqlClauseBuilder deleteClauseBuilder,
         IOptionalSqlClauseBuilder whereClauseBuilder,
@@ -58,7 +58,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     {
         private readonly IRequiredSqlClauseBuilder _selectClauseBuilder = selectClauseBuilder ?? throw new ArgumentNullException(nameof(selectClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _fromClauseBuilder = fromClauseBuilder ?? throw new ArgumentNullException(nameof(fromClauseBuilder));
-        private readonly IRequiredSqlClauseBuilder _insertClauseBuilder = insertClauseBuilder ?? throw new ArgumentNullException(nameof(insertClauseBuilder));
+        private readonly InsertClauseBuilder _insertClauseBuilder = insertClauseBuilder ?? throw new ArgumentNullException(nameof(insertClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _updateClauseBuilder = updateClauseBuilder ?? throw new ArgumentNullException( nameof(updateClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _deleteClauseBuilder = deleteClauseBuilder ?? throw new ArgumentNullException(nameof(deleteClauseBuilder));
         private readonly IOptionalSqlClauseBuilder _whereClauseBuilder = whereClauseBuilder ?? throw new ArgumentNullException(nameof(whereClauseBuilder));
@@ -89,11 +89,26 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             return queryDefinition.CommandType switch
             {
                 QueryCommandType.Select => BuildSelectQuery(queryDefinition, context),
-                QueryCommandType.Insert => _insertClauseBuilder.Build(queryDefinition, context),
+                QueryCommandType.Insert => BuildInsertCommand(queryDefinition, context),
                 QueryCommandType.Update => BuildUpdateCommand(queryDefinition, context),
                 QueryCommandType.Delete => BuildDeleteCommand(queryDefinition, context),
                 _ => throw new NotSupportedException($"SQL command type '{queryDefinition.CommandType}' is not supported.")
             };
+        }
+
+        // Builds the INSERT command pipeline using either VALUES or SELECT as the command source.
+        private string BuildInsertCommand(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
+        {
+            var insertDefinition = queryDefinition.InsertDefinition
+                ?? throw new InvalidOperationException("The INSERT command definition is not initialized.");
+
+            if (insertDefinition.ValueDefinitions.Count > 0)
+                return _insertClauseBuilder.Build(queryDefinition, context);
+
+            if (insertDefinition.SourceDefinition is not null)
+                return BuildInsertSelectCommand(queryDefinition, context);
+
+            throw new InvalidOperationException("At least one value or SELECT source must be configured before building an INSERT command.");
         }
 
         // Builds the existing SELECT query pipeline without altering its current clause order or behavior.
@@ -129,6 +144,21 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
             }
 
             return commandText;
+        }
+
+        // Builds an INSERT SELECT command using the existing SELECT query pipeline.
+        private string BuildInsertSelectCommand(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
+        {
+            var insertDefinition = queryDefinition.InsertDefinition
+                ?? throw new InvalidOperationException("The INSERT command definition is not initialized.");
+
+            var sourceDefinition = insertDefinition.SourceDefinition
+                ?? throw new InvalidOperationException("The INSERT SELECT source is not configured.");
+
+            var insertClause = _insertClauseBuilder.BuildTarget(queryDefinition, context);
+            var selectQuery = BuildSelectQuery(queryDefinition, context);
+
+            return $"{insertClause}{Environment.NewLine}{selectQuery}";
         }
 
         // Builds the UPDATE command pipeline using the shared WHERE clause implementation.
