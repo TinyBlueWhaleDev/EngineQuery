@@ -15,6 +15,159 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerProviderTestBase
     {
         /// <summary>
+        /// Validates INSERT SELECT target column inference from aggregate projection aliases.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Inferred_Aggregate_Columns()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .SelectAggregate<JoinOrder>(QueryAggregateFunction.Sum, order => order.Total, "TotalAmount")
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_inferred_aggregate",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates INSERT SELECT target column inference from scalar function projection aliases.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Inferred_Scalar_Function_Columns()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinUser>("projection_results")
+                .From<JoinUser>(alias: "u")
+                .SelectScalarFunction<JoinUser>(QueryScalarFunction.Upper, user => user.Email, "NormalizedEmail")
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_inferred_scalar_function",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates INSERT SELECT target column inference from computed expression aliases.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Inferred_Computed_Columns()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .SelectComputed<JoinOrder>(order => order.Total * 1.16m, "TotalWithTax")
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_inferred_computed",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates INSERT SELECT target column inference from CASE WHEN projection aliases.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Inferred_Case_When_Columns()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .SelectCaseWhen<JoinOrder>(order => order.Total > 1000, "VIP", "STANDARD", "CustomerType")
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_inferred_case_when",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates INSERT SELECT target column inference from window function projection aliases.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Inferred_Window_Columns()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .SelectRowNumber(
+                    "RowNumber",
+                    window => window
+                        .PartitionBy<JoinOrder>(order => order.UserId)
+                        .OrderByDescending<JoinOrder>(order => order.Total))
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_inferred_window",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates INSERT SELECT target column inference order across all supported projection types.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Mixed_Inferred_Projection_Columns()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .SelectAggregate<JoinOrder>(QueryAggregateFunction.Sum, order => order.Total, "TotalAmount")
+                .SelectScalarFunction<JoinUser>(QueryScalarFunction.Upper, user => user.Email, "NormalizedEmail")
+                .SelectComputed<JoinOrder>(order => order.Total * 1.16m, "TotalWithTax")
+                .SelectCaseWhen<JoinOrder>(order => order.Total > 1000, "VIP", "STANDARD", "CustomerType")
+                .SelectRowNumber(
+                    "RowNumber",
+                    window => window
+                        .PartitionBy<JoinOrder>(order => order.UserId)
+                        .OrderByDescending<JoinOrder>(order => order.Total))
+                .GroupBy<JoinUser>(user => new
+                {
+                    user.Id,
+                    user.Email
+                })
+                .GroupBy<JoinOrder>(order => new
+                {
+                    order.UserId,
+                    order.Total
+                })
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_inferred_mixed_projection",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates that inferred INSERT target columns cannot be duplicated across different projection types.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Inferred_Target_Column_Is_Duplicated_Across_Projection_Types()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .Select<JoinOrder>(order => new
+                {
+                    TotalAmount = order.Total
+                })
+                .SelectAggregate<JoinOrder>(QueryAggregateFunction.Sum, order => order.Total, "TotalAmount")
+                .Build());
+
+            Assert.That(
+                exception!.Message,
+                Is.EqualTo("Target INSERT column 'TotalAmount' was resolved more than once from the SELECT projection."));
+        }
+
+
+        /// <summary>
         /// Validates INSERT SELECT target column inference from the SELECT projection.
         /// </summary>
         [Test]

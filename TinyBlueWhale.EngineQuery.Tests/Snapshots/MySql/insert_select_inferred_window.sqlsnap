@@ -1,0 +1,4 @@
+INSERT INTO `projection_results` (`RowNumber`)
+SELECT ROW_NUMBER() OVER (PARTITION BY `o`.`user_id`
+ORDER BY `o`.`total` DESC) AS `RowNumber`
+FROM `orders` AS `o`
