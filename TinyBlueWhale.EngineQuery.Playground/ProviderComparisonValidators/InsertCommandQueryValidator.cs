@@ -53,6 +53,10 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             ProviderQueryPrinter.Print(
                 $"{providerName} Insert Select Join",
                 BuildInsertSelectJoinQuery(queryBuilder));
+
+            ProviderQueryPrinter.Print(
+                $"{providerName} Insert Select Inferred Columns",
+                BuildInsertSelectInferredColumnsQuery(queryBuilder));
         }
 
         // Builds a strongly typed INSERT VALUES command.
@@ -113,6 +117,25 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     order.UserId,
                     order.Total
                 })
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .Select<JoinOrder>(order => new
+                {
+                    order.Total
+                })
+                .Where<JoinUser>(user => user.IsActive)
+                .Build();
+        }
+
+        // Builds an INSERT SELECT command inferring target columns from projection aliases.
+        private static GeneratedSqlQuery BuildInsertSelectInferredColumnsQuery(QueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .InsertInto<JoinOrder>()
                 .From<JoinUser>(alias: "u")
                 .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
                 .Select<JoinUser>(user => new
