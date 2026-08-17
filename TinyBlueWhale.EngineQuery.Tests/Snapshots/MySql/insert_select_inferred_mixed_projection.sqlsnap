@@ -1,0 +1,12 @@
+INSERT INTO `projection_results` (`UserId`, `TotalAmount`, `NormalizedEmail`, `TotalWithTax`, `CustomerType`, `RowNumber`)
+SELECT `u`.`user_id` AS `UserId`, SUM(`o`.`total`) AS `TotalAmount`, UPPER(`u`.`email`) AS `NormalizedEmail`, (`o`.`total` * @p0) AS `TotalWithTax`, CASE WHEN (`o`.`total` > @p1) THEN @p2 ELSE @p3 END AS `CustomerType`, ROW_NUMBER() OVER (PARTITION BY `o`.`user_id`
+ORDER BY `o`.`total` DESC) AS `RowNumber`
+FROM `users` AS `u`
+INNER JOIN `orders` AS `o` ON (`u`.`user_id` = `o`.`user_id`)
+GROUP BY `u`.`user_id`, `u`.`email`, `o`.`user_id`, `o`.`total`
+
+-- Parameters
+@p0 = 1.16
+@p1 = 1000
+@p2 = VIP
+@p3 = STANDARD

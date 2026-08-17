@@ -1,0 +1,3 @@
+INSERT INTO [projection_results] ([TotalAmount])
+SELECT SUM([o].[total]) AS [TotalAmount]
+FROM [orders] AS [o]

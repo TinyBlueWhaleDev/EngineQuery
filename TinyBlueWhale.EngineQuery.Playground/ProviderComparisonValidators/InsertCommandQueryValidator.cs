@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Playground.Models;
@@ -57,6 +58,30 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             ProviderQueryPrinter.Print(
                 $"{providerName} Insert Select Inferred Columns",
                 BuildInsertSelectInferredColumnsQuery(queryBuilder));
+
+            ProviderQueryPrinter.Print(
+                $"{providerName} Insert Select Inferred Aggregate",
+                BuildInsertSelectInferredAggregateQuery(queryBuilder));
+
+            ProviderQueryPrinter.Print(
+                $"{providerName} Insert Select Inferred Scalar Function",
+                BuildInsertSelectInferredScalarFunctionQuery(queryBuilder));
+
+            ProviderQueryPrinter.Print(
+                $"{providerName} Insert Select Inferred Computed Expression",
+                BuildInsertSelectInferredComputedQuery(queryBuilder));
+
+            ProviderQueryPrinter.Print(
+                $"{providerName} Insert Select Inferred Case When",
+                BuildInsertSelectInferredCaseWhenQuery(queryBuilder));
+
+            ProviderQueryPrinter.Print(
+                $"{providerName} Insert Select Inferred Window Function",
+                BuildInsertSelectInferredWindowQuery(queryBuilder));
+
+            ProviderQueryPrinter.Print(
+                $"{providerName} Insert Select Mixed Inferred Projection",
+                BuildInsertSelectMixedInferredProjectionQuery(queryBuilder));
         }
 
         // Builds a strongly typed INSERT VALUES command.
@@ -147,6 +172,93 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     order.Total
                 })
                 .Where<JoinUser>(user => user.IsActive)
+                .Build();
+        }
+
+        // Builds an INSERT SELECT command inferring a target column from an aggregate projection alias.
+        private static GeneratedSqlQuery BuildInsertSelectInferredAggregateQuery(QueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .SelectAggregate<JoinOrder>(QueryAggregateFunction.Sum, order => order.Total, "TotalAmount")
+                .Build();
+        }
+
+        // Builds an INSERT SELECT command inferring a target column from a scalar function projection alias.
+        private static GeneratedSqlQuery BuildInsertSelectInferredScalarFunctionQuery(QueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .InsertInto<JoinUser>("projection_results")
+                .From<JoinUser>(alias: "u")
+                .SelectScalarFunction<JoinUser>(QueryScalarFunction.Upper, user => user.Email, "NormalizedEmail")
+                .Build();
+        }
+
+        // Builds an INSERT SELECT command inferring a target column from a computed expression alias.
+        private static GeneratedSqlQuery BuildInsertSelectInferredComputedQuery(QueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .SelectComputed<JoinOrder>(order => order.Total * 1.16m, "TotalWithTax")
+                .Build();
+        }
+
+        // Builds an INSERT SELECT command inferring a target column from a CASE WHEN projection alias.
+        private static GeneratedSqlQuery BuildInsertSelectInferredCaseWhenQuery(QueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .SelectCaseWhen<JoinOrder>(order => order.Total > 1000, "VIP", "STANDARD", "CustomerType")
+                .Build();
+        }
+
+        // Builds an INSERT SELECT command inferring a target column from a window function projection alias.
+        private static GeneratedSqlQuery BuildInsertSelectInferredWindowQuery(QueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinOrder>(alias: "o")
+                .SelectRowNumber(
+                    "RowNumber",
+                    window => window
+                        .PartitionBy<JoinOrder>(order => order.UserId)
+                        .OrderByDescending<JoinOrder>(order => order.Total))
+                .Build();
+        }
+
+        // Builds an INSERT SELECT command validating inferred target column order across all supported projection types.
+        private static GeneratedSqlQuery BuildInsertSelectMixedInferredProjectionQuery(QueryBuilder queryBuilder)
+        {
+            return queryBuilder
+                .InsertInto<JoinOrder>("projection_results")
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .SelectAggregate<JoinOrder>(QueryAggregateFunction.Sum, order => order.Total, "TotalAmount")
+                .SelectScalarFunction<JoinUser>(QueryScalarFunction.Upper, user => user.Email, "NormalizedEmail")
+                .SelectComputed<JoinOrder>(order => order.Total * 1.16m, "TotalWithTax")
+                .SelectCaseWhen<JoinOrder>(order => order.Total > 1000, "VIP", "STANDARD", "CustomerType")
+                .SelectRowNumber(
+                    "RowNumber",
+                    window => window
+                        .PartitionBy<JoinOrder>(order => order.UserId)
+                        .OrderByDescending<JoinOrder>(order => order.Total))
+                .GroupBy<JoinUser>(user => new
+                {
+                    user.Id,
+                    user.Email
+                })
+                .GroupBy<JoinOrder>(order => new
+                {
+                    order.UserId,
+                    order.Total
+                })
                 .Build();
         }
     }
