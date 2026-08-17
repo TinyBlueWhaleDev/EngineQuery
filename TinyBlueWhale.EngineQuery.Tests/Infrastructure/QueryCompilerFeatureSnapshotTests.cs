@@ -14,6 +14,97 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     /// </summary>
     public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerProviderTestBase
     {
+        /// <summary>
+        /// Validates INSERT SELECT target column inference from the SELECT projection.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Inferred_Columns()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinOrder>()
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .Select<JoinOrder>(order => new
+                {
+                    order.Total
+                })
+                .Where<JoinUser>(user => user.IsActive)
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_inferred_columns",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates INSERT SELECT target column inference from projection property names when aliases are not configured.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Inferred_Property_Names()
+        {
+            var sql = CreateQueryBuilder()
+                .InsertInto<JoinUser>()
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(user => new
+                {
+                    user.Id,
+                    user.Email
+                })
+                .Build();
+
+            AssertSnapshot(
+                "insert_select_inferred_property_names",
+                sql);
+        }
+
+        /// <summary>
+        /// Validates that INSERT SELECT column inference requires at least one SELECT projection.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Inferred_Columns_Have_No_Select_Projection()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
+                .InsertInto<JoinUser>()
+                .From<JoinUser>(alias: "u")
+                .Build());
+
+            Assert.That(
+                exception!.Message,
+                Is.EqualTo("At least one SELECT projection must be configured when INSERT target columns are not explicitly configured."));
+        }
+
+        /// <summary>
+        /// Validates that INSERT SELECT inferred target columns cannot resolve the same projection name more than once.
+        /// </summary>
+        [Test]
+        public void Insert_Select_Should_Throw_When_Inferred_Target_Column_Is_Duplicated()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
+                .InsertInto<JoinOrder>()
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(alias: "o", on: (user, order) => user.Id == order.UserId)
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .Select<JoinOrder>(order => new
+                {
+                    UserId = order.UserId
+                })
+                .Build());
+
+            Assert.That(
+                exception!.Message,
+                Is.EqualTo("Target INSERT column 'UserId' was resolved more than once from the SELECT projection."));
+        }
 
         [Test]
         public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_Join()

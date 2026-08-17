@@ -280,7 +280,40 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (_queryDefinition.InsertDefinition!.ValueDefinitions.Count == 0 && _queryDefinition.InsertDefinition.SourceDefinition is null)
                 throw new InvalidOperationException("At least one value or SELECT source must be configured before building an INSERT command.");
 
+            ResolveInsertSelectColumns();
+
             return _queryCompiler.Compile(_queryDefinition);
+        }
+
+        // Resolves INSERT target columns from the SELECT projection when explicit target columns were not configured.
+        private void ResolveInsertSelectColumns()
+        {
+            var insertDefinition = _queryDefinition.InsertDefinition!;
+
+            if (insertDefinition.SourceDefinition is null)
+                return;
+
+            if (insertDefinition.ColumnDefinitions.Count > 0)
+                return;
+
+            if (_queryDefinition.SelectDefinitions.Count == 0)
+                throw new InvalidOperationException("At least one SELECT projection must be configured when INSERT target columns are not explicitly configured.");
+
+            foreach (var selectDefinition in _queryDefinition.SelectDefinitions)
+            {
+                var targetColumnName = string.IsNullOrWhiteSpace(selectDefinition.Alias)
+                    ? selectDefinition.PropertyName
+                    : selectDefinition.Alias;
+
+                if (insertDefinition.ColumnDefinitions.Any(definition => definition.ColumnName.Equals(targetColumnName, StringComparison.Ordinal)))
+                    throw new InvalidOperationException($"Target INSERT column '{targetColumnName}' was resolved more than once from the SELECT projection.");
+
+                insertDefinition.ColumnDefinitions.Add(
+                    new QueryInsertColumnDefinition
+                    {
+                        ColumnName = targetColumnName
+                    });
+            }
         }
 
         // Ensures the current INSERT command can transition to INSERT SELECT composition.
