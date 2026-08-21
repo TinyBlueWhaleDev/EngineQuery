@@ -22,13 +22,13 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryInsertColumnDefinition> ColumnDefinitions { get; } = [];
 
         /// <summary>
-        /// Gets or sets whether identity columns should be included in the INSERT command.
-        /// </summary>
-        public bool IncludeIdentityColumns { get; set; }
-
-        /// <summary>
         /// Gets or sets the source definition associated with an INSERT SELECT command.
         /// </summary>
         public QuerySourceDefinition? SourceDefinition { get; set; }
+
+        /// <summary>
+        /// Gets or sets the identity retrieval definition associated with a direct INSERT VALUES command.
+        /// </summary>
+        public QueryInsertIdentityDefinition? IdentityDefinition { get; set; }
     }
 }

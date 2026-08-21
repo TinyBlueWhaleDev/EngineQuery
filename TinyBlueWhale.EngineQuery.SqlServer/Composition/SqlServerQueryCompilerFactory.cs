@@ -26,7 +26,8 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Composition
                 new QueryScriptBuilderOptions
                 {
                     CteClauseBuilderFactory = subqueryCompiler =>
-                        new SqlServerCteClauseBuilder(subqueryCompiler)
+                        new SqlServerCteClauseBuilder(subqueryCompiler),
+                    InsertClauseBuilderFactory = () => new SqlServerInsertClauseBuilder(),  
                 });
         }
     }

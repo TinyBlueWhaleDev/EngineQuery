@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Tests.Models;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
@@ -14,6 +15,91 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     /// </summary>
     public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerProviderTestBase
     {
+
+        /// <summary>
+        /// Validates that a direct INSERT can return its generated identity value
+        /// using the syntax required by the current provider.
+        /// </summary>
+        [Test]
+        public void Insert_ReturnIdentity_Should_Use_Provider_Specific_Syntax()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var commandBuilder = queryBuilder
+                .InsertInto<JoinUser>()
+                .Set(user => user.Email, "admin@test.com");
+
+            var query = ConfigureReturnIdentity(commandBuilder)
+                .Build();
+
+            AssertSnapshot("insert_return_identity", query);
+        }
+
+        #region Identity Retrieval
+
+        /// <summary>
+        /// Configures identity retrieval using the syntax supported by the current provider.
+        /// </summary>
+        protected abstract IInsertValuesCommandBuilder<JoinUser> ConfigureReturnIdentity(IInsertValuesCommandBuilder<JoinUser> commandBuilder);
+
+        #endregion
+
+        /// <summary>
+        /// Validates that INSERT identity retrieval cannot be configured more than once.
+        /// </summary>
+        [Test]
+        public void ReturnIdentity_Should_Throw_When_Identity_Retrieval_Is_Already_Configured()
+        {
+            // Arrange
+            var commandBuilder = CreateQueryBuilder()
+                .InsertInto<User>()
+                .Set(user => user.Email, "admin@test.com")
+                .ReturnIdentity();
+
+            // Act
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                commandBuilder.ReturnIdentity());
+
+            // Assert
+            Assert.That(
+                exception!.Message,
+                Is.EqualTo("Identity retrieval is already configured for the current INSERT command."));
+        }
+
+        /// <summary>
+        /// Validates that an INSERT identity selector cannot be null.
+        /// </summary>
+        [Test]
+        public void ReturnIdentity_Should_Throw_When_Selector_Is_Null()
+        {
+            // Arrange
+            Expression<Func<User, int>> selector = null!;
+
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => CreateQueryBuilder()
+                .InsertInto<User>()
+                .Set(user => user.Email, "admin@test.com")
+                .ReturnIdentity(selector));
+        }
+
+        /// <summary>
+        /// Validates that an INSERT identity selector must reference a direct entity property.
+        /// </summary>
+        [Test]
+        public void ReturnIdentity_Should_Throw_When_Selector_Is_Not_A_Direct_Property()
+        {
+            // Act
+            var exception = Assert.Throws<ArgumentException>(() => CreateQueryBuilder()
+                .InsertInto<User>()
+                .Set(user => user.Email, "admin@test.com")
+                .ReturnIdentity(user => user.Email.Length));
+
+            // Assert
+            Assert.That(
+                exception!.Message,
+                Does.Contain("The INSERT selector must reference a direct entity property."));
+        }
+
         /// <summary>
         /// Validates INSERT SELECT target column inference from aggregate projection aliases.
         /// </summary>
@@ -314,97 +400,8 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
 
             Assert.That(sql.CommandText, Does.Contain("orders"));
             Assert.That(sql.CommandText, Does.Contain("users"));
-        }
-
-        /// <summary>
-        /// Validates that INSERT value assignments cannot be combined with an INSERT SELECT source.
-        /// </summary>
-        [Test]
-        public void Insert_Select_Should_Throw_When_Value_Assignments_Were_Configured_First()
-        {
-            var queryBuilder = CreateQueryBuilder();
-
-            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
-                .InsertInto<JoinUser>()
-                .Set(user => user.Email, "admin@test.com")
-                .From<JoinUser>(alias: "u"));
-
-            Assert.That(exception!.Message, Is.EqualTo("An INSERT SELECT source cannot be combined with INSERT value assignments."));
-        }
-
-        /// <summary>
-        /// Validates that INSERT value assignments cannot be added after configuring an INSERT SELECT source.
-        /// </summary>
-        [Test]
-        public void Insert_Select_Should_Throw_When_Value_Assignment_Is_Added_After_Source()
-        {
-            var queryBuilder = CreateQueryBuilder();
-
-            var commandBuilder = queryBuilder
-                .InsertInto<JoinUser>()
-                .From<JoinUser>(alias: "u");
-
-            var exception = Assert.Throws<InvalidOperationException>(() => commandBuilder
-                .Set(user => user.Email, "admin@test.com"));
-
-            Assert.That(exception!.Message, Is.EqualTo("INSERT value assignments cannot be combined with an INSERT SELECT source."));
-        }
-
-        /// <summary>
-        /// Validates that an INSERT SELECT command cannot configure more than one root source.
-        /// </summary>
-        [Test]
-        public void Insert_Select_Should_Throw_When_A_Second_Source_Is_Configured()
-        {
-            var queryBuilder = CreateQueryBuilder();
-
-            var commandBuilder = queryBuilder
-                .InsertInto<JoinOrder>()
-                .From<JoinUser>(alias: "u");
-
-            var exception = Assert.Throws<InvalidOperationException>(() => commandBuilder
-                .From<JoinOrder>(alias: "o"));
-
-            Assert.That(exception!.Message, Is.EqualTo("The INSERT SELECT source is already configured."));
-        }
-
-        /// <summary>
-        /// Validates that an INSERT command requires either value assignments or a SELECT source before compilation.
-        /// </summary>
-        [Test]
-        public void Insert_Should_Throw_When_No_Values_Or_Select_Source_Are_Configured()
-        {
-            var queryBuilder = CreateQueryBuilder();
-
-            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
-                .InsertInto<JoinUser>()
-                .Build());
-
-            Assert.That(exception!.Message, Is.EqualTo("At least one value or SELECT source must be configured before building an INSERT command."));
-        }
-
-        /// <summary>
-        /// Validates that explicit INSERT SELECT target columns cannot be combined with INSERT value assignments.
-        /// </summary>
-        [Test]
-        public void Insert_Should_Throw_When_Columns_Are_Added_After_Value_Assignments()
-        {
-            var queryBuilder = CreateQueryBuilder();
-
-            var commandBuilder = queryBuilder
-                .InsertInto<JoinUser>()
-                .Set(user => user.Email, "admin@test.com");
-
-            var exception = Assert.Throws<InvalidOperationException>(() => commandBuilder
-                .Columns(user => new
-                {
-                    user.Id,
-                    user.Email
-                }));
-
-            Assert.That(exception!.Message, Is.EqualTo("INSERT SELECT columns cannot be combined with INSERT value assignments."));
-        }
-
+        }                   
+       
         /// <summary>
         /// Validates that INSERT value assignments cannot be combined with explicitly configured INSERT SELECT target columns.
         /// </summary>
@@ -560,38 +557,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
             AssertSnapshot(
                 "insert_select",
                 query);
-        }
-
-        [Test]
-        public void Build_Should_Throw_When_Insert_Values_And_Select_Source_Are_Combined()
-        {
-            var queryBuilder = CreateQueryBuilder();
-
-            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
-                .InsertInto<JoinUser>()
-                .Set(user => user.Email, "user@test.com")
-                .From<JoinUser>(alias: "u")
-                .Build());
-
-            Assert.That(exception!.Message, Is.EqualTo("An INSERT SELECT source cannot be combined with INSERT value assignments."));
-        }
-
-        [Test]
-        public void Build_Should_Throw_When_Insert_Select_Source_Is_Not_Configured()
-        {
-            var queryBuilder = CreateQueryBuilder();
-
-            var exception = Assert.Throws<InvalidOperationException>(() => queryBuilder
-                .InsertInto<JoinUser>()
-                .Columns(user => new
-                {
-                    user.Id,
-                    user.Email
-                })
-                .Build());
-
-            Assert.That(exception!.Message, Is.EqualTo("At least one value or SELECT source must be configured before building an INSERT command."));
-        }
+        }     
 
         /// <summary>
         /// Validates SQL generation for strongly typed DELETE commands.
@@ -608,6 +574,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 "delete",
                 sql);
         }
+
 
         /// <summary>
         /// Validates parameter generation for strongly typed DELETE commands.

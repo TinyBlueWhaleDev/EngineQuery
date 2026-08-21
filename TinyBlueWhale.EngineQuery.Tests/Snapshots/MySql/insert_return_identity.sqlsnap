@@ -1,0 +1,6 @@
+INSERT INTO `users` (`email`)
+VALUES (@p0);
+SELECT LAST_INSERT_ID();
+
+-- Parameters
+@p0 = admin@test.com

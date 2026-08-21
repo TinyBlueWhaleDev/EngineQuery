@@ -31,7 +31,8 @@ namespace TinyBlueWhale.EngineQuery.MySql.Composition
                 new QueryScriptBuilderOptions
                 {
                     ApplyClauseBuilderFactory = subqueryCompiler =>
-                        new MySqlApplyClauseBuilder(subqueryCompiler)
+                        new MySqlApplyClauseBuilder(subqueryCompiler),
+                    InsertClauseBuilderFactory = () => new MySqlInsertClauseBuilder(),
                 });
         }
     }

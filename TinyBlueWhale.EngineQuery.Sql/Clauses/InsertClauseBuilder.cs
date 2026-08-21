@@ -16,7 +16,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// This builder generates parameterized INSERT VALUES statements while delegating
     /// identifier escaping and parameter allocation to the active compilation context.
     /// </remarks>
-    public sealed class InsertClauseBuilder : IRequiredSqlClauseBuilder
+    public class InsertClauseBuilder : IRequiredSqlClauseBuilder
     {
         /// <summary>
         /// Builds the SQL INSERT statement.
@@ -49,8 +49,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             var insertTarget = BuildTarget(queryDefinition, context);
             var parameters = insertDefinition.ValueDefinitions.Select(definition => context.AddParameter(definition.Value));
 
-            return $"{insertTarget}{Environment.NewLine}" +
+            var commandText =
+                $"{insertTarget}{Environment.NewLine}" +
                 $"VALUES ({string.Join(", ", parameters)})";
+
+            if (insertDefinition.IdentityDefinition is null)
+                return commandText;
+
+            return AppendIdentityRetrieval(insertDefinition.IdentityDefinition, commandText, context);
         }
 
         /// <summary>
@@ -90,6 +96,30 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             var escapedColumns = columns.Select(context.DatabaseDialect.EscapeIdentifier);
 
             return $"INSERT INTO {tableName} ({string.Join(", ", escapedColumns)})";
+        }
+
+        /// <summary>
+        /// Appends provider-specific identity retrieval SQL to the generated INSERT command.
+        /// </summary>
+        /// <param name="identityDefinition">
+        /// Identity retrieval metadata configured by the INSERT VALUES builder.
+        /// </param>
+        /// <param name="commandText">
+        /// Generated INSERT VALUES command text.
+        /// </param>
+        /// <param name="context">
+        /// Current SQL compilation context.
+        /// </param>
+        /// <returns>
+        /// INSERT command text with provider-specific identity retrieval SQL.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the current provider does not implement identity retrieval.
+        /// </exception>
+        protected virtual string AppendIdentityRetrieval(QueryInsertIdentityDefinition identityDefinition, string commandText, QueryCompilationContext context)
+        {
+            throw new NotSupportedException(
+                "INSERT identity retrieval is not supported by the current database provider.");
         }
     }
 }

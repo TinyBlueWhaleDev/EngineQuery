@@ -1,0 +1,6 @@
+INSERT INTO [users] ([email])
+VALUES (@p0);
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT);
+
+-- Parameters
+@p0 = admin@test.com
