@@ -1,9 +1,20 @@
 USE EngineQuerySample;
 
+DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS invoice_lines;
 DROP TABLE IF EXISTS invoices;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS customers;
+
+CREATE TABLE categories
+(
+    category_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    parent_category_id INT NULL,
+    name VARCHAR(200) NOT NULL,
+    CONSTRAINT fk_categories_parent
+        FOREIGN KEY (parent_category_id)
+        REFERENCES categories(category_id)
+);
 
 CREATE TABLE customers
 (

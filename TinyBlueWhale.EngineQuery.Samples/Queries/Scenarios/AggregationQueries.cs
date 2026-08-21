@@ -1,4 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Samples.Domain.AttributeMapping;
+using TinyBlueWhale.EngineQuery.Samples.Domain.AttributeMapping;
 using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping;
 using TinyBlueWhale.EngineQuery.Samples.Domain.FluentMapping;
 using TinyBlueWhale.EngineQuery.Samples.Metadata;
@@ -14,76 +14,116 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
             return
             [
                 new SalesQueryScenario
-            {
-                Name = "Customer invoice summary",
-                MetadataStrategy = MetadataStrategy.Fluent,
-                ResultType = typeof(CustomerInvoiceSummaryRow),
-                Build = queryBuilder => queryBuilder
-                    .From<CustomerFluent>(alias: "c")
-                    .InnerJoin<CustomerFluent,InvoiceFluent>(alias: "i",on: (customer,invoice) => customer.Id == invoice.CustomerId)
-                    .Select<CustomerFluent>(customer => new
-                    {
-                        CustomerId = customer.Id,
-                        customer.FullName
-                    })
-                    .SelectAggregate<InvoiceFluent>(QueryAggregateFunction.Sum,invoice => invoice.Total,"TotalAmount")
-                    .SelectAggregate<InvoiceFluent>(QueryAggregateFunction.Count,invoice => invoice.Id,"InvoiceCount")
-                    .GroupBy<CustomerFluent>(customer => new
-                    {
-                        customer.Id,
-                        customer.FullName
-                    })
-                    .HavingAggregate<InvoiceFluent>(QueryAggregateFunction.Sum,invoice => invoice.Total,QueryComparisonOperator.GreaterThan,100)
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Product revenue summary",
-                MetadataStrategy = MetadataStrategy.Fluent,
-                ResultType = typeof(ProductRevenueSummaryRow),
-                Build = queryBuilder => queryBuilder
-                    .From<ProductFluent>(alias: "p")
-                    .InnerJoin<ProductFluent,InvoiceLineFluent>(alias: "l",on: (product,line) => product.Id == line.ProductId)
-                    .Select<ProductFluent>(product => new
-                    {
-                        ProductId = product.Id,
-                        product.Name
-                    })
-                    .SelectAggregate<InvoiceLineFluent>(QueryAggregateFunction.Sum,line => line.LineTotal,"Revenue")
-                    .SelectAggregate<InvoiceLineFluent>(QueryAggregateFunction.Sum,line => line.Quantity,"UnitsSold")
-                    .GroupBy<ProductFluent>(product => new
-                    {
-                        product.Id,
-                        product.Name
-                    })
-                    .HavingAggregate<InvoiceLineFluent>(QueryAggregateFunction.Sum,line => line.LineTotal,QueryComparisonOperator.GreaterThan,100)
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Average invoice amount",
-                MetadataStrategy = MetadataStrategy.Fluent,
-                ResultType = typeof(AverageInvoiceAmountRow),
-                Build = queryBuilder => queryBuilder
-                    .From<InvoiceFluent>(alias: "i")
-                    .SelectAggregate<InvoiceFluent>(QueryAggregateFunction.Average,invoice => invoice.Total,"AverageInvoiceAmount")
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Max invoice per customer",
-                MetadataStrategy = MetadataStrategy.Fluent,
-                ResultType = typeof(MaxInvoicePerCustomerRow),
-                Build = queryBuilder => queryBuilder
-                    .From<InvoiceFluent>(alias: "i")
-                    .Select<InvoiceFluent>(invoice => new
-                    {
-                        invoice.CustomerId
-                    })
-                    .SelectAggregate<InvoiceFluent>(QueryAggregateFunction.Maximum,invoice => invoice.Total,"MaxInvoiceTotal")
-                    .GroupBy<InvoiceFluent>(invoice => invoice.CustomerId)
-                    .Build()
-            }
+                {
+                    Name = "Customer invoice summary",
+                    MetadataStrategy = MetadataStrategy.Fluent,
+                    ResultType = typeof(CustomerInvoiceSummaryRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<CustomerFluent>(alias: "c")
+                        .InnerJoin<CustomerFluent,InvoiceFluent>(alias: "i",on: (customer,invoice) => customer.Id == invoice.CustomerId)
+                        .Select<CustomerFluent>(customer => new
+                        {
+                            CustomerId = customer.Id,
+                            customer.FullName
+                        })
+                        .SelectAggregate<InvoiceFluent>(QueryAggregateFunction.Sum,invoice => invoice.Total,"TotalAmount")
+                        .SelectAggregate<InvoiceFluent>(QueryAggregateFunction.Count,invoice => invoice.Id,"InvoiceCount")
+                        .GroupBy<CustomerFluent>(customer => new
+                        {
+                            customer.Id,
+                            customer.FullName
+                        })
+                        .HavingAggregate<InvoiceFluent>(QueryAggregateFunction.Sum,invoice => invoice.Total,QueryComparisonOperator.GreaterThan,100)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Product revenue summary",
+                    MetadataStrategy = MetadataStrategy.Fluent,
+                    ResultType = typeof(ProductRevenueSummaryRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<ProductFluent>(alias: "p")
+                        .InnerJoin<ProductFluent,InvoiceLineFluent>(alias: "l",on: (product,line) => product.Id == line.ProductId)
+                        .Select<ProductFluent>(product => new
+                        {
+                            ProductId = product.Id,
+                            product.Name
+                        })
+                        .SelectAggregate<InvoiceLineFluent>(QueryAggregateFunction.Sum,line => line.LineTotal,"Revenue")
+                        .SelectAggregate<InvoiceLineFluent>(QueryAggregateFunction.Sum,line => line.Quantity,"UnitsSold")
+                        .GroupBy<ProductFluent>(product => new
+                        {
+                            product.Id,
+                            product.Name
+                        })
+                        .HavingAggregate<InvoiceLineFluent>(QueryAggregateFunction.Sum,line => line.LineTotal,QueryComparisonOperator.GreaterThan,100)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Average invoice amount",
+                    MetadataStrategy = MetadataStrategy.Fluent,
+                    ResultType = typeof(AverageInvoiceAmountRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceFluent>(alias: "i")
+                        .SelectAggregate<InvoiceFluent>(QueryAggregateFunction.Average,invoice => invoice.Total,"AverageInvoiceAmount")
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Max invoice per customer",
+                    MetadataStrategy = MetadataStrategy.Fluent,
+                    ResultType = typeof(MaxInvoicePerCustomerRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceFluent>(alias: "i")
+                        .Select<InvoiceFluent>(invoice => new
+                        {
+                            invoice.CustomerId
+                        })
+                        .SelectAggregate<InvoiceFluent>(QueryAggregateFunction.Maximum,invoice => invoice.Total,"MaxInvoiceTotal")
+                        .GroupBy<InvoiceFluent>(invoice => invoice.CustomerId)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Min invoice per customer",
+                    MetadataStrategy = MetadataStrategy.Fluent,
+                    ResultType = typeof(MinInvoicePerCustomerRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceFluent>(alias: "i")
+                        .Select<InvoiceFluent>(invoice => new
+                        {
+                            invoice.CustomerId
+                        })
+                        .SelectAggregate<InvoiceFluent>(
+                            QueryAggregateFunction.Minimum,
+                            invoice => invoice.Total,
+                            "MinInvoiceTotal")
+                        .GroupBy<InvoiceFluent>(invoice => invoice.CustomerId)
+                        .OrderBy<InvoiceFluent>(invoice => invoice.CustomerId)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Active inactive customer union",
+                    MetadataStrategy = MetadataStrategy.Fluent,
+                    ResultType = typeof(CustomerEmailRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<CustomerFluent>(alias: "c")
+                        .Select<CustomerFluent>(customer => new
+                        {
+                            customer.Email
+                        })
+                        .Where<CustomerFluent>(customer => customer.IsActive)
+                        .Union<CustomerFluent>(set => set
+                            .From<CustomerFluent>(alias: "c2")
+                            .Select<CustomerFluent>(customer => new
+                            {
+                                customer.Email
+                            })
+                            .Where<CustomerFluent>(customer => !customer.IsActive))
+                        .Build()
+                }
             ];
         }
 
@@ -92,76 +132,116 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
             return
             [
                 new SalesQueryScenario
-            {
-                Name = "Customer invoice summary",
-                MetadataStrategy = MetadataStrategy.Attribute,
-                ResultType = typeof(CustomerInvoiceSummaryRow),
-                Build = queryBuilder => queryBuilder
-                    .From<CustomerAttribute>(alias: "c")
-                    .InnerJoin<CustomerAttribute,InvoiceAttribute>(alias: "i",on: (customer,invoice) => customer.Id == invoice.CustomerId)
-                    .Select<CustomerAttribute>(customer => new
-                    {
-                        CustomerId = customer.Id,
-                        customer.FullName
-                    })
-                    .SelectAggregate<InvoiceAttribute>(QueryAggregateFunction.Sum,invoice => invoice.Total,"TotalAmount")
-                    .SelectAggregate<InvoiceAttribute>(QueryAggregateFunction.Count,invoice => invoice.Id,"InvoiceCount")
-                    .GroupBy<CustomerAttribute>(customer => new
-                    {
-                        customer.Id,
-                        customer.FullName
-                    })
-                    .HavingAggregate<InvoiceAttribute>(QueryAggregateFunction.Sum,invoice => invoice.Total,QueryComparisonOperator.GreaterThan,100)
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Product revenue summary",
-                MetadataStrategy = MetadataStrategy.Attribute,
-                ResultType = typeof(ProductRevenueSummaryRow),
-                Build = queryBuilder => queryBuilder
-                    .From<ProductAttribute>(alias: "p")
-                    .InnerJoin<ProductAttribute,InvoiceLineAttribute>(alias: "l",on: (product,line) => product.Id == line.ProductId)
-                    .Select<ProductAttribute>(product => new
-                    {
-                        ProductId = product.Id,
-                        product.Name
-                    })
-                    .SelectAggregate<InvoiceLineAttribute>(QueryAggregateFunction.Sum,line => line.LineTotal,"Revenue")
-                    .SelectAggregate<InvoiceLineAttribute>(QueryAggregateFunction.Sum,line => line.Quantity,"UnitsSold")
-                    .GroupBy<ProductAttribute>(product => new
-                    {
-                        product.Id,
-                        product.Name
-                    })
-                    .HavingAggregate<InvoiceLineAttribute>(QueryAggregateFunction.Sum,line => line.LineTotal,QueryComparisonOperator.GreaterThan,100)
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Average invoice amount",
-                MetadataStrategy = MetadataStrategy.Attribute,
-                ResultType = typeof(AverageInvoiceAmountRow),
-                Build = queryBuilder => queryBuilder
-                    .From<InvoiceAttribute>(alias: "i")
-                    .SelectAggregate<InvoiceAttribute>(QueryAggregateFunction.Average,invoice => invoice.Total,"AverageInvoiceAmount")
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Max invoice per customer",
-                MetadataStrategy = MetadataStrategy.Attribute,
-                ResultType = typeof(MaxInvoicePerCustomerRow),
-                Build = queryBuilder => queryBuilder
-                    .From<InvoiceAttribute>(alias: "i")
-                    .Select<InvoiceAttribute>(invoice => new
-                    {
-                        invoice.CustomerId
-                    })
-                    .SelectAggregate<InvoiceAttribute>(QueryAggregateFunction.Minimum,invoice => invoice.Total,"MaxInvoiceTotal")
-                    .GroupBy<InvoiceAttribute>(invoice => invoice.CustomerId)
-                    .Build()
-            }
+                {
+                    Name = "Customer invoice summary",
+                    MetadataStrategy = MetadataStrategy.Attribute,
+                    ResultType = typeof(CustomerInvoiceSummaryRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<CustomerAttribute>(alias: "c")
+                        .InnerJoin<CustomerAttribute,InvoiceAttribute>(alias: "i",on: (customer,invoice) => customer.Id == invoice.CustomerId)
+                        .Select<CustomerAttribute>(customer => new
+                        {
+                            CustomerId = customer.Id,
+                            customer.FullName
+                        })
+                        .SelectAggregate<InvoiceAttribute>(QueryAggregateFunction.Sum,invoice => invoice.Total,"TotalAmount")
+                        .SelectAggregate<InvoiceAttribute>(QueryAggregateFunction.Count,invoice => invoice.Id,"InvoiceCount")
+                        .GroupBy<CustomerAttribute>(customer => new
+                        {
+                            customer.Id,
+                            customer.FullName
+                        })
+                        .HavingAggregate<InvoiceAttribute>(QueryAggregateFunction.Sum,invoice => invoice.Total,QueryComparisonOperator.GreaterThan,100)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Product revenue summary",
+                    MetadataStrategy = MetadataStrategy.Attribute,
+                    ResultType = typeof(ProductRevenueSummaryRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<ProductAttribute>(alias: "p")
+                        .InnerJoin<ProductAttribute,InvoiceLineAttribute>(alias: "l",on: (product,line) => product.Id == line.ProductId)
+                        .Select<ProductAttribute>(product => new
+                        {
+                            ProductId = product.Id,
+                            product.Name
+                        })
+                        .SelectAggregate<InvoiceLineAttribute>(QueryAggregateFunction.Sum,line => line.LineTotal,"Revenue")
+                        .SelectAggregate<InvoiceLineAttribute>(QueryAggregateFunction.Sum,line => line.Quantity,"UnitsSold")
+                        .GroupBy<ProductAttribute>(product => new
+                        {
+                            product.Id,
+                            product.Name
+                        })
+                        .HavingAggregate<InvoiceLineAttribute>(QueryAggregateFunction.Sum,line => line.LineTotal,QueryComparisonOperator.GreaterThan,100)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Average invoice amount",
+                    MetadataStrategy = MetadataStrategy.Attribute,
+                    ResultType = typeof(AverageInvoiceAmountRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceAttribute>(alias: "i")
+                        .SelectAggregate<InvoiceAttribute>(QueryAggregateFunction.Average,invoice => invoice.Total,"AverageInvoiceAmount")
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Max invoice per customer",
+                    MetadataStrategy = MetadataStrategy.Attribute,
+                    ResultType = typeof(MaxInvoicePerCustomerRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceAttribute>(alias: "i")
+                        .Select<InvoiceAttribute>(invoice => new
+                        {
+                            invoice.CustomerId
+                        })
+                        .SelectAggregate<InvoiceAttribute>(QueryAggregateFunction.Minimum,invoice => invoice.Total,"MaxInvoiceTotal")
+                        .GroupBy<InvoiceAttribute>(invoice => invoice.CustomerId)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Min invoice per customer",
+                    MetadataStrategy = MetadataStrategy.Attribute,
+                    ResultType = typeof(MinInvoicePerCustomerRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceAttribute>(alias: "i")
+                        .Select<InvoiceAttribute>(invoice => new
+                        {
+                            invoice.CustomerId
+                        })
+                        .SelectAggregate<InvoiceAttribute>(
+                            QueryAggregateFunction.Minimum,
+                            invoice => invoice.Total,
+                            "MinInvoiceTotal")
+                        .GroupBy<InvoiceAttribute>(invoice => invoice.CustomerId)
+                        .OrderBy<InvoiceAttribute>(invoice => invoice.CustomerId)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Active inactive customer union",
+                    MetadataStrategy = MetadataStrategy.Attribute,
+                    ResultType = typeof(CustomerEmailRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<CustomerAttribute>(alias: "c")
+                        .Select<CustomerAttribute>(customer => new
+                        {
+                            customer.Email
+                        })
+                        .Where<CustomerAttribute>(customer => customer.IsActive)
+                        .Union<CustomerAttribute>(set => set
+                            .From<CustomerAttribute>(alias: "c2")
+                            .Select<CustomerAttribute>(customer => new
+                            {
+                                customer.Email
+                            })
+                            .Where<CustomerAttribute>(customer => !customer.IsActive))
+                        .Build()
+                }
             ];
         }
 
@@ -170,76 +250,116 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
             return
             [
                 new SalesQueryScenario
-            {
-                Name = "Customer invoice summary",
-                MetadataStrategy = MetadataStrategy.EntityFramework,
-                ResultType = typeof(CustomerInvoiceSummaryRow),
-                Build = queryBuilder => queryBuilder
-                    .From<CustomerEf>(alias: "c")
-                    .InnerJoin<CustomerEf,InvoiceEf>(alias: "i",on: (customer,invoice) => customer.Id == invoice.CustomerId)
-                    .Select<CustomerEf>(customer => new
-                    {
-                        CustomerId = customer.Id,
-                        customer.FullName
-                    })
-                    .SelectAggregate<InvoiceEf>(QueryAggregateFunction.Sum,invoice => invoice.Total,"TotalAmount")
-                    .SelectAggregate<InvoiceEf>(QueryAggregateFunction.Count,invoice => invoice.Id,"InvoiceCount")
-                    .GroupBy<CustomerEf>(customer => new
-                    {
-                        customer.Id,
-                        customer.FullName
-                    })
-                    .HavingAggregate<InvoiceEf>(QueryAggregateFunction.Sum,invoice => invoice.Total,QueryComparisonOperator.GreaterThan,100)
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Product revenue summary",
-                MetadataStrategy = MetadataStrategy.EntityFramework,
-                ResultType = typeof(ProductRevenueSummaryRow),
-                Build = queryBuilder => queryBuilder
-                    .From<ProductEf>(alias: "p")
-                    .InnerJoin<ProductEf,InvoiceLineEf>(alias: "l",on: (product,line) => product.Id == line.ProductId)
-                    .Select<ProductEf>(product => new
-                    {
-                        ProductId = product.Id,
-                        product.Name
-                    })
-                    .SelectAggregate<InvoiceLineEf>(QueryAggregateFunction.Sum,line => line.LineTotal,"Revenue")
-                    .SelectAggregate<InvoiceLineEf>(QueryAggregateFunction.Sum,line => line.Quantity,"UnitsSold")
-                    .GroupBy<ProductEf>(product => new
-                    {
-                        product.Id,
-                        product.Name
-                    })
-                    .HavingAggregate<InvoiceLineEf>(QueryAggregateFunction.Sum,line => line.LineTotal,QueryComparisonOperator.GreaterThan,100)
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Average invoice amount",
-                MetadataStrategy = MetadataStrategy.EntityFramework,
-                ResultType = typeof(AverageInvoiceAmountRow),
-                Build = queryBuilder => queryBuilder
-                    .From<InvoiceEf>(alias: "i")
-                    .SelectAggregate<InvoiceEf>(QueryAggregateFunction.Average,invoice => invoice.Total,"AverageInvoiceAmount")
-                    .Build()
-            },
-            new SalesQueryScenario
-            {
-                Name = "Max invoice per customer",
-                MetadataStrategy = MetadataStrategy.EntityFramework,
-                ResultType = typeof(MaxInvoicePerCustomerRow),
-                Build = queryBuilder => queryBuilder
-                    .From<InvoiceEf>(alias: "i")
-                    .Select<InvoiceEf>(invoice => new
-                    {
-                        invoice.CustomerId
-                    })
-                    .SelectAggregate<InvoiceEf>(QueryAggregateFunction.Maximum,invoice => invoice.Total,"MaxInvoiceTotal")
-                    .GroupBy<InvoiceEf>(invoice => invoice.CustomerId)
-                    .Build()
-            }
+                {
+                    Name = "Customer invoice summary",
+                    MetadataStrategy = MetadataStrategy.EntityFramework,
+                    ResultType = typeof(CustomerInvoiceSummaryRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<CustomerEf>(alias: "c")
+                        .InnerJoin<CustomerEf,InvoiceEf>(alias: "i",on: (customer,invoice) => customer.Id == invoice.CustomerId)
+                        .Select<CustomerEf>(customer => new
+                        {
+                            CustomerId = customer.Id,
+                            customer.FullName
+                        })
+                        .SelectAggregate<InvoiceEf>(QueryAggregateFunction.Sum,invoice => invoice.Total,"TotalAmount")
+                        .SelectAggregate<InvoiceEf>(QueryAggregateFunction.Count,invoice => invoice.Id,"InvoiceCount")
+                        .GroupBy<CustomerEf>(customer => new
+                        {
+                            customer.Id,
+                            customer.FullName
+                        })
+                        .HavingAggregate<InvoiceEf>(QueryAggregateFunction.Sum,invoice => invoice.Total,QueryComparisonOperator.GreaterThan,100)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Product revenue summary",
+                    MetadataStrategy = MetadataStrategy.EntityFramework,
+                    ResultType = typeof(ProductRevenueSummaryRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<ProductEf>(alias: "p")
+                        .InnerJoin<ProductEf,InvoiceLineEf>(alias: "l",on: (product,line) => product.Id == line.ProductId)
+                        .Select<ProductEf>(product => new
+                        {
+                            ProductId = product.Id,
+                            product.Name
+                        })
+                        .SelectAggregate<InvoiceLineEf>(QueryAggregateFunction.Sum,line => line.LineTotal,"Revenue")
+                        .SelectAggregate<InvoiceLineEf>(QueryAggregateFunction.Sum,line => line.Quantity,"UnitsSold")
+                        .GroupBy<ProductEf>(product => new
+                        {
+                            product.Id,
+                            product.Name
+                        })
+                        .HavingAggregate<InvoiceLineEf>(QueryAggregateFunction.Sum,line => line.LineTotal,QueryComparisonOperator.GreaterThan,100)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Average invoice amount",
+                    MetadataStrategy = MetadataStrategy.EntityFramework,
+                    ResultType = typeof(AverageInvoiceAmountRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceEf>(alias: "i")
+                        .SelectAggregate<InvoiceEf>(QueryAggregateFunction.Average,invoice => invoice.Total,"AverageInvoiceAmount")
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Max invoice per customer",
+                    MetadataStrategy = MetadataStrategy.EntityFramework,
+                    ResultType = typeof(MaxInvoicePerCustomerRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceEf>(alias: "i")
+                        .Select<InvoiceEf>(invoice => new
+                        {
+                            invoice.CustomerId
+                        })
+                        .SelectAggregate<InvoiceEf>(QueryAggregateFunction.Maximum,invoice => invoice.Total,"MaxInvoiceTotal")
+                        .GroupBy<InvoiceEf>(invoice => invoice.CustomerId)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Min invoice per customer",
+                    MetadataStrategy = MetadataStrategy.EntityFramework,
+                    ResultType = typeof(MinInvoicePerCustomerRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<InvoiceEf>(alias: "i")
+                        .Select<InvoiceEf>(invoice => new
+                        {
+                            invoice.CustomerId
+                        })
+                        .SelectAggregate<InvoiceEf>(
+                            QueryAggregateFunction.Minimum,
+                            invoice => invoice.Total,
+                            "MinInvoiceTotal")
+                        .GroupBy<InvoiceEf>(invoice => invoice.CustomerId)
+                        .OrderBy<InvoiceEf>(invoice => invoice.CustomerId)
+                        .Build()
+                },
+                new SalesQueryScenario
+                {
+                    Name = "Active inactive customer union",
+                    MetadataStrategy = MetadataStrategy.EntityFramework,
+                    ResultType = typeof(CustomerEmailRow),
+                    Build = queryBuilder => queryBuilder
+                        .From<CustomerEf>(alias: "c")
+                        .Select<CustomerEf>(customer => new
+                        {
+                            customer.Email
+                        })
+                        .Where<CustomerEf>(customer => customer.IsActive)
+                        .Union<CustomerEf>(set => set
+                            .From<CustomerEf>(alias: "c2")
+                            .Select<CustomerEf>(customer => new
+                            {
+                                customer.Email
+                            })
+                            .Where<CustomerEf>(customer => !customer.IsActive))
+                        .Build()
+                }
             ];
         }
     }

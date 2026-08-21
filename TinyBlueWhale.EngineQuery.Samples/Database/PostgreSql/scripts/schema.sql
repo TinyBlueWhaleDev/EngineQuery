@@ -1,7 +1,15 @@
-﻿DROP TABLE IF EXISTS invoice_lines;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS invoice_lines;
 DROP TABLE IF EXISTS invoices;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS customers;
+
+CREATE TABLE categories
+(
+    category_id SERIAL PRIMARY KEY,
+    parent_category_id INTEGER NULL REFERENCES categories(category_id),
+    name VARCHAR(200) NOT NULL
+);
 
 CREATE TABLE customers
 (

@@ -1,5 +1,12 @@
 USE EngineQuerySample;
 
+INSERT INTO categories (parent_category_id, name)
+VALUES
+(NULL, 'Services'),
+(1, 'Consulting'),
+(2, 'Architecture'),
+(1, 'Development');
+
 INSERT INTO customers (email, full_name, is_active, created_at)
 VALUES
 ('admin@test.com', 'Admin User', TRUE, '2024-01-01 10:00:00'),
