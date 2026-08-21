@@ -394,6 +394,81 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         TBuilder Where<TEntity>(Expression<Func<TEntity, bool>> predicate, QueryLogicalOperator logicalOperator);
 
         /// <summary>
+        /// Adds an IN collection condition for the root entity.
+        /// </summary>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the IN condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        TBuilder WhereIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values);
+
+        /// <summary>
+        /// Adds an IN collection condition for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected property.
+        /// </typeparam>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the IN condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        TBuilder WhereIn<TEntity, TProperty>(Expression<Func<TEntity, TProperty>> selector, IEnumerable<TProperty> values);
+
+        /// <summary>
+        /// Adds a NOT IN collection condition for the root entity.
+        /// </summary>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the NOT IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the NOT IN condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        TBuilder WhereNotIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values);
+
+        /// <summary>
+        /// Adds a NOT IN collection condition for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected property.
+        /// </typeparam>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the NOT IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the NOT IN condition.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        TBuilder WhereNotIn<TEntity, TProperty>(Expression<Func<TEntity, TProperty>> selector, IEnumerable<TProperty> values);
+
+
+        /// <summary>
         /// Adds a filtering condition only when the specified condition is true.
         /// </summary>
         /// <param name="condition">

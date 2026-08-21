@@ -118,6 +118,50 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         /// <summary>
+        /// Adds an IN collection condition for the target entity.
+        /// </summary>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the IN condition.
+        /// </param>
+        /// <returns>
+        /// Current DELETE command builder instance.
+        /// </returns>
+        public IDeleteCommandBuilder<T> WhereIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values)
+        {
+            _whereClauseBuilder.AddCollection(selector, values, isNegated: false);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a NOT IN collection condition for the target entity.
+        /// </summary>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the NOT IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the NOT IN condition.
+        /// </param>
+        /// <returns>
+        /// Current DELETE command builder instance.
+        /// </returns>
+        public IDeleteCommandBuilder<T> WhereNotIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values)
+        {
+            _whereClauseBuilder.AddCollection(selector, values, isNegated: true);
+
+            return this;
+        }
+
+        /// <summary>
         /// Adds a filtering expression only when the specified condition is true.
         /// </summary>
         /// <param name="condition">
@@ -172,8 +216,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </exception>
         public GeneratedSqlQuery Build()
         {
-            if (_queryDefinition.WhereDefinitions.Count == 0)
-                throw new InvalidOperationException("At least one WHERE predicate must be configured before building a DELETE command.");
+            if (_queryDefinition.WhereDefinitions.Count == 0 && _queryDefinition.WhereCollectionDefinitions.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "At least one WHERE predicate must be configured before building a DELETE command.");
+            }
 
             return _queryCompiler.Compile(_queryDefinition);
         }

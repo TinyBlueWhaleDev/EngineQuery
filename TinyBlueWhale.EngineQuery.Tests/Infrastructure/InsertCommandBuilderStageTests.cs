@@ -15,7 +15,6 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     public sealed class InsertCommandBuilderStageTests
     {
         #region Tests
-
         [Test]
         public void Initial_Stage_Should_Expose_Columns_Set_And_From()
         {
@@ -30,6 +29,8 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 Assert.That(methodNames, Does.Contain("Set"));
                 Assert.That(methodNames, Does.Contain("From"));
                 Assert.That(methodNames, Does.Not.Contain("Build"));
+                Assert.That(methodNames, Does.Not.Contain("WhereIn"));
+                Assert.That(methodNames, Does.Not.Contain("WhereNotIn"));
             });
         }
 
@@ -49,9 +50,10 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                 Assert.That(methodNames, Does.Not.Contain("Columns"));
                 Assert.That(methodNames, Does.Not.Contain("From"));
                 Assert.That(methodNames, Does.Not.Contain("Select"));
+                Assert.That(methodNames, Does.Not.Contain("WhereIn"));
+                Assert.That(methodNames, Does.Not.Contain("WhereNotIn"));
             });
         }
-
 
         [Test]
         public void Select_Stage_Should_Expose_Query_Composition_And_Build()
@@ -65,10 +67,13 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
             {
                 Assert.That(methodNames, Does.Contain("Select"));
                 Assert.That(methodNames, Does.Contain("Where"));
+                Assert.That(methodNames, Does.Contain("WhereIn"));
+                Assert.That(methodNames, Does.Contain("WhereNotIn"));
                 Assert.That(methodNames, Does.Contain("Build"));
                 Assert.That(methodNames, Does.Not.Contain("Columns"));
                 Assert.That(methodNames, Does.Not.Contain("Set"));
                 Assert.That(methodNames, Does.Not.Contain("From"));
+                Assert.That(methodNames, Does.Not.Contain("ReturnIdentity"));
             });
         }
 

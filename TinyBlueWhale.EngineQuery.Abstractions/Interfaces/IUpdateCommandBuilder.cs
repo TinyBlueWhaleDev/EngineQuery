@@ -60,6 +60,40 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         IUpdateCommandBuilder<T> Where(Expression<Func<T, bool>> predicate, QueryLogicalOperator logicalOperator);
 
         /// <summary>
+        /// Adds an IN collection condition for the target entity.
+        /// </summary>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the IN condition.
+        /// </param>
+        /// <returns>
+        /// Current UPDATE command builder instance.
+        /// </returns>
+        IUpdateCommandBuilder<T> WhereIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values);
+
+        /// <summary>
+        /// Adds a NOT IN collection condition for the target entity.
+        /// </summary>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the NOT IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the NOT IN condition.
+        /// </param>
+        /// <returns>
+        /// Current UPDATE command builder instance.
+        /// </returns>
+        IUpdateCommandBuilder<T> WhereNotIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values);
+
+        /// <summary>
         /// Adds a filtering expression only when the specified condition is true.
         /// </summary>
         /// <param name="condition">

@@ -46,7 +46,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                    queryDefinition.WhereScalarFunctionDefinitions.Count > 0 ||
                    queryDefinition.WhereComputedExpressionDefinitions.Count > 0 ||
                    queryDefinition.ExistsDefinitions.Count > 0 ||
-                   queryDefinition.InSubqueryDefinitions.Count > 0;
+                   queryDefinition.InSubqueryDefinitions.Count > 0 ||
+                   queryDefinition.WhereCollectionDefinitions.Count > 0;
         }
 
         /// <summary>
@@ -80,11 +81,15 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             var inConditions =queryDefinition.InSubqueryDefinitions
                 .Select(inDefinition => BuildInSubqueryCondition(inDefinition, context));
 
+            var collectionConditions = queryDefinition.WhereCollectionDefinitions
+                .Select(collectionDefinition => BuildCollectionCondition(collectionDefinition, context));
+
             var conditions = predicateConditions
                 .Concat(functionConditions)
                 .Concat(computedConditions)
                 .Concat(existsConditions)
-                .Concat(inConditions);
+                .Concat(inConditions)
+                .Concat(collectionConditions);
 
             return "WHERE " + string.Join(" AND ", conditions);
         }
@@ -269,6 +274,37 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             var commandText = _subqueryCompiler.CompileAndReindex(inDefinition.Subquery, context);
 
             return $"{outerColumnReference} IN ({commandText})";
+        }
+
+        /// <summary>
+        /// Builds an IN or NOT IN collection WHERE condition.
+        /// </summary>
+        /// <param name="collectionDefinition">
+        /// Collection filter definition.
+        /// </param>
+        /// <param name="context">
+        /// Current SQL compilation context.
+        /// </param>
+        /// <returns>
+        /// Compiled collection condition.
+        /// </returns>
+        private string BuildCollectionCondition(QueryWhereCollectionDefinition collectionDefinition, QueryCompilationContext context)
+        {
+            var propertyName = ExpressionColumnSelector
+                .ExtractSinglePropertyName(collectionDefinition.Selector);
+
+            var columnReference = _columnReferenceBuilder.Build(
+                collectionDefinition.Source,
+                propertyName);
+
+            var parameterNames = collectionDefinition.Values
+                .Select(context.AddParameter);
+
+            var collectionOperator = collectionDefinition.IsNegated
+                ? "NOT IN"
+                : "IN";
+
+            return $"{columnReference} {collectionOperator} ({string.Join(", ", parameterNames)})";
         }
 
         /// <summary>

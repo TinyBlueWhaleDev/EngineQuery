@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -248,6 +248,107 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                     .Build());
 
             Assert.That(exception!.Message, Is.EqualTo("Recursive common table expressions are not supported by the current provider."));
+        }
+
+        /// <summary>
+        /// Validates that IN and NOT IN collections cannot be null.
+        /// </summary>
+        /// <param name="isNegated">
+        /// Determines whether the tested condition uses NOT IN.
+        /// </param>
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WhereCollection_Should_Throw_When_Values_Are_Null(bool isNegated)
+        {
+            // Arrange
+            var commandBuilder = CreateQueryBuilder()
+                .From<User>("Users");
+
+            IEnumerable<int> values = null!;
+
+            // Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+            {
+                if (isNegated)
+                    commandBuilder.WhereNotIn(user => user.Id, values);
+                else
+                    commandBuilder.WhereIn(user => user.Id, values);
+            });
+
+            // Assert
+            Assert.That(exception!.ParamName, Is.EqualTo("values"));
+        }
+
+        /// <summary>
+        /// Validates that IN and NOT IN collections cannot be empty.
+        /// </summary>
+        /// <param name="isNegated">
+        /// Determines whether the tested condition uses NOT IN.
+        /// </param>
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WhereCollection_Should_Throw_When_Values_Are_Empty(bool isNegated)
+        {
+            // Arrange
+            var commandBuilder = CreateQueryBuilder()
+                .From<User>("Users");
+
+            var values = Array.Empty<int>();
+
+            // Act
+            var exception = Assert.Throws<ArgumentException>(() =>
+            {
+                if (isNegated)
+                    commandBuilder.WhereNotIn(user => user.Id, values);
+                else
+                    commandBuilder.WhereIn(user => user.Id, values);
+            });
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(exception!.ParamName, Is.EqualTo("values"));
+                Assert.That(
+                    exception.Message,
+                    Does.StartWith("IN and NOT IN collections must contain at least one value."));
+            });
+        }
+
+        /// <summary>
+        /// Validates that IN and NOT IN collections cannot contain null values.
+        /// </summary>
+        /// <param name="isNegated">
+        /// Determines whether the tested condition uses NOT IN.
+        /// </param>
+        [TestCase(false)]
+        [TestCase(true)]
+        public void WhereCollection_Should_Throw_When_Values_Contain_Null(bool isNegated)
+        {
+            // Arrange
+            var commandBuilder = CreateQueryBuilder()
+                .From<User>("Users");
+
+            IEnumerable<string> values =
+            [
+                "valid@test.com",
+                null!
+            ];
+
+            // Act
+            var exception = Assert.Throws<ArgumentException>(() =>
+            {
+                if (isNegated)
+                    commandBuilder.WhereNotIn(user => user.Email, values);
+                else
+                    commandBuilder.WhereIn(user => user.Email, values);
+            });
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(exception!.ParamName, Is.EqualTo("values"));
+                Assert.That(exception.Message, Does.StartWith("IN and NOT IN collections cannot contain null values."));
+            });
         }
 
         private sealed class UnmappedEntity

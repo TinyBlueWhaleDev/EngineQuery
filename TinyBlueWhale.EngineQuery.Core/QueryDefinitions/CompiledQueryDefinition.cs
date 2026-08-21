@@ -88,6 +88,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryInSubqueryDefinition> InSubqueryDefinitions { get; } = [];
 
         /// <summary>
+        /// Gets the IN and NOT IN collection conditions associated with the query.
+        /// </summary>
+        public List<QueryWhereCollectionDefinition> WhereCollectionDefinitions { get; } = [];
+
+        /// <summary>
         /// Gets the query sources inherited from an outer query scope.
         /// </summary>
         public Dictionary<Type, QuerySourceDefinition> OuterSourceDefinitions { get; } = [];

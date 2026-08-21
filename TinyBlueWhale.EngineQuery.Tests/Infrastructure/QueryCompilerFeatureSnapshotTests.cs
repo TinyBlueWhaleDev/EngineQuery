@@ -17,6 +17,210 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     {
 
         /// <summary>
+        /// Validates INSERT SELECT generation using an IN collection condition
+        /// over the SELECT source entity.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Insert_Select_With_WhereIn_Collection()
+        {
+            // Arrange
+            var userIds = new[] { 10, 20, 30 };
+
+            // Act
+            var query = CreateQueryBuilder()
+                .InsertInto<JoinOrder>()
+                .Columns(order => new
+                {
+                    order.UserId
+                })
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(user => new
+                {
+                    UserId = user.Id
+                })
+                .WhereIn<JoinUser, int>(
+                    user => user.Id,
+                    userIds)
+                .Build();
+
+            // Assert
+            AssertSnapshot(
+                "insert_select_where_in_collection",
+                query);
+        }
+
+        /// <summary>
+        /// Validates DELETE command generation using a NOT IN collection condition.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Delete_With_WhereNotIn_Collection()
+        {
+            // Arrange
+            var excludedUserIds = new[] { 10, 20, 30 };
+
+            // Act
+            var query = CreateQueryBuilder()
+                .DeleteFrom<User>()
+                .WhereNotIn(user => user.Id, excludedUserIds)
+                .Build();
+
+            // Assert
+            AssertSnapshot(
+                "delete_where_not_in_collection",
+                query);
+        }
+
+        /// <summary>
+        /// Validates UPDATE command generation using an IN collection condition.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_Update_With_WhereIn_Collection()
+        {
+            // Arrange
+            var userIds = new[] { 10, 20, 30 };
+
+            // Act
+            var query = CreateQueryBuilder()
+                .Update<User>()
+                .Set(user => user.IsActive, false)
+                .WhereIn(user => user.Id, userIds)
+                .Build();
+
+            // Assert
+            AssertSnapshot(
+                "update_where_in_collection",
+                query);
+        }
+
+        /// <summary>
+        /// Validates IN and NOT IN collection generation for an entity
+        /// available through a JOIN.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Generate_WhereIn_And_WhereNotIn_Collections_For_Joined_Entity()
+        {
+            // Arrange
+            var orderIds = new[] { 100, 200 };
+            var excludedUserIds = new[] { 30, 40 };
+
+            // Act
+            var query = CreateQueryBuilder()
+                .From<JoinUser>(alias: "u")
+                .InnerJoin<JoinUser, JoinOrder>(
+                    alias: "o",
+                    on: (user, order) => user.Id == order.UserId)
+                .WhereIn<JoinOrder, int>(
+                    order => order.Id,
+                    orderIds)
+                .WhereNotIn<JoinOrder, int>(
+                    order => order.UserId,
+                    excludedUserIds)
+                .Build();
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    query.CommandText,
+                    Does.Contain("order_id"));
+
+                Assert.That(
+                    query.CommandText,
+                    Does.Contain("user_id"));
+
+                Assert.That(
+                    query.CommandText,
+                    Does.Contain(" IN (@p0, @p1)"));
+
+                Assert.That(
+                    query.CommandText,
+                    Does.Contain(" NOT IN (@p2, @p3)"));
+
+                Assert.That(
+                    query.Parameters,
+                    Has.Count.EqualTo(4));
+
+                Assert.That(
+                    query.Parameters[0].Name,
+                    Is.EqualTo("@p0"));
+
+                Assert.That(
+                    query.Parameters[0].Value,
+                    Is.EqualTo(100));
+
+                Assert.That(
+                    query.Parameters[1].Name,
+                    Is.EqualTo("@p1"));
+
+                Assert.That(
+                    query.Parameters[1].Value,
+                    Is.EqualTo(200));
+
+                Assert.That(
+                    query.Parameters[2].Name,
+                    Is.EqualTo("@p2"));
+
+                Assert.That(
+                    query.Parameters[2].Value,
+                    Is.EqualTo(30));
+
+                Assert.That(
+                    query.Parameters[3].Name,
+                    Is.EqualTo("@p3"));
+
+                Assert.That(
+                    query.Parameters[3].Value,
+                    Is.EqualTo(40));
+            });
+        }
+
+        /// <summary>
+        /// Validates SQL generation for an IN collection condition.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_WhereIn_Collection()
+        {
+            // Arrange
+            var userIds = new[] { 10, 20, 30 };
+
+            // Act
+            var query = CreateQueryBuilder()
+                .From<User>("Users")
+                .WhereIn(user => user.Id, userIds)
+                .Build();
+
+            // Assert
+            AssertSnapshot(
+                "where_in_collection",
+                query);
+        }
+
+        /// <summary>
+        /// Validates SQL generation for a NOT IN collection condition.
+        /// </summary>
+        [Test]
+        public void ToSql_Should_Match_Snapshot_For_WhereNotIn_Collection()
+        {
+            // Arrange
+            var excludedEmails = new[]
+            {
+                "blocked@test.com",
+                "deleted@test.com"
+            };
+
+            // Act
+            var query = CreateQueryBuilder()
+                .From<User>("Users")
+                .WhereNotIn(user => user.Email, excludedEmails)
+                .Build();
+
+            // Assert
+            AssertSnapshot(
+                "where_not_in_collection",
+                query);
+        }
+
+        /// <summary>
         /// Validates that a direct INSERT can return its generated identity value
         /// using the syntax required by the current provider.
         /// </summary>

@@ -385,6 +385,46 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         /// <summary>
+        /// Adds an IN collection condition for the root entity.
+        /// </summary>
+        public TBuilder WhereIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values)
+        {
+            Components.WhereClauseBuilder.AddCollection(selector, values, isNegated: false);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds an IN collection condition for an entity available in the current query scope.
+        /// </summary>
+        public TBuilder WhereIn<TEntity, TProperty>(Expression<Func<TEntity, TProperty>> selector, IEnumerable<TProperty> values)
+        {
+            Components.WhereClauseBuilder.AddCollection(selector, values, isNegated: false);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds a NOT IN collection condition for the root entity.
+        /// </summary>
+        public TBuilder WhereNotIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values)
+        {
+            Components.WhereClauseBuilder.AddCollection(selector, values, isNegated: true);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds a NOT IN collection condition for an entity available in the current query scope.
+        /// </summary>
+        public TBuilder WhereNotIn<TEntity, TProperty>(Expression<Func<TEntity, TProperty>> selector, IEnumerable<TProperty> values)
+        {
+            Components.WhereClauseBuilder.AddCollection(selector, values, isNegated: true);
+
+            return Current;
+        }
+
+        /// <summary>
         /// Adds a filtering expression only when the specified condition is true.
         /// </summary>
         public TBuilder WhereIf(bool condition, Expression<Func<T, bool>> predicate)

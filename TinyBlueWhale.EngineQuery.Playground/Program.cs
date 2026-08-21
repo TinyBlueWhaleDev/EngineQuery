@@ -41,6 +41,7 @@ AggregateComputedExpressionQueryValidator.Run();
 DynamicOrderingPaginationQueryValidator.Run();
 WhereStringContainsQueryValidator.Run();
 WhereLogicalOperatorQueryValidator.Run();
+WhereCollectionQueryValidator.Run();
 InsertCommandQueryValidator.Run();
 UpdateCommandQueryValidator.Run();
 DeleteCommandQueryValidator.Run();
