@@ -1,6 +1,14 @@
 USE EngineQuerySample;
 GO
 
+INSERT INTO dbo.categories (parent_category_id, name)
+VALUES
+(NULL, 'Services'),
+(1, 'Consulting'),
+(2, 'Architecture'),
+(1, 'Development');
+GO
+
 INSERT INTO dbo.customers (email, full_name, is_active, created_at)
 VALUES
 ('admin@test.com', 'Admin User', 1, '2024-01-01T10:00:00'),

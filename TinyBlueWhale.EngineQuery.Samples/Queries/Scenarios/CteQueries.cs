@@ -1,4 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Samples.Domain.AttributeMapping;
 using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping;
 using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadModels;
@@ -14,7 +14,8 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
             return
             [
                 DerivedTableCustomerTotalsFluent(),
-            CteCustomerTotalsFluent()
+                CteCustomerTotalsFluent(),
+                RecursiveCategoryHierarchyFluent()
             ];
         }
 
@@ -23,7 +24,8 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
             return
             [
                 DerivedTableCustomerTotalsAttribute(),
-            CteCustomerTotalsAttribute()
+                CteCustomerTotalsAttribute(),
+                RecursiveCategoryHierarchyAttribute()
             ];
         }
 
@@ -32,7 +34,8 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
             return
             [
                 DerivedTableCustomerTotalsEntityFramework(),
-            CteCustomerTotalsEntityFramework()
+                CteCustomerTotalsEntityFramework(),
+                RecursiveCategoryHierarchyEntityFramework()
             ];
         }
 
@@ -221,6 +224,132 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
                         summary.TotalAmount
                     })
                     .WhereComputed<CustomerInvoiceTotalRow>(summary => summary.TotalAmount > 500)
+                    .Build()
+            };
+        }
+
+        private static SalesQueryScenario RecursiveCategoryHierarchyFluent()
+        {
+            return new SalesQueryScenario
+            {
+                Name = "Recursive category hierarchy",
+                MetadataStrategy = MetadataStrategy.Fluent,
+                ResultType = typeof(CategoryTreeRow),
+                Build = queryBuilder => queryBuilder
+                    .WithRecursive<CategoryTreeRow, CategoryFluent, CategoryFluent>(
+                        name: "category_tree",
+                        baseQueryBuilder: baseQuery => baseQuery
+                            .From<CategoryFluent>(alias: "c")
+                            .Select<CategoryFluent>(category => new
+                            {
+                                category.Id,
+                                category.ParentId,
+                                category.Name
+                            })
+                            .Where<CategoryFluent>(category => category.ParentId == null),
+                        recursiveQueryBuilder: recursiveQuery => recursiveQuery
+                            .From<CategoryFluent>(alias: "c")
+                            .InnerJoin<CategoryFluent, CategoryTreeRow>(
+                                alias: "ct",
+                                on: (category, parent) => category.ParentId == parent.Id)
+                            .Select<CategoryFluent>(category => new
+                            {
+                                category.Id,
+                                category.ParentId,
+                                category.Name
+                            }))
+                    .FromCte<CategoryTreeRow>("category_tree")
+                    .Select<CategoryTreeRow>(category => new
+                    {
+                        category.Id,
+                        category.ParentId,
+                        category.Name
+                    })
+                    .OrderBy<CategoryTreeRow>(category => category.Id)
+                    .Build()
+            };
+        }
+
+        private static SalesQueryScenario RecursiveCategoryHierarchyAttribute()
+        {
+            return new SalesQueryScenario
+            {
+                Name = "Recursive category hierarchy",
+                MetadataStrategy = MetadataStrategy.Attribute,
+                ResultType = typeof(CategoryTreeRow),
+                Build = queryBuilder => queryBuilder
+                    .WithRecursive<CategoryTreeRow, CategoryAttribute, CategoryAttribute>(
+                        name: "category_tree",
+                        baseQueryBuilder: baseQuery => baseQuery
+                            .From<CategoryAttribute>(alias: "c")
+                            .Select<CategoryAttribute>(category => new
+                            {
+                                category.Id,
+                                category.ParentId,
+                                category.Name
+                            })
+                            .Where<CategoryAttribute>(category => category.ParentId == null),
+                        recursiveQueryBuilder: recursiveQuery => recursiveQuery
+                            .From<CategoryAttribute>(alias: "c")
+                            .InnerJoin<CategoryAttribute, CategoryTreeRow>(
+                                alias: "ct",
+                                on: (category, parent) => category.ParentId == parent.Id)
+                            .Select<CategoryAttribute>(category => new
+                            {
+                                category.Id,
+                                category.ParentId,
+                                category.Name
+                            }))
+                    .FromCte<CategoryTreeRow>("category_tree")
+                    .Select<CategoryTreeRow>(category => new
+                    {
+                        category.Id,
+                        category.ParentId,
+                        category.Name
+                    })
+                    .OrderBy<CategoryTreeRow>(category => category.Id)
+                    .Build()
+            };
+        }
+
+        private static SalesQueryScenario RecursiveCategoryHierarchyEntityFramework()
+        {
+            return new SalesQueryScenario
+            {
+                Name = "Recursive category hierarchy",
+                MetadataStrategy = MetadataStrategy.EntityFramework,
+                ResultType = typeof(CategoryTreeRow),
+                Build = queryBuilder => queryBuilder
+                    .WithRecursive<CategoryTreeRow, CategoryEf, CategoryEf>(
+                        name: "category_tree",
+                        baseQueryBuilder: baseQuery => baseQuery
+                            .From<CategoryEf>(alias: "c")
+                            .Select<CategoryEf>(category => new
+                            {
+                                category.Id,
+                                category.ParentId,
+                                category.Name
+                            })
+                            .Where<CategoryEf>(category => category.ParentId == null),
+                        recursiveQueryBuilder: recursiveQuery => recursiveQuery
+                            .From<CategoryEf>(alias: "c")
+                            .InnerJoin<CategoryEf, CategoryTreeRow>(
+                                alias: "ct",
+                                on: (category, parent) => category.ParentId == parent.Id)
+                            .Select<CategoryEf>(category => new
+                            {
+                                category.Id,
+                                category.ParentId,
+                                category.Name
+                            }))
+                    .FromCte<CategoryTreeRow>("category_tree")
+                    .Select<CategoryTreeRow>(category => new
+                    {
+                        category.Id,
+                        category.ParentId,
+                        category.Name
+                    })
+                    .OrderBy<CategoryTreeRow>(category => category.Id)
                     .Build()
             };
         }

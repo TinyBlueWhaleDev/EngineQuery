@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using TinyBlueWhale.EngineQuery.Metadata.Fluent;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
+using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadModels;
 using TinyBlueWhale.EngineQuery.Samples.Domain.FluentMapping;
 
 namespace TinyBlueWhale.EngineQuery.Samples.Metadata
@@ -46,6 +47,18 @@ namespace TinyBlueWhale.EngineQuery.Samples.Metadata
                 .Property(line => line.ProductId).HasColumnName("product_id")
                 .Property(line => line.Quantity).HasColumnName("quantity")
                 .Property(line => line.LineTotal).HasColumnName("line_total");
+
+            registry.Entity<CategoryFluent>()
+                .ToTable("categories")
+                .Property(category => category.Id).HasColumnName("category_id")
+                .Property(category => category.ParentId).HasColumnName("parent_category_id")
+                .Property(category => category.Name).HasColumnName("name");
+
+            registry.Entity<CategoryTreeRow>()
+                .ToTable("category_tree")
+                .Property(category => category.Id).HasColumnName("Id")
+                .Property(category => category.ParentId).HasColumnName("ParentId")
+                .Property(category => category.Name).HasColumnName("Name");
 
             return new FluentEntityMetadataResolver(registry);
         }

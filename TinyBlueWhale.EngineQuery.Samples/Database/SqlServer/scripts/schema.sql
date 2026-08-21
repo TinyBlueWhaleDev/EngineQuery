@@ -1,10 +1,22 @@
 USE EngineQuerySample
 GO
-
+IF OBJECT_ID('dbo.categories', 'U') IS NOT NULL DROP TABLE dbo.categories;
 IF OBJECT_ID('dbo.invoice_lines', 'U') IS NOT NULL DROP TABLE dbo.invoice_lines;
 IF OBJECT_ID('dbo.invoices', 'U') IS NOT NULL DROP TABLE dbo.invoices;
 IF OBJECT_ID('dbo.products', 'U') IS NOT NULL DROP TABLE dbo.products;
 IF OBJECT_ID('dbo.customers', 'U') IS NOT NULL DROP TABLE dbo.customers;
+GO
+
+
+CREATE TABLE dbo.categories
+(
+    category_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    parent_category_id INT NULL,
+    name NVARCHAR(200) NOT NULL,
+    CONSTRAINT fk_categories_parent
+        FOREIGN KEY (parent_category_id)
+        REFERENCES dbo.categories(category_id)
+);
 GO
 
 CREATE TABLE dbo.customers

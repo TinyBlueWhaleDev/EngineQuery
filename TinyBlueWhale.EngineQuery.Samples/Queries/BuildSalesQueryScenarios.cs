@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,6 +26,10 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries
             return
             [
                 ..BasicQueries.CreateForFluent(),
+                ..PredicateQueries.CreateForFluent(),
+                ..ProjectionQueries.CreateForFluent(),
+                ..JoinQueries.CreateForFluent(),
+                ..SubqueryQueries.CreateForFluent(),
                 ..AggregationQueries.CreateForFluent(),
                 ..CteQueries.CreateForFluent(),
                 ..SetOperationQueries.CreateForFluent(),
@@ -38,6 +42,10 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries
             return
             [
                 ..BasicQueries.CreateForAttribute(),
+                ..PredicateQueries.CreateForAttribute(),
+                ..ProjectionQueries.CreateForAttribute(),
+                ..JoinQueries.CreateForAttribute(),
+                ..SubqueryQueries.CreateForAttribute(),
                 ..AggregationQueries.CreateForAttribute(),
                 ..CteQueries.CreateForAttribute(),
                 ..SetOperationQueries.CreateForAttribute(),
@@ -50,6 +58,10 @@ namespace TinyBlueWhale.EngineQuery.Samples.Queries
             return
             [
                 ..BasicQueries.CreateForEntityFramework(),
+                ..PredicateQueries.CreateForEntityFramework(),
+                ..ProjectionQueries.CreateForEntityFramework(),
+                ..JoinQueries.CreateForEntityFramework(),
+                ..SubqueryQueries.CreateForEntityFramework(),
                 ..AggregationQueries.CreateForEntityFramework(),
                 ..CteQueries.CreateForEntityFramework(),
                 ..SetOperationQueries.CreateForEntityFramework(),

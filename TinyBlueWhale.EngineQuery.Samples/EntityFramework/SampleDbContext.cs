@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping;
 using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadModels;
 
@@ -13,6 +13,8 @@ public sealed class SampleDbContext(DbContextOptions<SampleDbContext> options) :
     public DbSet<ProductEf> Products => Set<ProductEf>();
 
     public DbSet<InvoiceLineEf> InvoiceLines => Set<InvoiceLineEf>();
+
+    public DbSet<CategoryEf> Categories => Set<CategoryEf>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -59,6 +61,24 @@ public sealed class SampleDbContext(DbContextOptions<SampleDbContext> options) :
             entity.Property(line => line.LineTotal).HasColumnName("line_total");
         });
 
+        modelBuilder.Entity<CategoryEf>(entity =>
+        {
+            entity.ToTable("categories");
+            entity.HasKey(category => category.Id);
+            entity.Property(category => category.Id).HasColumnName("category_id");
+            entity.Property(category => category.ParentId).HasColumnName("parent_category_id");
+            entity.Property(category => category.Name).HasColumnName("name");
+        });
+
+        modelBuilder.Entity<CategoryTreeRow>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToTable("category_tree");
+            entity.Property(category => category.Id).HasColumnName("Id");
+            entity.Property(category => category.ParentId).HasColumnName("ParentId");
+            entity.Property(category => category.Name).HasColumnName("Name");
+        });
+
         modelBuilder.Entity<ActiveCustomerRow>().HasNoKey();
         modelBuilder.Entity<CustomerEmailRow>().HasNoKey();
         modelBuilder.Entity<InvoiceRow>().HasNoKey();
@@ -77,5 +97,7 @@ public sealed class SampleDbContext(DbContextOptions<SampleDbContext> options) :
         modelBuilder.Entity<InvoiceLagLeadRow>().HasNoKey();
         modelBuilder.Entity<InvoiceFirstLastValueRow>().HasNoKey();
         modelBuilder.Entity<InvoiceQuartileRow>().HasNoKey();
+        modelBuilder.Entity<CustomerOptionalInvoiceRow>().HasNoKey();
+        modelBuilder.Entity<MinInvoicePerCustomerRow>().HasNoKey();
     }
 }
