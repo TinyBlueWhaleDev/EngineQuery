@@ -13,6 +13,15 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
     public sealed class QueryScriptBuilderOptions
     {
         /// <summary>
+        /// Gets or initializes the optional factory used to create the INSERT clause builder.
+        /// </summary>
+        /// <remarks>
+        /// When this value is <see langword="null"/>, the default
+        /// <see cref="InsertClauseBuilder"/> is used.
+        /// </remarks>
+        public Func<InsertClauseBuilder>? InsertClauseBuilderFactory { get; init; }
+
+        /// <summary>
         /// Gets or initializes the optional factory used to create the APPLY clause builder.
         /// </summary>
         /// <remarks>

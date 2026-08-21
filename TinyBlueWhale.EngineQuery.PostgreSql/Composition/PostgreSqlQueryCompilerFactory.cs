@@ -31,7 +31,8 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Composition
                 new QueryScriptBuilderOptions
                 {
                     ApplyClauseBuilderFactory = subqueryCompiler =>
-                        new PostgreSqlApplyClauseBuilder(subqueryCompiler)
+                        new PostgreSqlApplyClauseBuilder(subqueryCompiler),
+                    InsertClauseBuilderFactory = () => new PostgreSqlInsertClauseBuilder(),
                 });
         }
     }

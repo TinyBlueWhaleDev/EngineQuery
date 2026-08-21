@@ -44,6 +44,10 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 BuildInsertValuesQuery(queryBuilder));
 
             ProviderQueryPrinter.Print(
+               $"{providerName} Insert Return Identity",
+               BuildInsertIdentityQuery(queryBuilder, providerName));
+
+            ProviderQueryPrinter.Print(
                 $"{providerName} Insert Select",
                 BuildInsertSelectQuery(queryBuilder));
 
@@ -90,6 +94,18 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             return queryBuilder
                 .InsertInto<JoinUser>()
                 .Set(user => user.Email, "admin@test.com")
+                .Build();
+        }
+
+        // Builds a SQL Server or MySQL INSERT command that retrieves the generated identity through a connection-scoped function.
+        private static GeneratedSqlQuery BuildInsertIdentityQuery(QueryBuilder queryBuilder, string providerName)
+        {
+            var query = queryBuilder.InsertInto<JoinUser>()
+                .Set(user => user.Email, "admin@test.com");
+
+            query = providerName.Equals("PostgreSQL") ? query.ReturnIdentity(x => x.Id) : query.ReturnIdentity();            
+
+            return query
                 .Build();
         }
 

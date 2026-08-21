@@ -1,8 +1,10 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
+using TinyBlueWhale.EngineQuery.Tests.Models;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
 {    
@@ -14,6 +16,11 @@ namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
     public sealed class SqlServerQuerySnapshotTests : QueryCompilerFeatureSnapshotTests
     {
         protected override string ProviderName => "SqlServer";
+
+        protected override IInsertValuesCommandBuilder<JoinUser> ConfigureReturnIdentity(IInsertValuesCommandBuilder<JoinUser> commandBuilder)
+        {
+            return commandBuilder.ReturnIdentity();
+        }
 
         protected override QueryBuilder CreateQueryBuilder()
         {

@@ -50,7 +50,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
                 parameterRewriter);
 
             var selectClauseBuilder = new SelectClauseBuilder(columnReferenceBuilder);
-            var insertClauseBuilder = new InsertClauseBuilder();
+
+            var insertClauseBuilder = options.InsertClauseBuilderFactory?.Invoke()
+                ?? new InsertClauseBuilder();
+
             var updateClauseBuilder = new UpdateClauseBuilder();
             var deleteClauseBuilder = new DeleteClauseBuilder();
             var fromClauseBuilder = new FromClauseBuilder(subqueryCompiler);
