@@ -182,6 +182,57 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
         }
 
         /// <summary>
+        /// Adds an IN or NOT IN collection condition for an entity available
+        /// in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// The entity type associated with the selected property.
+        /// </typeparam>
+        /// <typeparam name="TProperty">
+        /// The selected property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// The expression that selects the property evaluated by the collection condition.
+        /// </param>
+        /// <param name="values">
+        /// The values evaluated by the collection condition.
+        /// </param>
+        /// <param name="isNegated">
+        /// A value indicating whether the collection condition uses NOT IN.
+        /// </param>
+        public void AddCollection<TEntity, TProperty>(Expression<Func<TEntity, TProperty>> selector, IEnumerable<TProperty> values, bool isNegated)
+        {
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentNullException.ThrowIfNull(values);
+
+            var materializedValues = new List<object>();
+
+            foreach (var value in values)
+            {
+                if (value is null)
+                    throw new ArgumentException("IN and NOT IN collections cannot contain null values.", nameof(values));
+
+                materializedValues.Add(value);
+            }
+
+            if (materializedValues.Count == 0)
+                throw new ArgumentException("IN and NOT IN collections must contain at least one value.", nameof(values));
+
+            var sourceDefinition = _sourceResolver.Resolve<TEntity>();
+
+            _context.QueryDefinition
+                .WhereCollectionDefinitions
+                .Add(
+                    new QueryWhereCollectionDefinition
+                    {
+                        Selector = selector,
+                        Source = sourceDefinition,
+                        Values = materializedValues,
+                        IsNegated = isNegated
+                    });
+        }
+
+        /// <summary>
         /// Adds a scalar SQL function WHERE condition.
         /// </summary>
         /// <typeparam name="TEntity">

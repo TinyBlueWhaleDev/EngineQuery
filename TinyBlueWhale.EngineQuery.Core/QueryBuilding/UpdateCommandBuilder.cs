@@ -100,9 +100,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current UPDATE command builder instance.
         /// </returns>
-        public IUpdateCommandBuilder<T> Set<TProperty>(
-            Expression<Func<T, TProperty>> selector,
-            TProperty value)
+        public IUpdateCommandBuilder<T> Set<TProperty>(Expression<Func<T, TProperty>> selector, TProperty value)
         {
             ArgumentNullException.ThrowIfNull(selector);
 
@@ -160,6 +158,50 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public IUpdateCommandBuilder<T> Where(Expression<Func<T, bool>> predicate, QueryLogicalOperator logicalOperator)
         {
             _whereClauseBuilder.Add(predicate, logicalOperator);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an IN collection condition for the target entity.
+        /// </summary>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the IN condition.
+        /// </param>
+        /// <returns>
+        /// Current UPDATE command builder instance.
+        /// </returns>
+        public IUpdateCommandBuilder<T> WhereIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values)
+        {
+            _whereClauseBuilder.AddCollection(selector, values, isNegated: false);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a NOT IN collection condition for the target entity.
+        /// </summary>
+        /// <typeparam name="TProperty">
+        /// Property and collection element type.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the property evaluated by the NOT IN condition.
+        /// </param>
+        /// <param name="values">
+        /// Values evaluated by the NOT IN condition.
+        /// </param>
+        /// <returns>
+        /// Current UPDATE command builder instance.
+        /// </returns>
+        public IUpdateCommandBuilder<T> WhereNotIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values)
+        {
+            _whereClauseBuilder.AddCollection(selector, values, isNegated: true);
+
             return this;
         }
 
@@ -226,8 +268,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (updateDefinition.AssignmentDefinitions.Count == 0)
                 throw new InvalidOperationException("At least one value must be configured before building an UPDATE command.");
 
-            if (_queryDefinition.WhereDefinitions.Count == 0)
-                throw new InvalidOperationException("At least one WHERE predicate must be configured before building an UPDATE command.");
+            if (_queryDefinition.WhereDefinitions.Count == 0 && _queryDefinition.WhereCollectionDefinitions.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "At least one WHERE predicate must be configured before building an UPDATE command.");
+            }
 
             return _queryCompiler.Compile(_queryDefinition);
         }

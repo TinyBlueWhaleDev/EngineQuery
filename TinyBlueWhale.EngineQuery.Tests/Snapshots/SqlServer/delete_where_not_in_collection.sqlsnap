@@ -1,0 +1,8 @@
+DELETE
+FROM [Users]
+WHERE [Users].[Id] NOT IN (@p0, @p1, @p2)
+
+-- Parameters
+@p0 = 10
+@p1 = 20
+@p2 = 30
