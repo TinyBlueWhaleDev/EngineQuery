@@ -5,7 +5,7 @@ using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
-{    
+{
     /// <summary>
     /// Validates scalar SQL function projections across providers.
     /// </summary>

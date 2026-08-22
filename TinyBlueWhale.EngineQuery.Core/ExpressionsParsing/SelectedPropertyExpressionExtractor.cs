@@ -41,7 +41,7 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
                     }
                 ],
 
-                UnaryExpression unaryExpression when unaryExpression.Operand is MemberExpression memberExpression => 
+                UnaryExpression unaryExpression when unaryExpression.Operand is MemberExpression memberExpression =>
                 [
                     new QuerySelectColumnDefinition
                     {

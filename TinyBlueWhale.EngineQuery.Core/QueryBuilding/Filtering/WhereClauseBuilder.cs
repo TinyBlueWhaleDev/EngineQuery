@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
@@ -65,7 +65,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
         /// </param>
         public void AddForSource<TEntity>(Expression<Func<TEntity, bool>> predicate)
         {
-            AddForSource(predicate,QueryLogicalOperator.And);
+            AddForSource(predicate, QueryLogicalOperator.And);
         }
 
         /// <summary>
@@ -292,7 +292,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
         {
             ArgumentNullException.ThrowIfNull(expression);
 
-            var sourceDefinition =_sourceResolver.Resolve<TEntity>();
+            var sourceDefinition = _sourceResolver.Resolve<TEntity>();
 
             _context.QueryDefinition
                 .WhereComputedExpressionDefinitions
@@ -301,7 +301,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
                     {
                         Expression = expression,
                         Sources =
-                            new Dictionary<ParameterExpression,QuerySourceDefinition>
+                            new Dictionary<ParameterExpression, QuerySourceDefinition>
                             {
                                 [expression.Parameters[0]] = sourceDefinition
                             }
@@ -336,11 +336,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
                     new QueryWhereComputedExpressionDefinition
                     {
                         Expression = expression,
-                        Sources = new Dictionary<ParameterExpression,QuerySourceDefinition>
-                            {
-                                [expression.Parameters[0]] = leftSource,
-                                [expression.Parameters[1]] = rightSource
-                            }
+                        Sources = new Dictionary<ParameterExpression, QuerySourceDefinition>
+                        {
+                            [expression.Parameters[0]] = leftSource,
+                            [expression.Parameters[1]] = rightSource
+                        }
                     });
         }
 

@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Samples.Domain.AttributeMapping;
 using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping;
 using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadModels;

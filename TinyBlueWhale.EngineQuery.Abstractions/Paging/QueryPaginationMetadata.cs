@@ -25,7 +25,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Paging
         /// <summary>
         /// Gets the total number of available pages.
         /// </summary>
-        public int TotalPages =>PageSize <= 0 ? 0 : (int)Math.Ceiling((double)TotalItems / PageSize);
+        public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling((double)TotalItems / PageSize);
 
         /// <summary>
         /// Gets a value indicating whether a previous page exists.

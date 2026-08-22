@@ -21,5 +21,5 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Models
         /// </summary>
         public bool HasParameters => Parameters.Count > 0;
     }
-    
+
 }

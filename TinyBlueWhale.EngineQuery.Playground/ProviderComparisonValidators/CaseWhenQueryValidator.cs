@@ -5,7 +5,7 @@ using TinyBlueWhale.EngineQuery.Playground.Shared;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 {
-  
+
     /// <summary>
     /// Validates CASE WHEN SQL expression projections across providers.
     /// </summary>

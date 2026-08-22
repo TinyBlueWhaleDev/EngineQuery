@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
@@ -31,7 +26,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
                 .Where(x => x.is_active)
                 .OrderByDescending(x => x.created_at)
                 .Build();
-            
+
             MappingValidatorPrinter.Print(nameof(ConventionMappingValidator), sql);
         }
 

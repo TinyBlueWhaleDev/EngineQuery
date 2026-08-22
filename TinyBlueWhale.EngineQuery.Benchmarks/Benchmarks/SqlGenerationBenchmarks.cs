@@ -1,5 +1,5 @@
+﻿using System.Text;
 using BenchmarkDotNet.Attributes;
-using System.Text;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Benchmarks.Benchmarks.Models;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
@@ -14,7 +14,7 @@ namespace TinyBlueWhale.EngineQuery.Benchmarks.Benchmarks
     [MemoryDiagnoser]
     public class SqlGenerationBenchmarks
     {
-        private FluentEntityMetadataResolver _metadataResolver = null!;        
+        private FluentEntityMetadataResolver _metadataResolver = null!;
 
         [GlobalSetup]
         public void Setup()

@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
@@ -34,10 +34,10 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
 
             var metadataOptions = new EngineQueryMetadataOptions();
             configureMetadata(metadataOptions);
-            
+
             if (metadataOptions.Registrations.Count == 0)
                 throw new InvalidOperationException("At least one metadata strategy must be configured.");
-            
+
             foreach (var metadataRegistration in metadataOptions.Registrations)
             {
                 _registrations.Add(

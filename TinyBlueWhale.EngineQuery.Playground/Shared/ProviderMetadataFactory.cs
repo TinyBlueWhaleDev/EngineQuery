@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Metadata.Fluent;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Fluent;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 
 namespace TinyBlueWhale.EngineQuery.Playground.Shared
-{ 
+{
     /// <summary>
     /// Creates shared playground metadata used by provider comparison validators.
     /// </summary>

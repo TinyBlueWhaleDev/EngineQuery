@@ -1,7 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Ordering
-{        
+{
 
     /// <summary>
     /// Builds SQL pagination definitions.

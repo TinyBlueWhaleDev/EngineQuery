@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
+﻿namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
     /// <summary>
     /// Represents the INSERT-specific metadata associated with a compiled command definition.

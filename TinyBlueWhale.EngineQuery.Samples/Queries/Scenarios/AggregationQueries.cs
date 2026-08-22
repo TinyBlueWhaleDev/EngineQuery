@@ -1,9 +1,9 @@
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Samples.Domain.AttributeMapping;
 using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping;
+using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadModels;
 using TinyBlueWhale.EngineQuery.Samples.Domain.FluentMapping;
 using TinyBlueWhale.EngineQuery.Samples.Metadata;
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
-using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadModels;
 
 namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
 {

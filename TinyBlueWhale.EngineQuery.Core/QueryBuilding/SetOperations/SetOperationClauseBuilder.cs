@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
@@ -24,7 +24,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.SetOperations
 
             if (nestedCommandBuilder is not QueryCommandBuilder<TSet> concreteNestedCommandBuilder)
                 throw new InvalidOperationException("The set operation builder returned an unsupported query command builder instance.");
-            
+
 
             _context.QueryDefinition.SetOperationDefinitions.Add(
                 new QuerySetOperationDefinition

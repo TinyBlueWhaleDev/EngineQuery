@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Labs.Domain.Enums;
+﻿using TinyBlueWhale.EngineQuery.Labs.Domain.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.ViewModels
 {
@@ -25,6 +25,6 @@ namespace TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders
         public string CustomerFirstName { get; init; } = string.Empty;
         public string CustomerLastName { get; init; } = string.Empty;
         public string CustomerEmail { get; init; } = string.Empty;
-        public string CustomerName =>$"{CustomerFirstName} {CustomerLastName}".Trim();
+        public string CustomerName => $"{CustomerFirstName} {CustomerLastName}".Trim();
     }
 }

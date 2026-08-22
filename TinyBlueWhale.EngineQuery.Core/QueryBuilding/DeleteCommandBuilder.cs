@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
@@ -46,7 +41,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver associated with the command.
         /// </param>
-        internal DeleteCommandBuilder(IQueryCompiler queryCompiler,string tableName, IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
+        internal DeleteCommandBuilder(IQueryCompiler queryCompiler, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);

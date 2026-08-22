@@ -4,7 +4,7 @@ using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
-{ 
+{
 
     /// <summary>
     /// Builds EXISTS and NOT EXISTS query definitions.

@@ -1,7 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
-{    
+{
     /// <summary>
     /// Provides snapshot assertions for generated SQL queries.
     /// </summary>

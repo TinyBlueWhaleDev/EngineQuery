@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
@@ -7,7 +7,7 @@ using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 using TinyBlueWhale.EngineQuery.Tests.Models;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql
-{    
+{
 
     /// <summary>
     /// Runs PostgreSQL query compiler snapshot tests.

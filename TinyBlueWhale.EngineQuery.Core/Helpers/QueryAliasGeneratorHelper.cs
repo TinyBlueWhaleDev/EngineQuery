@@ -1,6 +1,6 @@
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Core.Helpers
-{    
+{
     /// <summary>
     /// Generates deterministic SQL table aliases for query sources.
     /// </summary>

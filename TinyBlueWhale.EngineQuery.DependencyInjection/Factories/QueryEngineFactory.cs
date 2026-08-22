@@ -32,7 +32,7 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Factories
 
             if (matches.Count > 1)
                 throw new InvalidOperationException($"Multiple metadata strategies are registered for provider '{provider}'. Specify a metadata strategy.");
-           
+
             return Create(matches[0]);
         }
 
@@ -54,7 +54,7 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Factories
             var queryBuilder = new QueryBuilder(
                 registration.CreateCompiler(_serviceProvider),
                 registration.CreateMetadataResolver(_serviceProvider));
-            
+
             return new QueryEngine(queryBuilder);
         }
     }

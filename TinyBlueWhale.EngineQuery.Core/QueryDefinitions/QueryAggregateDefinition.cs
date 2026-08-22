@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
@@ -27,7 +27,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the required SQL alias assigned to the aggregate result.
         /// </summary>
         public required string Alias { get; init; }
-        
+
         /// <summary>
         /// Gets the query source associated with the selected column.
         /// </summary>

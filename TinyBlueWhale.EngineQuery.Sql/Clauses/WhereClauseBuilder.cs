@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
@@ -66,19 +66,19 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
-            
+
             var predicateConditions = BuildPredicateConditions(queryDefinition, context);
 
             var functionConditions = queryDefinition.WhereScalarFunctionDefinitions
                 .Select(functionDefinition => BuildWhereScalarFunctionCondition(functionDefinition, context));
 
-            var computedConditions =queryDefinition.WhereComputedExpressionDefinitions
+            var computedConditions = queryDefinition.WhereComputedExpressionDefinitions
                 .Select(computedDefinition => BuildWhereComputedExpressionCondition(computedDefinition, context));
 
             var existsConditions = queryDefinition.ExistsDefinitions
                 .Select(existsDefinition => BuildExistsCondition(existsDefinition, context));
 
-            var inConditions =queryDefinition.InSubqueryDefinitions
+            var inConditions = queryDefinition.InSubqueryDefinitions
                 .Select(inDefinition => BuildInSubqueryCondition(inDefinition, context));
 
             var collectionConditions = queryDefinition.WhereCollectionDefinitions
@@ -108,7 +108,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// SQL predicate conditions ready to be connected by root-level
         /// logical AND operations.
         /// </returns>
-        private static List<string>BuildPredicateConditions(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
+        private static List<string> BuildPredicateConditions(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             var compiledConditions = queryDefinition.WhereDefinitions.Select(
                 whereDefinition =>
@@ -119,9 +119,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                         whereDefinition.Source.ColumnMappings ?? queryDefinition.ColumnMappings,
                         whereDefinition.Source.TableAlias ?? queryDefinition.TableAlias);
 
-                    var sqlCondition =parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
+                    var sqlCondition = parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
 
-                    return new CompiledPredicateCondition(sqlCondition,whereDefinition.LogicalOperator);
+                    return new CompiledPredicateCondition(sqlCondition, whereDefinition.LogicalOperator);
                 }).ToList();
 
             return GroupOrConditions(compiledConditions);
@@ -158,7 +158,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                     continue;
                 }
 
-                var orConditions = new List<string> { currentCondition.Sql };                
+                var orConditions = new List<string> { currentCondition.Sql };
 
                 while (index + 1 < conditions.Count && conditions[index + 1].LogicalOperator == QueryLogicalOperator.Or)
                 {
@@ -166,8 +166,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
                     orConditions.Add(conditions[index].Sql);
                 }
-                
-                groupedConditions.Add("(" + string.Join(" OR ", orConditions) +")");
+
+                groupedConditions.Add("(" + string.Join(" OR ", orConditions) + ")");
             }
 
             return groupedConditions;
@@ -192,7 +192,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
             var parameterName = context.AddParameter(functionDefinition.Value);
 
-            var functionName = SqlFunctionNameResolver.ResolveScalarFunctionName(functionDefinition.Function,context.DatabaseDialect);
+            var functionName = SqlFunctionNameResolver.ResolveScalarFunctionName(functionDefinition.Function, context.DatabaseDialect);
 
             var comparisonOperator = SqlComparisonOperatorResolver.Resolve(functionDefinition.ComparisonOperator);
 
@@ -216,7 +216,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         {
             var expressionScope = new QueryExpressionScope();
 
-            foreach ( var source in computedDefinition.Sources)
+            foreach (var source in computedDefinition.Sources)
                 expressionScope.Register(source.Key, source.Value);
 
 
@@ -265,7 +265,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// Compiled IN subquery condition.
         /// </returns>
-        private string BuildInSubqueryCondition(QueryInSubqueryDefinition inDefinition,QueryCompilationContext context)
+        private string BuildInSubqueryCondition(QueryInSubqueryDefinition inDefinition, QueryCompilationContext context)
         {
             var propertyName = ExpressionColumnSelector.ExtractSinglePropertyName(inDefinition.OuterSelector);
 

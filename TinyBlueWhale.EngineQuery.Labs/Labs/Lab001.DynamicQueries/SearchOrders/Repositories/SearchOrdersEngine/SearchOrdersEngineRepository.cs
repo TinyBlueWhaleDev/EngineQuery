@@ -1,7 +1,6 @@
-using Dapper;
+﻿using Dapper;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 using TinyBlueWhale.EngineQuery.Labs.Domain.Entities;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.SqlServer;
@@ -60,8 +59,8 @@ public sealed class SearchOrdersEngineRepository(
             .WhereIf(hasSearch, order => order.OrderNumber.Contains(search), QueryLogicalOperator.Or)
             .WhereIf<Customer>(hasSearch, customer => customer.FirstName.Contains(search) ||
                 customer.LastName.Contains(search) ||
-                customer.Email.Contains(search), QueryLogicalOperator.Or);            
-        
+                customer.Email.Contains(search), QueryLogicalOperator.Or);
+
 
         var descending = request.SortDirection.Equals("desc", StringComparison.OrdinalIgnoreCase);
         var sortBy = request.SortBy?.Trim().ToUpperInvariant() ?? "ORDERDATEUTC";
@@ -117,7 +116,7 @@ public sealed class SearchOrdersEngineRepository(
             .Build();
 
         var countQuery = queryBuilder
-            .From<Order>(alias: "o")            
+            .From<Order>(alias: "o")
             .InnerJoin<Order, Customer>(alias: "c", on: (order, customer) => order.CustomerId == customer.Id)
             .SelectAggregate<Order>(QueryAggregateFunction.Count, order => order.Id, alias: "TotalCount")
             .WhereIf(request.CustomerId.HasValue, order => order.CustomerId == customerId)
@@ -153,7 +152,7 @@ public sealed class SearchOrdersEngineRepository(
             generatedDataQuery.CommandText,
             string.Join(Environment.NewLine, generatedDataQuery.Parameters.Select(parameter => $"{parameter.Name} = {parameter.Value}")),
             countQuery.CommandText,
-            string.Join(Environment.NewLine,countQuery.Parameters.Select(parameter =>$"{parameter.Name} = {parameter.Value}")));
+            string.Join(Environment.NewLine, countQuery.Parameters.Select(parameter => $"{parameter.Name} = {parameter.Value}")));
 
         await using var connection = await connectionFactory
             .OpenConnectionAsync(cancellationToken)
@@ -187,5 +186,5 @@ public sealed class SearchOrdersEngineRepository(
             TotalCount = totalCount
         };
     }
-   
+
 }

@@ -1,9 +1,9 @@
-﻿using TinyBlueWhale.EngineQuery.Core.Enums;
+﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
-using System.Linq.Expressions;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Ordering
 {

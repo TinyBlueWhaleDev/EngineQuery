@@ -6,7 +6,7 @@ using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.MySql
-{    
+{
 
     /// <summary>
     /// Runs MySQL negative validation tests.

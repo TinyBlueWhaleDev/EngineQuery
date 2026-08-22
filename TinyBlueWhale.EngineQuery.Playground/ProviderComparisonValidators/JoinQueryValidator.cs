@@ -5,7 +5,7 @@ using TinyBlueWhale.EngineQuery.Playground.Shared;
 
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
-{  
+{
     /// <summary>
     /// Validates JOIN generation across providers.
     /// </summary>

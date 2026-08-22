@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
@@ -87,7 +87,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             {
                 var left = BuildJoinExpression(binaryExpression.Left, joinDefinition, context);
 
-                var right = BuildJoinExpression(binaryExpression.Right,joinDefinition, context);
+                var right = BuildJoinExpression(binaryExpression.Right, joinDefinition, context);
 
                 var sqlOperator = binaryExpression.NodeType == ExpressionType.AndAlso
                     ? "AND"
@@ -118,7 +118,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                 _ => throw new NotSupportedException(
                     $"Join operator '{expressionType}' is not supported.")
             };
-        }     
+        }
 
         private static string BuildJoinColumnReference(Expression expression, QueryJoinDefinition joinDefinition, QueryCompilationContext context)
         {

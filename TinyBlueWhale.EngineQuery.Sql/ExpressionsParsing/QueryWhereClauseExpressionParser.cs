@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Parameters;
@@ -13,7 +13,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
     /// into provider-specific SQL predicate fragments and query parameters.
     /// </remarks>
     public sealed class QueryWhereClauseExpressionParser(ISqlDatabaseDialect databaseDialect,
-        QueryParameterCollection sqlParameters, 
+        QueryParameterCollection sqlParameters,
         IReadOnlyDictionary<string, string> columnMappings,
         string? tableAlias = null)
     {
@@ -126,7 +126,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         {
             return expression switch
             {
-                MemberExpression memberExpression when memberExpression.Expression?.NodeType == ExpressionType.Parameter => 
+                MemberExpression memberExpression when memberExpression.Expression?.NodeType == ExpressionType.Parameter =>
                     memberExpression.Type == typeof(bool)
                         ? ParseBooleanPropertyToSqlCondition(memberExpression)
                         : ResolveColumnReference(memberExpression.Member.Name),
@@ -161,7 +161,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         // Parses negated expressions such as !IsActive.
         private string ParseNegatedExpressionToSqlCondition(UnaryExpression unaryExpression)
         {
-            if (unaryExpression.Operand is MemberExpression memberExpression &&memberExpression.Expression?.NodeType == ExpressionType.Parameter)
+            if (unaryExpression.Operand is MemberExpression memberExpression && memberExpression.Expression?.NodeType == ExpressionType.Parameter)
             {
                 var columnName = ResolveColumnReference(memberExpression.Member.Name);
 
@@ -176,7 +176,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         // Parses supported string method calls such as Contains, StartsWith and EndsWith.
         private string ParseMethodCallExpressionToSqlCondition(MethodCallExpression methodCallExpression)
         {
-            if (methodCallExpression.Object is not MemberExpression memberExpression ||memberExpression.Expression?.NodeType != ExpressionType.Parameter)
+            if (methodCallExpression.Object is not MemberExpression memberExpression || memberExpression.Expression?.NodeType != ExpressionType.Parameter)
                 throw new NotSupportedException($"Method call '{methodCallExpression}' is not supported in WHERE clauses.");
 
             var columnName = ResolveColumnReference(memberExpression.Member.Name);
@@ -196,7 +196,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         // Builds SQL LIKE conditions based on the selected search mode.
         private string BuildSqlLikeCondition(string columnName, Expression valueExpression, SqlLikeSearchMode searchMode)
         {
-            var rawValue = RuntimeExpressionValueExtractor .ExtractValue(valueExpression);
+            var rawValue = RuntimeExpressionValueExtractor.ExtractValue(valueExpression);
 
             var value = rawValue?.ToString() ?? string.Empty;
 

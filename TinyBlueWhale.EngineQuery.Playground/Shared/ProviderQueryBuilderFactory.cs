@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
@@ -26,7 +21,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         /// Creates a SQL Server query builder.
         /// </summary>
         public static QueryBuilder CreateSqlServer(FluentEntityMetadataResolver metadataResolver) =>
-            new(new SqlServerQueryCompiler(new SqlServerDatabaseDialect(),new SqlServerProviderCapabilities()), metadataResolver);
+            new(new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new SqlServerProviderCapabilities()), metadataResolver);
 
         /// <summary>
         /// Creates a PostgreSQL query builder.

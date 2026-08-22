@@ -1,9 +1,9 @@
-using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
-{        
+{
 
     /// <summary>
     /// Configures EngineQuery metadata strategies.

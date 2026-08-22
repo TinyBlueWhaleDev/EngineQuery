@@ -1,10 +1,10 @@
-﻿using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
+﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
-using System.Linq.Expressions;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Projections
-{        
+{
 
     /// <summary>
     /// Builds SELECT projection definitions.

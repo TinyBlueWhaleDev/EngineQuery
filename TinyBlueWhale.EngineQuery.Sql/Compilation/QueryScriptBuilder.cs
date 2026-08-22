@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Clauses;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -59,7 +59,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         private readonly IRequiredSqlClauseBuilder _selectClauseBuilder = selectClauseBuilder ?? throw new ArgumentNullException(nameof(selectClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _fromClauseBuilder = fromClauseBuilder ?? throw new ArgumentNullException(nameof(fromClauseBuilder));
         private readonly InsertClauseBuilder _insertClauseBuilder = insertClauseBuilder ?? throw new ArgumentNullException(nameof(insertClauseBuilder));
-        private readonly IRequiredSqlClauseBuilder _updateClauseBuilder = updateClauseBuilder ?? throw new ArgumentNullException( nameof(updateClauseBuilder));
+        private readonly IRequiredSqlClauseBuilder _updateClauseBuilder = updateClauseBuilder ?? throw new ArgumentNullException(nameof(updateClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _deleteClauseBuilder = deleteClauseBuilder ?? throw new ArgumentNullException(nameof(deleteClauseBuilder));
         private readonly IOptionalSqlClauseBuilder _whereClauseBuilder = whereClauseBuilder ?? throw new ArgumentNullException(nameof(whereClauseBuilder));
         private readonly IReadOnlyList<IOptionalSqlClauseBuilder> _bodyClauseBuilders = bodyClauseBuilders ?? throw new ArgumentNullException(nameof(bodyClauseBuilders));

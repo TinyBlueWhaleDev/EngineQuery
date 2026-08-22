@@ -1,10 +1,10 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
+﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
-using System.Linq.Expressions;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Projections
-{        
+{
 
     /// <summary>
     /// Builds CASE WHEN SELECT expression definitions.

@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Abstractions.Enums
+﻿namespace TinyBlueWhale.EngineQuery.Abstractions.Enums
 {
     /// <summary>
     /// Defines the logical operator used to connect a WHERE predicate

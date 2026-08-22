@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping
+﻿namespace TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping
 {
     public sealed class CategoryEf
     {

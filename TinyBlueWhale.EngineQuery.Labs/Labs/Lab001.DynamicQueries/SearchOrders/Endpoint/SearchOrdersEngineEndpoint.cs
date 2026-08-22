@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TinyBlueWhale.EngineQuery.Labs.Domain.Enums;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.Interfaces;
@@ -38,7 +38,7 @@ namespace TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders
                 .ProducesValidationProblem()
                 .ProducesProblem(StatusCodes.Status500InternalServerError)
                 .WithSummary("Search Orders using Engine Query")
-                .WithDescription("Searches orders using EngineQuery with the same query structure and result contract as Raw SQL.");                
+                .WithDescription("Searches orders using EngineQuery with the same query structure and result contract as Raw SQL.");
         }
     }
 }

@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
@@ -36,7 +31,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         private readonly QueryCommandBuilderContext _context;
         private readonly QueryCommandBuilderComponents _components;
 
-        private protected override QueryCommandBuilderComponents Components => _components;        
+        private protected override QueryCommandBuilderComponents Components => _components;
         protected override IInsertSelectCommandBuilder<T> Current => this;
 
 

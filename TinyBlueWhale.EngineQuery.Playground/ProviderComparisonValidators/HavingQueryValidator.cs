@@ -6,7 +6,7 @@ using TinyBlueWhale.EngineQuery.Playground.Shared;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 {
- 
+
 
     /// <summary>
     /// Validates HAVING aggregate generation across providers.

@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
-{    
+{
     /// <summary>
     /// Represents a query command builder with ordering support.
     /// </summary>

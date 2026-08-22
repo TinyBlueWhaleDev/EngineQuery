@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Enums;
@@ -575,7 +570,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return Current;
         }
-       
+
 
         #endregion
     }

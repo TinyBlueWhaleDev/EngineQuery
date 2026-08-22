@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Dialects
 {
@@ -34,7 +34,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Dialects
         /// <returns>
         /// SQL Server pagination clause.
         /// </returns>
-        public string BuildPaginationClause(int? skip,int? take)
+        public string BuildPaginationClause(int? skip, int? take)
         {
             if (!skip.HasValue && !take.HasValue)
                 return string.Empty;

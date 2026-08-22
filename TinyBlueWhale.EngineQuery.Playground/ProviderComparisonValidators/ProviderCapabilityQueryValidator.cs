@@ -9,7 +9,7 @@ using TinyBlueWhale.EngineQuery.SqlServer.Composition;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
-{    
+{
 
     /// <summary>
     /// Validates provider capability checks during SQL generation.

@@ -1,6 +1,5 @@
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using TinyBlueWhale.EngineQuery.Samples.EntityFramework;
-using Microsoft.Data.SqlClient;
 using MySqlConnector;
 using Npgsql;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
@@ -11,6 +10,7 @@ using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
 using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
+using TinyBlueWhale.EngineQuery.Samples.EntityFramework;
 using TinyBlueWhale.EngineQuery.Samples.Settings;
 using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
