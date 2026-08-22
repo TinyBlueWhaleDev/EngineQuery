@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Playground.Models
+﻿namespace TinyBlueWhale.EngineQuery.Playground.Models
 {
     public sealed class JoinUser
     {
@@ -12,7 +6,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Models
 
         public bool IsActive { get; set; }
 
-        public string Email { get; set; } = null!;  
+        public string Email { get; set; } = null!;
     }
 
     public sealed class JoinOrder

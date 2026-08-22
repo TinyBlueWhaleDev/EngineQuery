@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
@@ -707,7 +702,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder Except<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);              
+        TBuilder Except<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
 
         /// <summary>
         /// Adds a GROUP BY clause for the root entity.

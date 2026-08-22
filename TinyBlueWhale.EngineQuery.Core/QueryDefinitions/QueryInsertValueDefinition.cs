@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
+﻿namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
     /// <summary>
     /// Represents a value assigned to a target column by an INSERT command.
     /// </summary>
     public sealed record QueryInsertValueDefinition
-    {        
+    {
         /// <summary>
         /// Gets the resolved database column name associated with the inserted value.
         /// </summary>

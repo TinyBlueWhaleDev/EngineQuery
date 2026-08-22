@@ -3,7 +3,7 @@ using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context
-{        
+{
 
     /// <summary>
     /// Represents shared state used during query command construction.

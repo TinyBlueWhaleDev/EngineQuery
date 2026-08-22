@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
@@ -52,7 +46,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             ProviderQueryPrinter.Print(
                 "MySQL Where Logical Operators - Single OR",
                 BuildSingleOrQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
-        }      
+        }
 
         // Prints queries that validate an OR group followed by AND.
         private static void PrintOrThenAndQueries(FluentEntityMetadataResolver metadataResolver)
@@ -98,7 +92,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 "MySQL Where Logical Operators - Multiple OR Groups",
                 BuildMultipleOrGroupsQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
         }
-      
+
         // Prints queries that validate the default logical AND behavior.
         private static void PrintDefaultAndQueries(FluentEntityMetadataResolver metadataResolver)
         {

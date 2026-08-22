@@ -1,5 +1,5 @@
+﻿using System.Text;
 using Dapper;
-using System.Text;
 using TinyBlueWhale.EngineQuery.Labs.Domain.Enums;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.SqlServer;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.Interfaces;
@@ -54,14 +54,14 @@ public sealed class SearchOrdersRawRepository(
         {
             dataSql.AppendLine("""AND o.OrderDateUtc >= @CreatedFromUtc""");
 
-            dataParameters.Add("CreatedFromUtc",createdFromUtc);
+            dataParameters.Add("CreatedFromUtc", createdFromUtc);
         }
 
         if (request.CreatedToUtc is DateTime createdToUtc)
         {
             dataSql.AppendLine("""AND o.OrderDateUtc <= @CreatedToUtc""");
 
-            dataParameters.Add("CreatedToUtc",createdToUtc);
+            dataParameters.Add("CreatedToUtc", createdToUtc);
         }
 
         if (request.MinimumTotal is decimal minimumTotal)
@@ -75,7 +75,7 @@ public sealed class SearchOrdersRawRepository(
         {
             dataSql.AppendLine("""AND o.TotalAmount <= @MaximumTotal""");
 
-            dataParameters.Add("MaximumTotal",maximumTotal);
+            dataParameters.Add("MaximumTotal", maximumTotal);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -90,7 +90,7 @@ public sealed class SearchOrdersRawRepository(
                 )
                 """);
 
-            dataParameters.Add("Search",$"%{request.Search.Trim()}%");
+            dataParameters.Add("Search", $"%{request.Search.Trim()}%");
         }
 
         var direction = request.SortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase)
@@ -150,35 +150,35 @@ public sealed class SearchOrdersRawRepository(
         {
             countSql.AppendLine("""AND o.Status = @Status""");
 
-            countParameters.Add("Status",countStatus);
+            countParameters.Add("Status", countStatus);
         }
 
         if (request.CreatedFromUtc is DateTime countCreatedFromUtc)
         {
             countSql.AppendLine("""AND o.OrderDateUtc >= @CreatedFromUtc""");
 
-            countParameters.Add("CreatedFromUtc",countCreatedFromUtc);
+            countParameters.Add("CreatedFromUtc", countCreatedFromUtc);
         }
 
         if (request.CreatedToUtc is DateTime countCreatedToUtc)
         {
             countSql.AppendLine("""AND o.OrderDateUtc <= @CreatedToUtc""");
 
-            countParameters.Add("CreatedToUtc",countCreatedToUtc);
+            countParameters.Add("CreatedToUtc", countCreatedToUtc);
         }
 
         if (request.MinimumTotal is decimal countMinimumTotal)
         {
             countSql.AppendLine("""AND o.TotalAmount >= @MinimumTotal""");
 
-            countParameters.Add("MinimumTotal",countMinimumTotal);
+            countParameters.Add("MinimumTotal", countMinimumTotal);
         }
 
         if (request.MaximumTotal is decimal countMaximumTotal)
         {
             countSql.AppendLine("""AND o.TotalAmount <= @MaximumTotal""");
 
-            countParameters.Add("MaximumTotal",countMaximumTotal);
+            countParameters.Add("MaximumTotal", countMaximumTotal);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Search))

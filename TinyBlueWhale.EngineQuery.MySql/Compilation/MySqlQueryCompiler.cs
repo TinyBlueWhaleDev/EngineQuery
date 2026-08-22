@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.MySql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
@@ -16,5 +16,5 @@ namespace TinyBlueWhale.EngineQuery.MySql.Compilation
         IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
             databaseDialect,
             providerCapabilities,
-            MySqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));   
+            MySqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));
 }

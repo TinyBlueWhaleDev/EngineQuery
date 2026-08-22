@@ -4,7 +4,7 @@ using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
-{    
+{
     /// <summary>
     /// Validates FIRST_VALUE and LAST_VALUE window function generation across providers.
     /// </summary>

@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Tests.Models;
@@ -604,8 +599,8 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
 
             Assert.That(sql.CommandText, Does.Contain("orders"));
             Assert.That(sql.CommandText, Does.Contain("users"));
-        }                   
-       
+        }
+
         /// <summary>
         /// Validates that INSERT value assignments cannot be combined with explicitly configured INSERT SELECT target columns.
         /// </summary>
@@ -761,7 +756,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
             AssertSnapshot(
                 "insert_select",
                 query);
-        }     
+        }
 
         /// <summary>
         /// Validates SQL generation for strongly typed DELETE commands.

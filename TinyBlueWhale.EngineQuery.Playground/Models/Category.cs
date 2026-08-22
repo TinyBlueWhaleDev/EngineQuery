@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Playground.Models
+﻿namespace TinyBlueWhale.EngineQuery.Playground.Models
 {
     /// <summary>
     /// Represents a category used by recursive CTE examples.

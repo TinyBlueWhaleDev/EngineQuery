@@ -1,8 +1,8 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Helpers
-{    
+{
 
     /// <summary>
     /// Extracts scalar SQL function arguments from expression trees.

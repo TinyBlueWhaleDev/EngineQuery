@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
@@ -7,7 +7,7 @@ using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 using TinyBlueWhale.EngineQuery.Tests.Models;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
-{    
+{
 
     /// <summary>
     /// Runs SQL Server query compiler snapshot tests.

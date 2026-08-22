@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
@@ -66,7 +66,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             if (_metadataResolver is null)
                 throw new InvalidOperationException("No entity metadata resolver is configured.");
-            
+
 
             if (!_metadataResolver.TryResolve<T>(out var metadata))
                 throw new InvalidOperationException($"Metadata for entity type '{typeof(T).Name}' could not be resolved.");
@@ -109,7 +109,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             ArgumentException.ThrowIfNullOrWhiteSpace(alias);
             ArgumentNullException.ThrowIfNull(subqueryBuilder);
 
-            var nestedQueryBuilder = new QueryBuilder(_queryCompiler,_metadataResolver);
+            var nestedQueryBuilder = new QueryBuilder(_queryCompiler, _metadataResolver);
 
             var nestedCommandBuilder = subqueryBuilder(nestedQueryBuilder);
 
@@ -144,7 +144,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 _queryCompiler,
                 _metadataResolver);
 
-            var nestedCommandBuilder = cteBuilder(nestedQueryBuilder);            
+            var nestedCommandBuilder = cteBuilder(nestedQueryBuilder);
 
             if (nestedCommandBuilder is not QueryCommandBuilder<TSubqueryRoot> concreteNestedCommandBuilder)
                 throw new InvalidOperationException("The CTE builder returned an unsupported query command builder instance.");
@@ -156,7 +156,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 new QueryCteDefinition
                 {
                     Name = name,
-                    Query = cteQueryDefinition                    
+                    Query = cteQueryDefinition
                 });
 
             return this;
@@ -292,7 +292,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Creates a query command builder with inherited outer sources.
-        internal QueryCommandBuilder<TEntity> FromWithOuterSources<TEntity>(string? alias,IReadOnlyDictionary<Type, QuerySourceDefinition> outerSources)
+        internal QueryCommandBuilder<TEntity> FromWithOuterSources<TEntity>(string? alias, IReadOnlyDictionary<Type, QuerySourceDefinition> outerSources)
         {
             var commandBuilder = (QueryCommandBuilder<TEntity>)From<TEntity>(alias);
 

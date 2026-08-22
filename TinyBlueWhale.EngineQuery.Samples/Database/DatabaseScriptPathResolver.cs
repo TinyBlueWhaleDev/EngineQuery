@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Samples.Providers;
+﻿using TinyBlueWhale.EngineQuery.Samples.Providers;
 
 namespace TinyBlueWhale.EngineQuery.Samples.Database
 {
@@ -21,7 +16,7 @@ namespace TinyBlueWhale.EngineQuery.Samples.Database
 
             return new DatabaseScriptSet
             {
-                SchemaScriptPath = Path.Combine(AppContext.BaseDirectory, "Database", providerFolder, "scripts","schema.sql"),
+                SchemaScriptPath = Path.Combine(AppContext.BaseDirectory, "Database", providerFolder, "scripts", "schema.sql"),
                 SeedScriptPath = Path.Combine(AppContext.BaseDirectory, "Database", providerFolder, "scripts", "seed.sql")
             };
         }

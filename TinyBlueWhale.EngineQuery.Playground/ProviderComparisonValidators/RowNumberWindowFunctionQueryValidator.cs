@@ -4,7 +4,7 @@ using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
-{        
+{
 
     /// <summary>
     /// Validates ROW_NUMBER window function generation across providers.

@@ -5,7 +5,7 @@ using TinyBlueWhale.EngineQuery.DependencyInjection.Factories;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions
-{        
+{
 
     /// <summary>
     /// Provides EngineQuery dependency injection registration extensions.

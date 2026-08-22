@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
@@ -15,7 +9,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// Entity type associated with the target INSERT table.
     /// </typeparam>
     public interface IInsertSelectCommandBuilder<T> : IQueryCompositionCommandBuilder<T, IInsertSelectCommandBuilder<T>>
-    {        
+    {
         /// <summary>
         /// Builds the current INSERT SELECT command into SQL command text and parameters.
         /// </summary>

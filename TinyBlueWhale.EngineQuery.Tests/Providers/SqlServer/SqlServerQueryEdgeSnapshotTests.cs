@@ -5,7 +5,7 @@ using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
-{    
+{
     /// <summary>
     /// Runs SQL Server edge-case snapshot tests.
     /// </summary>

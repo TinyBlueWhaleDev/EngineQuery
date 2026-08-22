@@ -1,18 +1,18 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
-using TinyBlueWhale.EngineQuery.Playground.Shared;
-using Microsoft.Extensions.DependencyInjection;
-using TinyBlueWhale.EngineQuery.Playground.Models;
-using TinyBlueWhale.EngineQuery.Metadata.Models;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
+using TinyBlueWhale.EngineQuery.Metadata.Models;
 using TinyBlueWhale.EngineQuery.Playground.EntityFramework;
-using Microsoft.EntityFrameworkCore;
+using TinyBlueWhale.EngineQuery.Playground.Models;
+using TinyBlueWhale.EngineQuery.Playground.Shared;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
-{        
+{
 
     public static class DependencyInjectionQueryValidator
     {
@@ -27,7 +27,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             ValidateEntityFrameworkMetadataResolution();
             ValidateInsertCommandDirectInjection();
             ValidateUpdateCommandDirectInjection();
-            ValidateDeleteCommandDirectInjection(); 
+            ValidateDeleteCommandDirectInjection();
         }
 
         // Validates DELETE command generation through direct IQueryEngine injection.

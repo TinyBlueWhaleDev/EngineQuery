@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Playground.Models;
@@ -103,7 +98,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             var query = queryBuilder.InsertInto<JoinUser>()
                 .Set(user => user.Email, "admin@test.com");
 
-            query = providerName.Equals("PostgreSQL") ? query.ReturnIdentity(x => x.Id) : query.ReturnIdentity();            
+            query = providerName.Equals("PostgreSQL") ? query.ReturnIdentity(x => x.Id) : query.ReturnIdentity();
 
             return query
                 .Build();

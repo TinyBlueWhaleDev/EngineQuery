@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Parameters;
@@ -11,13 +11,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
     /// Parses computed expression trees into SQL expressions.
     /// </summary>
     public sealed class SqlComputedExpressionParser(ISqlDatabaseDialect databaseDialect,
-        QueryParameterCollection sqlParameters, 
-        IReadOnlyDictionary<string, string>? columnMappings, 
+        QueryParameterCollection sqlParameters,
+        IReadOnlyDictionary<string, string>? columnMappings,
         string? sourceAlias,
         QueryExpressionScope? expressionScope = null)
     {
         private readonly ISqlDatabaseDialect _databaseDialect = databaseDialect;
-        private readonly QueryParameterCollection  _sqlParameters = sqlParameters;
+        private readonly QueryParameterCollection _sqlParameters = sqlParameters;
         private readonly IReadOnlyDictionary<string, string>? _columnMappings = columnMappings;
         private readonly string? _sourceAlias = sourceAlias;
         private readonly QueryExpressionScope? _expressionScope = expressionScope;
@@ -134,9 +134,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         }
 
         // Adds a SQL parameter and returns the generated parameter name.
-        
+
         private string AddSqlParameter(object? value)
-        {           
+        {
             return _sqlParameters.Add(value);
         }
 

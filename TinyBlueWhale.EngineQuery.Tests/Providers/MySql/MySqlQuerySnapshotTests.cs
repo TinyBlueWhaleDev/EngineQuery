@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
@@ -7,7 +7,7 @@ using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 using TinyBlueWhale.EngineQuery.Tests.Models;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.MySql
-{    
+{
 
     /// <summary>
     /// Runs MySQL query compiler snapshot tests.

@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.SqlServer.Composition;
@@ -26,5 +26,5 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
         IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
             databaseDialect,
             providerCapabilities,
-            SqlServerQueryCompilerFactory.CreateScriptBuilder(databaseDialect));      
+            SqlServerQueryCompilerFactory.CreateScriptBuilder(databaseDialect));
 }

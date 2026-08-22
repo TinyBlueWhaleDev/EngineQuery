@@ -3,7 +3,7 @@ using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources
-{        
+{
 
     /// <summary>
     /// Resolves query sources and metadata for query command builders.

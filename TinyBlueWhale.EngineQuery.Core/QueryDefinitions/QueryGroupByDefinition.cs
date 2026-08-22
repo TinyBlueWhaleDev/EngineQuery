@@ -1,4 +1,4 @@
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
     /// <summary>
@@ -15,5 +15,5 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the query source associated with the selected column.
         /// </summary>
         public required QuerySourceDefinition Source { get; init; }
-    }   
+    }
 }

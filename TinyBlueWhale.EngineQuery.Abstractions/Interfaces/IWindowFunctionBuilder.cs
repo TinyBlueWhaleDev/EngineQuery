@@ -1,7 +1,7 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
-{    
+{
 
     /// <summary>
     /// Defines operations used to build SQL window function clauses.
@@ -49,6 +49,6 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Current window function builder instance.
         /// </returns>
         IWindowFunctionBuilder OrderByDescending<TEntity>(Expression<Func<TEntity, object>> selector);
-       
+
     }
 }

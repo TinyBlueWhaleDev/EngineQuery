@@ -47,7 +47,7 @@ namespace TinyBlueWhale.EngineQuery.Core.Helpers
         /// <returns>
         /// Resolved SQL column reference.
         /// </returns>
-        public static string ResolveColumnReference(CompiledQueryDefinition queryDefinition,ISqlDatabaseDialect databaseDialect,string propertyName)
+        public static string ResolveColumnReference(CompiledQueryDefinition queryDefinition, ISqlDatabaseDialect databaseDialect, string propertyName)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(databaseDialect);

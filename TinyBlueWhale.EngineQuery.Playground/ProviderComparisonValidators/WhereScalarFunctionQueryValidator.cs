@@ -1,8 +1,8 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.Playground.Shared;
 using TinyBlueWhale.EngineQuery.Playground.Models;
+using TinyBlueWhale.EngineQuery.Playground.Shared;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 {

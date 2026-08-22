@@ -1,8 +1,6 @@
-using System.Linq.Expressions;
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
@@ -22,7 +20,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     /// It only captures query intent and delegates SQL generation to the query compiler.
     /// </remarks>
     public sealed class QueryCommandBuilder<T> : QueryCompositionCommandBuilderBase<T, IQueryCommandBuilder<T>>, IOrderedQueryCommandBuilder<T>
-    {        
+    {
         private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
         private readonly IEntityMetadataResolver? _metadataResolver;
@@ -30,7 +28,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         private readonly QueryCommandBuilderContext _context;
         private readonly QueryCommandBuilderComponents _components;
         private protected override QueryCommandBuilderComponents Components => _components;
-        
+
         protected override IQueryCommandBuilder<T> Current => this;
 
         #region Constructor
@@ -100,12 +98,12 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver used for metadata-driven joins.
         /// </param>
-        internal QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName, string? tableAlias = null,  IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName, string? tableAlias = null, IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            if(tableAlias is not null)
+            if (tableAlias is not null)
                 ArgumentException.ThrowIfNullOrWhiteSpace(tableAlias);
 
 
@@ -133,10 +131,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             RegisterRootSource(tableName, tableAlias);
         }
 
-        #endregion 
-      
+        #endregion
 
-      
+
+
 
         #region Ordering Overloads
         /// <summary>
@@ -288,7 +286,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         #endregion
 
-      
+
         #region Pagination Methods
         /// <summary>
         /// Sets the number of rows to skip during SQL pagination.
@@ -330,7 +328,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         #endregion
 
-       
+
 
         /// <summary>
         /// Compiles the current query definition into SQL command text and parameters.
@@ -347,10 +345,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             return _queryCompiler.Compile(_queryDefinition);
         }
-              
+
 
         // Registers the root query source in the current query scope.
-        private void RegisterRootSource(string tableName,string? tableAlias)
+        private void RegisterRootSource(string tableName, string? tableAlias)
         {
             var resolvedAlias = string.IsNullOrWhiteSpace(tableAlias)
                 ? QueryAliasGeneratorHelper.Generate(0)
@@ -392,6 +390,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             foreach (var cteDefinition in cteDefinitions)
                 _queryDefinition.CteDefinitions.Add(cteDefinition);
-        }     
+        }
     }
 }

@@ -6,7 +6,7 @@ using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
 using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql
-{    
+{
 
     /// <summary>
     /// Runs PostgreSQL negative validation tests.

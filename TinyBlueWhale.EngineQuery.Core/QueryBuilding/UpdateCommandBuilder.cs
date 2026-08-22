@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
@@ -115,7 +110,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     ? mappedColumnName
                     : propertyName;
 
-            if (updateDefinition.AssignmentDefinitions.Any(definition => definition.ColumnName.Equals(columnName,StringComparison.Ordinal)))
+            if (updateDefinition.AssignmentDefinitions.Any(definition => definition.ColumnName.Equals(columnName, StringComparison.Ordinal)))
                 throw new InvalidOperationException($"Column '{columnName}' already has an UPDATE value assignment.");
 
             updateDefinition.AssignmentDefinitions.Add(

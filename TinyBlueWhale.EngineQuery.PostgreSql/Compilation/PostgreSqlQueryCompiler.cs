@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.PostgreSql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
@@ -25,5 +25,5 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
         IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
             databaseDialect,
             providerCapabilities,
-            PostgreSqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));    
+            PostgreSqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));
 }

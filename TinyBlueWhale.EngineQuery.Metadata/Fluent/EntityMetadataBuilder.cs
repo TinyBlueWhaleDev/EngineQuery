@@ -135,7 +135,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
             {
                 MemberExpression memberExpression => memberExpression.Member.Name,
 
-                UnaryExpression unaryExpression when unaryExpression.Operand 
+                UnaryExpression unaryExpression when unaryExpression.Operand
                     is MemberExpression memberExpression => memberExpression.Member.Name,
 
                 _ => throw new NotSupportedException($"Expression '{expression}' is not supported as a property selector.")

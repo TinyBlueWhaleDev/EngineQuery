@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 using TinyBlueWhale.EngineQuery.SqlServer.Clauses;
@@ -27,7 +27,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Composition
                 {
                     CteClauseBuilderFactory = subqueryCompiler =>
                         new SqlServerCteClauseBuilder(subqueryCompiler),
-                    InsertClauseBuilderFactory = () => new SqlServerInsertClauseBuilder(),  
+                    InsertClauseBuilderFactory = () => new SqlServerInsertClauseBuilder(),
                 });
         }
     }

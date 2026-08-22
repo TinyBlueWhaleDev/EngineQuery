@@ -1,6 +1,6 @@
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context
-{    
+{
 
     /// <summary>
     /// Tracks aliases registered within the current query scope.

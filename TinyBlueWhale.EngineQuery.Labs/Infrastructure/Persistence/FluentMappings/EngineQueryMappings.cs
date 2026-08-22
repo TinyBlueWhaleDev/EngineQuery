@@ -1,6 +1,6 @@
-using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
+﻿using TinyBlueWhale.EngineQuery.Labs.Domain.Entities;
 using TinyBlueWhale.EngineQuery.Metadata.Fluent;
-using TinyBlueWhale.EngineQuery.Labs.Domain.Entities;
+using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 
 namespace TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.FluentMappings;
 

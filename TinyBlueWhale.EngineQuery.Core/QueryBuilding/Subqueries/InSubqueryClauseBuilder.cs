@@ -1,8 +1,8 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
-using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
 {
@@ -32,7 +32,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
 
             var configuredBuilder = subqueryBuilder(nestedCommandBuilder);
 
-            var subqueryDefinition = NestedQueryCommandBuilderFactory.ExtractDefinition(configuredBuilder,"The IN subquery builder returned an unsupported query command builder instance.");
+            var subqueryDefinition = NestedQueryCommandBuilderFactory.ExtractDefinition(configuredBuilder, "The IN subquery builder returned an unsupported query command builder instance.");
 
             _context.QueryDefinition.InSubqueryDefinitions.Add(
                 new QueryInSubqueryDefinition

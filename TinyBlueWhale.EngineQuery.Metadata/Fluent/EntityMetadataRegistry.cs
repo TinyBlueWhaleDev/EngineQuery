@@ -51,7 +51,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <returns>
         /// True when metadata exists; otherwise, false.
         /// </returns>
-        public bool TryGet(Type entityType,out EntityMetadata? metadata)
+        public bool TryGet(Type entityType, out EntityMetadata? metadata)
         {
             return _metadataByEntityType.TryGetValue(entityType, out metadata);
         }

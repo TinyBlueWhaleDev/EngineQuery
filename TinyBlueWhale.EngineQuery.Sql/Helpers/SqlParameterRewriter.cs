@@ -3,7 +3,7 @@ using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Parameters;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Helpers
-{    
+{
 
     /// <summary>
     /// Rewrites SQL parameter names from a nested query into a parent parameter collection.

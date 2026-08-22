@@ -4,7 +4,7 @@ using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Versioning
-{    
+{
 
     /// <summary>
     /// Validates version-based provider capabilities.
