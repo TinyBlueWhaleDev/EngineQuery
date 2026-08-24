@@ -23,7 +23,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context
         /// <summary>
         /// Gets the metadata resolver associated with the query.
         /// </summary>
-        public required IEntityMetadataResolver? MetadataResolver { get; init; }
+        public required IEntityMetadataResolver MetadataResolver { get; init; }
 
         /// <summary>
         /// Gets the alias registry associated with the query scope.

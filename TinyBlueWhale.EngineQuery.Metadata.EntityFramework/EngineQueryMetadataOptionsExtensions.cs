@@ -29,14 +29,18 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework
         {
             ArgumentNullException.ThrowIfNull(metadata);
 
-            return metadata.UseMetadata(
-                EntityFrameworkMetadataStrategies.EntityFramework,
-                serviceProvider =>
+            metadata.AddRegistration(new EngineQueryMetadataRegistration
+            {
+                Strategy = EntityFrameworkMetadataStrategies.EntityFramework,
+                BuildMetadataResolver = serviceProvider =>
                 {
                     var dbContext = serviceProvider.GetRequiredService<TDbContext>();
 
                     return new EntityFrameworkMetadataResolver(dbContext.Model);
-                });
+                }
+            });
+
+            return metadata;
         }
 
         /// <summary>
@@ -62,16 +66,19 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework
             ArgumentNullException.ThrowIfNull(metadata);
             ArgumentNullException.ThrowIfNull(options);
 
-            return metadata.UseMetadata(
-                EntityFrameworkMetadataStrategies.EntityFramework,
-                serviceProvider =>
+            metadata.AddRegistration(new EngineQueryMetadataRegistration
+            {
+                Strategy = EntityFrameworkMetadataStrategies.EntityFramework,
+                BuildMetadataResolver = serviceProvider =>
                 {
                     var dbContext = serviceProvider.GetRequiredService<TDbContext>();
 
-                    return new EntityFrameworkMetadataResolver(
-                        dbContext.Model,
-                        options);
-                });
+                    return new EntityFrameworkMetadataResolver(dbContext.Model, options);
+                }
+            });
+
+            return metadata;
+
         }
     }
 }

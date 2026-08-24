@@ -1,5 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
-using TinyBlueWhale.EngineQuery.Metadata.Models;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
@@ -20,7 +19,7 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         /// <summary>
         /// Registers fluent metadata.
         /// </summary>
-        public EngineQueryMetadataOptions UseFluentMetadata(Func<IEntityMetadataResolver> metadataResolverFactory)
+        public EngineQueryMetadataOptions UseFluentMetadata(Func<FluentEntityMetadataResolver> metadataResolverFactory)
         {
             ArgumentNullException.ThrowIfNull(metadataResolverFactory);
             _registrations.Add(
@@ -47,20 +46,16 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         }
 
         /// <summary>
-        /// Registers metadata using a service provider based factory.
+        /// Adds a supported metadata registration to the current metadata configuration.
         /// </summary>
-        public EngineQueryMetadataOptions UseMetadata(
-            MetadataStrategy strategy,
-            Func<IServiceProvider, IEntityMetadataResolver> metadataResolverFactory)
+        /// <param name="registration">
+        /// Metadata registration to add.
+        /// </param>
+        internal void AddRegistration(EngineQueryMetadataRegistration registration)
         {
-            ArgumentNullException.ThrowIfNull(metadataResolverFactory);
-            _registrations.Add(
-                new EngineQueryMetadataRegistration
-                {
-                    Strategy = strategy,
-                    BuildMetadataResolver = metadataResolverFactory
-                });
-            return this;
+            ArgumentNullException.ThrowIfNull(registration);
+
+            _registrations.Add(registration);
         }
     }
 }

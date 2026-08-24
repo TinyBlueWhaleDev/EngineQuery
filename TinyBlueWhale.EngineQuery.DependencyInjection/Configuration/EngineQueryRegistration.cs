@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
@@ -18,7 +18,7 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         /// <summary>
         /// Gets the configured metadata strategy.
         /// </summary>
-        public required MetadataStrategy MetadataStrategy { get; init; }
+        public required MetadataStrategy? MetadataStrategy { get; init; }
 
         /// <summary>
         /// Gets the query compiler factory.

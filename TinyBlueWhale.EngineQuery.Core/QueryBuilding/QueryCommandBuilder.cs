@@ -23,7 +23,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     {
         private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
-        private readonly IEntityMetadataResolver? _metadataResolver;
+        private readonly IEntityMetadataResolver _metadataResolver;
 
         private readonly QueryCommandBuilderContext _context;
         private readonly QueryCommandBuilderComponents _components;
@@ -47,7 +47,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="queryCompiler"/> or <paramref name="querySource"/> is null.
         /// </exception>
-        internal QueryCommandBuilder(IQueryCompiler queryCompiler, QuerySourceDefinition querySource, IEntityMetadataResolver? metadataResolver = null)
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler, QuerySourceDefinition querySource, IEntityMetadataResolver metadataResolver)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentNullException.ThrowIfNull(querySource);
@@ -86,6 +86,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="queryCompiler">
         /// Query compiler used to generate provider-specific query output.
         /// </param>
+        /// <param name="metadataResolver">
+        /// Metadata resolver used to resolve entity table and column mappings.
+        /// </param>
         /// <param name="tableName">
         /// Database table name associated with the query.
         /// </param>
@@ -94,11 +97,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </param>
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
-        /// </param>
-        /// <param name="metadataResolver">
-        /// Optional entity metadata resolver used for metadata-driven joins.
-        /// </param>
-        internal QueryCommandBuilder(IQueryCompiler queryCompiler, string tableName, string? tableAlias = null, IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
+        /// </param>        
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? tableAlias = null, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);

@@ -19,7 +19,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
 
             var columnMappings = QuerySourceResolver.BuildColumnMappings(metadata);
 
-            return new QueryCommandBuilder<TSubquery>(_context.QueryCompiler, metadata.TableName, alias, columnMappings, _context.MetadataResolver);
+            return new QueryCommandBuilder<TSubquery>(_context.QueryCompiler, _context.MetadataResolver, metadata.TableName, alias, columnMappings);
         }
 
         public QueryBuilder CreateQueryBuilder()

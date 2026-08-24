@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
+using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
 using TinyBlueWhale.EngineQuery.MySql.Dialects;
@@ -26,6 +27,29 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         internal IReadOnlyList<EngineQueryRegistration> Registrations => _registrations;
 
         /// <summary>
+        /// Registers a provider using convention-based metadata resolution.
+        /// </summary>
+        /// <param name="provider">
+        /// Query engine provider to register.
+        /// </param>
+        /// <returns>
+        /// Current EngineQuery options instance.
+        /// </returns>
+        public EngineQueryOptions Add(QueryEngineProvider provider)
+        {
+            _registrations.Add(
+                new EngineQueryRegistration
+                {
+                    Provider = provider,
+                    MetadataStrategy = null,
+                    BuildCompiler = BuildCompilerFactory(provider),
+                    BuildMetadataResolver = _ => new ConventionEntityMetadataResolver()
+                });
+
+            return this;
+        }
+
+        /// <summary>
         /// Registers a provider using metadata options.
         /// </summary>
         public EngineQueryOptions Add(QueryEngineProvider provider, Action<EngineQueryMetadataOptions> configureMetadata)
@@ -46,7 +70,16 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
                         Provider = provider,
                         MetadataStrategy = metadataRegistration.Strategy,
                         BuildCompiler = BuildCompilerFactory(provider),
-                        BuildMetadataResolver = metadataRegistration.BuildMetadataResolver
+                        BuildMetadataResolver = serviceProvider =>
+                        {
+                            var configuredResolver = metadataRegistration.BuildMetadataResolver(serviceProvider);
+
+                            return new CompositeEntityMetadataResolver(
+                            [
+                                configuredResolver,
+                                new ConventionEntityMetadataResolver()
+                            ]);
+                        }
                     });
             }
             return this;

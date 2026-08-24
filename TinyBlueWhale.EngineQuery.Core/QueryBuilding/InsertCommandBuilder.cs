@@ -51,7 +51,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver used for metadata-driven query composition.
         /// </param>
-        internal InsertCommandBuilder(IQueryCompiler queryCompiler, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
+        internal InsertCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);

@@ -41,7 +41,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver associated with the command.
         /// </param>
-        internal UpdateCommandBuilder(IQueryCompiler queryCompiler, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
+        internal UpdateCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
