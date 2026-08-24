@@ -37,41 +37,25 @@ namespace TinyBlueWhale.EngineQuery.Sql.Helpers
             ArgumentNullException.ThrowIfNull(sourceParameters);
             ArgumentNullException.ThrowIfNull(targetParameters);
 
-            foreach (var parameter in sourceParameters.OrderByDescending(parameter => parameter.Name.Length))
-            {
-                var rewrittenParameter = targetParameters.AddRewritten(parameter);
+            Dictionary<string, string> replacements = new(StringComparer.Ordinal);
 
-                commandText = ReplaceParameterName(
-                    commandText,
-                    parameter.Name,
-                    rewrittenParameter.Name);
+            foreach (QuerySqlParameter parameter in sourceParameters)
+            {
+                QuerySqlParameter rewrittenParameter = targetParameters.AddRewritten(parameter);
+
+                replacements.Add(parameter.Name, rewrittenParameter.Name);
             }
 
-            return commandText;
-        }
+            if (replacements.Count == 0)
+                return commandText;
 
-        /// <summary>
-        /// Replaces a SQL parameter name without matching partial parameter names.
-        /// </summary>
-        /// <param name="commandText">
-        /// SQL command text to update.
-        /// </param>
-        /// <param name="oldName">
-        /// Existing parameter name.
-        /// </param>
-        /// <param name="newName">
-        /// Replacement parameter name.
-        /// </param>
-        /// <returns>
-        /// SQL command text with the parameter name replaced.
-        /// </returns>
-        private static string ReplaceParameterName(string commandText, string oldName, string newName)
-        {
-            return Regex.Replace(
-                commandText,
-                $@"(?<![\w@]){Regex.Escape(oldName)}(?!\w)",
-                newName,
+            string parameterPattern = string.Join("|", replacements.Keys.OrderByDescending(name => name.Length).Select(Regex.Escape));
+
+            return Regex.Replace(commandText,
+                $@"(?<![\w@])(?:{parameterPattern})(?!\w)",
+                match => replacements[match.Value],
                 RegexOptions.CultureInvariant);
+
         }
     }
 }

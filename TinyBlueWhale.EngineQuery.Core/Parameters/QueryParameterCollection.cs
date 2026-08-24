@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.Core.Parameters
 {
