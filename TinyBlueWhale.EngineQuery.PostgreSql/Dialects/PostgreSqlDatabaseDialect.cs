@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
 {
@@ -12,7 +12,7 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
     public sealed class PostgreSqlDatabaseDialect : ISqlDatabaseDialect
     {
         /// <summary>
-        /// Escapes a SQL identifier using PostgreSql bracket syntax.
+        /// Escapes a SQL identifier using PostgreSql double quote syntax.
         /// </summary>
         /// <param name="identifier">
         /// Identifier to escape.
@@ -20,7 +20,7 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
         /// <returns>
         /// Escaped PostgreSql identifier.
         /// </returns>
-        public string EscapeIdentifier(string identifier) => $"\"{identifier}\"";
+        public string EscapeIdentifier(string identifier) => $"\"{identifier.Replace("\"", "\"\"")}\"";
 
         /// <summary>
         /// Builds a PostgreSql pagination clause using LIMIT/OFFSET syntax.

@@ -20,7 +20,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Dialects
         /// <returns>
         /// Escaped SQL Server identifier.
         /// </returns>
-        public string EscapeIdentifier(string identifier) => $"[{identifier}]";
+        public string EscapeIdentifier(string identifier) => $"[{identifier.Replace("]", "]]")}]";
 
         /// <summary>
         /// Builds a SQL Server pagination clause using OFFSET/FETCH syntax.

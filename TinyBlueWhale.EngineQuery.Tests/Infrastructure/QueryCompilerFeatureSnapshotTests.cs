@@ -10,6 +10,58 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     /// </summary>
     public abstract class QueryCompilerFeatureSnapshotTests : QueryCompilerProviderTestBase
     {
+        [Test]
+        public void ToSql_Should_Not_Leak_Cte_Definitions_Between_Queries()
+        {
+            var queryBuilder = CreateQueryBuilder();
+
+            var firstQuery = queryBuilder
+                .With<OrderSummary, JoinOrder>(
+                    "first_summary",
+                    cte => cte
+                        .From<JoinOrder>(alias: "o")
+                        .Select<JoinOrder>(o => new
+                        {
+                            UserId = o.UserId
+                        }))
+                .FromCte<OrderSummary>("first_summary")
+                .Select<OrderSummary>(summary => new
+                {
+                    summary.UserId
+                })
+                .Build();
+
+            var secondQuery = queryBuilder
+                .With<OrderSummary, JoinOrder>(
+                    "second_summary",
+                    cte => cte
+                        .From<JoinOrder>(alias: "o")
+                        .Select<JoinOrder>(o => new
+                        {
+                            UserId = o.UserId
+                        }))
+                .FromCte<OrderSummary>("second_summary")
+                .Select<OrderSummary>(summary => new
+                {
+                    summary.UserId
+                })
+                .Build();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    firstQuery.CommandText,
+                    Does.Contain("first_summary"));
+
+                Assert.That(
+                    secondQuery.CommandText,
+                    Does.Contain("second_summary"));
+
+                Assert.That(
+                    secondQuery.CommandText,
+                    Does.Not.Contain("first_summary"));
+            });
+        }
 
         /// <summary>
         /// Validates INSERT SELECT generation using an IN collection condition

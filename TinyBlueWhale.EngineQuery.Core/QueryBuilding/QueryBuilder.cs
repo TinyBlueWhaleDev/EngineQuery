@@ -183,6 +183,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             commandBuilder.RegisterCteDefinitions(_cteDefinitions);
 
+            _cteDefinitions.Clear();
+
             return commandBuilder;
         }
 

@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Dialects
 {
@@ -12,7 +12,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Dialects
     public sealed class MySqlDatabaseDialect : ISqlDatabaseDialect
     {
         /// <summary>
-        /// Escapes a SQL identifier using MySql bracket syntax.
+        /// Escapes a SQL identifier using MySql backtick syntax.
         /// </summary>
         /// <param name="identifier">
         /// Identifier to escape.
@@ -20,7 +20,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Dialects
         /// <returns>
         /// Escaped MySql identifier.
         /// </returns>
-        public string EscapeIdentifier(string identifier) => $"`{identifier}`";
+        public string EscapeIdentifier(string identifier) => $"`{identifier.Replace("`", "``")}`";
 
         /// <summary>
         /// Builds a MySql pagination clause using LIMIT/OFFSET syntax.
