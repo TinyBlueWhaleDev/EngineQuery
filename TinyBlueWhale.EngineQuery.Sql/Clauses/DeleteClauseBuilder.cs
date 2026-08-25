@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Clauses
@@ -33,7 +34,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
 
-            var tableName = context.DatabaseDialect.EscapeIdentifier(queryDefinition.TableName);
+            var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, queryDefinition.TableName, queryDefinition.SchemaName);
 
             return $"DELETE FROM {tableName}";
         }

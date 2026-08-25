@@ -35,13 +35,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="tableName">
         /// Database table name associated with the DELETE command.
         /// </param>
+        /// <param name="schemaName">
+        /// Optional database schema name associated with the target INSERT table.
+        /// </param>
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
         /// </param>
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver associated with the command.
         /// </param>
-        internal DeleteCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null)
+        internal DeleteCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? schemaName, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
@@ -51,6 +54,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             _queryDefinition = new CompiledQueryDefinition
             {
                 CommandType = QueryCommandType.Delete,
+                SchemaName = schemaName,
                 TableName = tableName,
                 TableAlias = tableName,
                 ColumnMappings = columnMappings ?? new Dictionary<string, string>(),

@@ -1,4 +1,4 @@
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
 
@@ -11,6 +11,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the CLR entity type associated with the query source.
         /// </summary>
         public required Type EntityType { get; init; }
+
+        /// <summary>
+        /// Gets the optional database schema name associated with the physical query source.
+        /// </summary>
+        public string? SchemaName { get; init; }
 
         /// <summary>
         /// Gets the physical database table name associated with the query source.

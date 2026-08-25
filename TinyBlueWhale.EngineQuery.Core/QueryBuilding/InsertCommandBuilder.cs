@@ -27,7 +27,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     {
         private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
-        private readonly IEntityMetadataResolver? _metadataResolver;
+        private readonly IEntityMetadataResolver _metadataResolver;
         private readonly QueryCommandBuilderContext _context;
         private readonly QueryCommandBuilderComponents _components;
 
@@ -44,16 +44,20 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </param>
         /// <param name="tableName">
         /// Database table name associated with the INSERT command.
-        /// </param>    
+        /// </param>
+        /// <param name="schemaName">
+        /// Optional database schema name associated with the target INSERT table.
+        /// </param>
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
         /// </param>
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver used for metadata-driven query composition.
         /// </param>
-        internal InsertCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null)
+        internal InsertCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? schemaName = null, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
+            ArgumentNullException.ThrowIfNull(metadataResolver);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
             _queryCompiler = queryCompiler;
@@ -62,6 +66,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             _queryDefinition = new CompiledQueryDefinition
             {
                 CommandType = QueryCommandType.Insert,
+                SchemaName = schemaName,
                 TableName = tableName,
                 ColumnMappings = columnMappings ?? new Dictionary<string, string>(),
                 EntityType = typeof(T),
@@ -239,11 +244,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             EnsureInsertSelectMode();
 
-            var columnMappings = typeof(TSource)
-                .GetProperties()
-                .ToDictionary(property => property.Name, property => property.Name);
+            var metadata = EntityMetadataHelper.Resolve<TSource>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            RegisterSource<TSource>(tableName, alias, columnMappings);
+            RegisterSource<TSource>(tableName, metadata.SchemaName, alias, columnMappings);
 
             return this;
         }
@@ -273,15 +277,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             EnsureInsertSelectMode();
 
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
+            var metadata = EntityMetadataHelper.Resolve<TSource>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            if (!_metadataResolver.TryResolve<TSource>(out var metadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TSource).Name}' could not be resolved.");
-
-            var columnMappings = metadata!.Properties.ToDictionary(property => property.Key, property => property.Value.ColumnName);
-
-            RegisterSource<TSource>(metadata.TableName, alias, columnMappings);
+            RegisterSource<TSource>(metadata.TableName, metadata.SchemaName, alias, columnMappings);
 
             return this;
         }
@@ -387,7 +386,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
 
         // Registers the root query source associated with the current INSERT SELECT command.
-        private void RegisterSource<TSource>(string tableName, string? alias, IReadOnlyDictionary<string, string> columnMappings)
+        private void RegisterSource<TSource>(string tableName, string? schemaName, string? alias, IReadOnlyDictionary<string, string> columnMappings)
         {
             if (_queryDefinition.InsertDefinition!.SourceDefinition is not null)
                 throw new InvalidOperationException("The INSERT SELECT source is already configured.");
@@ -402,6 +401,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             var sourceDefinition = new QuerySourceDefinition
             {
                 EntityType = typeof(TSource),
+                SchemaName = schemaName,
                 TableName = tableName,
                 TableAlias = resolvedAlias,
                 ColumnMappings = columnMappings

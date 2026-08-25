@@ -92,13 +92,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="tableName">
         /// Database table name associated with the query.
         /// </param>
+        /// <param name="schemaName">
+        /// Optional database schema name associated with the query source.
+        /// </param>
         /// <param name="tableAlias">
         /// Optional table alias used to qualify generated SQL column references.
         /// </param>
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
         /// </param>        
-        internal QueryCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? tableAlias = null, IReadOnlyDictionary<string, string>? columnMappings = null)
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? schemaName = null, string? tableAlias = null, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
@@ -113,6 +116,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             _queryDefinition = new CompiledQueryDefinition
             {
                 TableName = tableName,
+                SchemaName = schemaName,
                 TableAlias = tableAlias,
                 ColumnMappings = columnMappings ?? new Dictionary<string, string>(),
                 EntityType = typeof(T)
@@ -128,7 +132,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _components = QueryCommandBuilderComponentFactory.Create(_context);
 
-            RegisterRootSource(tableName, tableAlias);
+            RegisterRootSource(tableName, tableAlias, schemaName);
         }
 
         #endregion
@@ -348,7 +352,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
 
         // Registers the root query source in the current query scope.
-        private void RegisterRootSource(string tableName, string? tableAlias)
+        private void RegisterRootSource(string tableName, string? tableAlias, string? schemaName)
         {
             var resolvedAlias = string.IsNullOrWhiteSpace(tableAlias)
                 ? QueryAliasGeneratorHelper.Generate(0)
@@ -358,6 +362,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 new QuerySourceDefinition
                 {
                     EntityType = typeof(T),
+                    SchemaName = schemaName,
                     TableName = tableName,
                     TableAlias = resolvedAlias,
                     ColumnMappings = _queryDefinition.ColumnMappings

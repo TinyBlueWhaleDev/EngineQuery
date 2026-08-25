@@ -61,7 +61,8 @@ namespace TinyBlueWhale.EngineQuery.Tests.EntityFrameworkMetadata
             {
                 Assert.That(resolved, Is.True);
                 Assert.That(metadata, Is.Not.Null);
-                Assert.That(metadata!.TableName, Is.EqualTo("security.schema_users"));
+                Assert.That(metadata!.SchemaName, Is.EqualTo("security"));
+                Assert.That(metadata.TableName, Is.EqualTo("schema_users"));
                 Assert.That(metadata.Properties["Id"].ColumnName, Is.EqualTo("schema_user_id"));
                 Assert.That(metadata.Properties["Email"].ColumnName, Is.EqualTo("email"));
             });

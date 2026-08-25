@@ -1,4 +1,4 @@
-
+﻿
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
@@ -16,6 +16,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets or sets the SQL command type represented by the query definition.
         /// </summary>
         public QueryCommandType CommandType { get; set; } = QueryCommandType.Select;
+
+        /// <summary>
+        /// Gets or sets the optional database schema name associated with the root query source.
+        /// </summary>
+        public string? SchemaName { get; set; }
 
         /// <summary>
         /// Gets or sets the source table name associated with the query.

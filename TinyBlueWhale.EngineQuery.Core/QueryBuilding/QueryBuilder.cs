@@ -1,9 +1,9 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
-using TinyBlueWhale.EngineQuery.Metadata.Models;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 {
@@ -45,10 +45,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (alias is not null)
                 ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
-            var metadata = ResolveMetadata<T>();
-            var columnMappings = CreateColumnMappings(metadata);
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            return new QueryCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, alias, columnMappings);
+            return new QueryCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, metadata.SchemaName, alias, columnMappings);
         }
 
         /// <summary>
@@ -68,10 +68,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (alias is not null)
                 ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
-            var metadata = ResolveMetadata<T>();
-            var columnMappings = CreateColumnMappings(metadata);
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            return new QueryCommandBuilder<T>(_queryCompiler, _metadataResolver, metadata.TableName, alias, columnMappings);
+            return new QueryCommandBuilder<T>(_queryCompiler, _metadataResolver, metadata.TableName, metadata.SchemaName, alias, columnMappings);
         }
 
         /// <summary>
@@ -307,10 +307,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            var metadata = ResolveMetadata<T>();
-            var columnMappings = CreateColumnMappings(metadata);
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            return new InsertCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, columnMappings);
+            return new InsertCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, metadata.SchemaName, columnMappings);
         }
         /// <summary>
         /// Creates a new INSERT command builder using resolved entity metadata.
@@ -323,10 +323,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IInsertCommandBuilder<T> InsertInto<T>()
         {
-            var metadata = ResolveMetadata<T>();
-            var columnMappings = CreateColumnMappings(metadata);
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            return new InsertCommandBuilder<T>(_queryCompiler, _metadataResolver, metadata.TableName, columnMappings);
+            return new InsertCommandBuilder<T>(_queryCompiler, _metadataResolver, metadata.TableName, metadata.SchemaName, columnMappings);
         }
 
         /// <summary>
@@ -345,10 +345,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            var metadata = ResolveMetadata<T>();
-            var columnMappings = CreateColumnMappings(metadata);
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            return new UpdateCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, columnMappings);
+            return new UpdateCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, metadata.SchemaName, columnMappings);
         }
 
         /// <summary>
@@ -362,10 +362,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IUpdateCommandBuilder<T> Update<T>()
         {
-            var metadata = ResolveMetadata<T>();
-            var columnMappings = CreateColumnMappings(metadata);
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            return new UpdateCommandBuilder<T>(_queryCompiler, _metadataResolver, metadata.TableName, columnMappings);
+            return new UpdateCommandBuilder<T>(_queryCompiler, _metadataResolver, metadata.TableName, metadata.SchemaName, columnMappings);
         }
 
         /// <summary>
@@ -384,10 +384,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            var metadata = ResolveMetadata<T>();
-            var columnMappings = CreateColumnMappings(metadata);
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            return new DeleteCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, columnMappings);
+            return new DeleteCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, metadata.SchemaName, columnMappings);
         }
 
         /// <summary>
@@ -401,11 +401,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IDeleteCommandBuilder<T> DeleteFrom<T>()
         {
-            var metadata = ResolveMetadata<T>();
-            var columnMappings = CreateColumnMappings(metadata);
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
             return new DeleteCommandBuilder<T>(
-                _queryCompiler, _metadataResolver, metadata.TableName, columnMappings);
+                _queryCompiler, _metadataResolver, metadata.TableName, metadata.SchemaName, columnMappings);
         }
 
         /// <summary>
@@ -421,47 +421,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         private Dictionary<string, string> ResolveDerivedColumnMappings<TDerived>()
         {
             if (_metadataResolver.TryResolve<TDerived>(out var metadata))
-                return CreateColumnMappings(metadata!);
+                return EntityMetadataHelper.CreateColumnMappings(metadata!);
 
             return typeof(TDerived)
                 .GetProperties()
                 .ToDictionary(property => property.Name, property => property.Name);
-        }
-
-        /// <summary>
-        /// Resolves metadata for the specified entity type.
-        /// </summary>
-        /// <typeparam name="TEntity">
-        /// Entity type whose metadata is resolved.
-        /// </typeparam>
-        /// <returns>
-        /// Resolved entity metadata.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when metadata cannot be resolved for the specified entity type.
-        /// </exception>
-        private EntityMetadata ResolveMetadata<TEntity>()
-        {
-            if (!_metadataResolver.TryResolve<TEntity>(out var metadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TEntity).Name}' could not be resolved.");
-
-            return metadata!;
-        }
-
-        /// <summary>
-        /// Creates property-to-column mappings from the specified entity metadata.
-        /// </summary>
-        /// <param name="metadata">
-        /// Entity metadata used to create the property-to-column mappings.
-        /// </param>
-        /// <returns>
-        /// Property-to-column mappings associated with the entity.
-        /// </returns>
-        private static Dictionary<string, string> CreateColumnMappings(EntityMetadata metadata)
-        {
-            ArgumentNullException.ThrowIfNull(metadata);
-
-            return metadata.Properties.ToDictionary(property => property.Key, property => property.Value.ColumnName);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Clauses
@@ -41,7 +42,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             if (updateDefinition is null || updateDefinition.AssignmentDefinitions.Count == 0)
                 throw new InvalidOperationException("The UPDATE command requires at least one value assignment.");
 
-            var tableName = context.DatabaseDialect.EscapeIdentifier(queryDefinition.TableName);
+            var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, queryDefinition.TableName, queryDefinition.SchemaName);
 
             var assignments = updateDefinition.AssignmentDefinitions.Select(definition =>
             {

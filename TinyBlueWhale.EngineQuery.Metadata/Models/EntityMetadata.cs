@@ -1,4 +1,4 @@
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Metadata.Models
 {
     /// <summary>
@@ -10,6 +10,11 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Models
         /// Gets the CLR entity type.
         /// </summary>
         public required Type EntityType { get; init; }
+
+        /// <summary>
+        /// Gets the optional database schema name associated with the mapped table.
+        /// </summary>
+        public string? SchemaName { get; init; }
 
         /// <summary>
         /// Gets the mapped database table name.

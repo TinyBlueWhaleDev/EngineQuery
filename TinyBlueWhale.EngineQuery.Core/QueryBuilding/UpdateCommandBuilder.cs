@@ -35,13 +35,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="tableName">
         /// Database table name associated with the UPDATE command.
         /// </param>
+        /// <param name="schemaName">
+        /// Optional database schema name associated with the target INSERT table.
+        /// </param>
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
         /// </param>
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver associated with the command.
         /// </param>
-        internal UpdateCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null)
+        internal UpdateCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? schemaName = null, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
@@ -51,6 +54,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             _queryDefinition = new CompiledQueryDefinition
             {
                 CommandType = QueryCommandType.Update,
+                SchemaName = schemaName,
                 TableName = tableName,
                 TableAlias = tableName,
                 ColumnMappings = columnMappings ?? new Dictionary<string, string>(),
@@ -62,6 +66,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 new QuerySourceDefinition
                 {
                     EntityType = typeof(T),
+                    SchemaName = schemaName,
                     TableName = tableName,
                     TableAlias = tableName,
                     ColumnMappings = _queryDefinition.ColumnMappings

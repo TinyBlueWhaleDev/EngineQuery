@@ -1,5 +1,6 @@
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Clauses
@@ -46,7 +47,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             if (rootSource is not null)
                 return $"FROM {BuildQuerySourceReference(rootSource, context)}";
 
-            var tableName = context.DatabaseDialect.EscapeIdentifier(queryDefinition.TableName);
+            var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, queryDefinition.TableName, queryDefinition.SchemaName);
 
             return string.IsNullOrWhiteSpace(queryDefinition.TableAlias)
                 ? $"FROM {tableName}"
@@ -65,7 +66,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             }
 
             if (sourceDefinition.IsTable)
-                return $"{context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableName!)} AS {context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+            {
+                var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, sourceDefinition.TableName!, sourceDefinition.SchemaName);
+
+                return $"{tableName} AS {context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+            }
 
             throw new InvalidOperationException("Query source must define either a physical table or a derived table subquery.");
         }

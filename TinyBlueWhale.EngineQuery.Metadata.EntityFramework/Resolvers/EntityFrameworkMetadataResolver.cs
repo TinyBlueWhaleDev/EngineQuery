@@ -99,9 +99,8 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Resolvers
             metadata = new EntityMetadata
             {
                 EntityType = entityType,
-                TableName = string.IsNullOrWhiteSpace(schema)
-                    ? tableName
-                    : $"{schema}.{tableName}",
+                SchemaName = schema,
+                TableName = tableName,
                 Properties = properties
             };
 
