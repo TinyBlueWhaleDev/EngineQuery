@@ -2,6 +2,7 @@
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering;
@@ -105,7 +106,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             var updateDefinition = _queryDefinition.UpdateDefinition
                 ?? throw new InvalidOperationException("The UPDATE command definition is not initialized.");
 
-            var propertyName = ResolvePropertyName(selector);
+            var propertyName = PropertyExpressionHelper.ResolvePropertyName(selector, nameof(selector), "The UPDATE selector must reference a direct entity property.");
 
             var columnName = _queryDefinition.ColumnMappings.TryGetValue(
                 propertyName,
@@ -273,20 +274,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             }
 
             return _queryCompiler.Compile(_queryDefinition);
-        }
-
-        // Resolves the selected entity property name from an UPDATE value assignment expression.
-        private static string ResolvePropertyName<TProperty>(Expression<Func<T, TProperty>> selector)
-        {
-            Expression expression = selector.Body;
-
-            if (expression is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
-                expression = unaryExpression.Operand;
-
-            if (expression is not MemberExpression memberExpression || memberExpression.Expression is not ParameterExpression)
-                throw new ArgumentException("The UPDATE selector must reference a direct entity property.", nameof(selector));
-
-            return memberExpression.Member.Name;
         }
     }
 }

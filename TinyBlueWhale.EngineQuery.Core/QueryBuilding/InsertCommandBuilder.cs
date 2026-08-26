@@ -109,7 +109,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (_queryDefinition.InsertDefinition!.ValueDefinitions.Count > 0)
                 throw new InvalidOperationException("INSERT SELECT columns cannot be combined with INSERT value assignments.");
 
-            foreach (var propertyName in ResolvePropertyNames(selector))
+            var propertyNames = PropertyExpressionHelper.ResolvePropertyNames(selector, nameof(selector), "The INSERT columns selector must reference direct entity properties.");
+
+            foreach (var propertyName in propertyNames)
             {
                 var columnName = ResolveColumnName(propertyName);
 
@@ -161,7 +163,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (_queryDefinition.InsertDefinition.ColumnDefinitions.Count > 0)
                 throw new InvalidOperationException("INSERT value assignments cannot be combined with explicitly configured INSERT SELECT columns.");
 
-            var propertyName = ResolvePropertyName(selector);
+            var propertyName = PropertyExpressionHelper.ResolvePropertyName(selector, nameof(selector), "The INSERT selector must reference a direct entity property.");
+
             var columnName = ResolveColumnName(propertyName);
 
             if (_queryDefinition.InsertDefinition.ValueDefinitions.Any(definition => definition.ColumnName.Equals(columnName, StringComparison.Ordinal)))
@@ -206,7 +209,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentNullException.ThrowIfNull(identitySelector);
 
-            var propertyName = ResolvePropertyName(identitySelector);
+            var propertyName = PropertyExpressionHelper.ResolvePropertyName(identitySelector, nameof(identitySelector), "The INSERT identity selector must reference a direct entity property.");
+
             var columnName = ResolveColumnName(propertyName);
 
             ConfigureIdentityRetrieval(columnName);
@@ -418,49 +422,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return _queryDefinition.ColumnMappings.TryGetValue(propertyName, out var mappedColumnName)
                 ? mappedColumnName
                 : propertyName;
-        }
-
-        // Resolves the selected entity property name from an INSERT value assignment expression.
-        private static string ResolvePropertyName<TProperty>(Expression<Func<T, TProperty>> selector)
-        {
-            Expression expression = selector.Body;
-
-            if (expression is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
-                expression = unaryExpression.Operand;
-
-            if (expression is not MemberExpression memberExpression || memberExpression.Expression is not ParameterExpression)
-                throw new ArgumentException("The INSERT selector must reference a direct entity property.", nameof(selector));
-
-            return memberExpression.Member.Name;
-        }
-
-        // Resolves the selected entity property names from an INSERT target column expression.
-        private static List<string> ResolvePropertyNames(Expression<Func<T, object>> selector)
-        {
-            Expression expression = selector.Body;
-
-            if (expression is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
-                expression = unaryExpression.Operand;
-
-            if (expression is MemberExpression memberExpression)
-                return [ResolvePropertyName(memberExpression, nameof(selector))];
-
-            if (expression is NewExpression newExpression)
-                return newExpression.Arguments.Select(argument => ResolvePropertyName(argument, nameof(selector))).ToList();
-
-            throw new ArgumentException("The INSERT columns selector must reference one or more direct entity properties.", nameof(selector));
-        }
-
-        // Resolves a direct entity property name from an INSERT target column expression.
-        private static string ResolvePropertyName(Expression expression, string parameterName)
-        {
-            if (expression is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
-                expression = unaryExpression.Operand;
-
-            if (expression is not MemberExpression memberExpression || memberExpression.Expression is not ParameterExpression)
-                throw new ArgumentException("The INSERT columns selector must reference direct entity properties.", parameterName);
-
-            return memberExpression.Member.Name;
         }
 
         // Configures identity retrieval for a direct INSERT VALUES command.

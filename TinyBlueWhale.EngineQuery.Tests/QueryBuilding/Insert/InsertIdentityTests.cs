@@ -85,7 +85,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Insert
                 .Set(user => user.Email, "admin@test.com")
                 .ReturnIdentity(user => user.Email.Length));
 
-            Assert.That(exception!.Message, Does.Contain("The INSERT selector must reference a direct entity property."));
+            Assert.That(exception!.Message, Does.Contain("The INSERT identity selector must reference a direct entity property. (Parameter 'identitySelector')"));
         }
 
         /// <summary>
