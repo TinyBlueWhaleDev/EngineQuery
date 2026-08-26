@@ -1,6 +1,0 @@
-DELETE
-FROM [Users]
-WHERE ([Users].[Id] = @p0)
-
--- Parameters
-@p0 = 10

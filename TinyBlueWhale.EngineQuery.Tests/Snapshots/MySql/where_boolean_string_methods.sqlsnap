@@ -1,8 +1,0 @@
-SELECT *
-FROM `Users` AS `Users`
-WHERE (((`Users`.`IsActive` = @p0) AND (`Users`.`Email` LIKE @p1)) AND (`Users`.`Age` >= @p2))
-
--- Parameters
-@p0 = True
-@p1 = %@gmail.com%
-@p2 = 18

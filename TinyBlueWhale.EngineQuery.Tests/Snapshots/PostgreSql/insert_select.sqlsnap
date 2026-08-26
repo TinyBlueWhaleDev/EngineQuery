@@ -1,7 +1,0 @@
-INSERT INTO "users" ("user_id", "email")
-SELECT "u"."user_id" AS "Id", "u"."email" AS "Email"
-FROM "users" AS "u"
-WHERE ("u"."is_active" = @p0)
-
--- Parameters
-@p0 = True

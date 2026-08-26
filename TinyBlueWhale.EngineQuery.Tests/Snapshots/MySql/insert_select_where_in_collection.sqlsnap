@@ -1,9 +1,0 @@
-INSERT INTO `orders` (`user_id`)
-SELECT `u`.`user_id` AS `UserId`
-FROM `users` AS `u`
-WHERE `u`.`user_id` IN (@p0, @p1, @p2)
-
--- Parameters
-@p0 = 10
-@p1 = 20
-@p2 = 30

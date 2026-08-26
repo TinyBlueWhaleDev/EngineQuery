@@ -1,4 +1,0 @@
-SELECT *
-FROM `Users` AS `Users`
-ORDER BY `Users`.`Email` ASC, `Users`.`CreatedAt` DESC
-LIMIT 10 OFFSET 20

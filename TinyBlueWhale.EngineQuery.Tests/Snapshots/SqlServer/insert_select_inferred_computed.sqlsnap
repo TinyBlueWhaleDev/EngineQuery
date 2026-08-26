@@ -1,6 +1,0 @@
-INSERT INTO [projection_results] ([TotalWithTax])
-SELECT ([o].[total] * @p0) AS [TotalWithTax]
-FROM [orders] AS [o]
-
--- Parameters
-@p0 = 1.16

@@ -1,2 +1,0 @@
-SELECT "u"."user_id" AS "UserId", UPPER("u"."email") AS "NormalizedEmail", LENGTH("u"."email") AS "EmailLength"
-FROM "users" AS "u"

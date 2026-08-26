@@ -1,8 +1,0 @@
-INSERT INTO [projection_results] ([CustomerType])
-SELECT CASE WHEN ([o].[total] > @p0) THEN @p1 ELSE @p2 END AS [CustomerType]
-FROM [orders] AS [o]
-
--- Parameters
-@p0 = 1000
-@p1 = VIP
-@p2 = STANDARD

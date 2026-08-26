@@ -1,8 +1,0 @@
-INSERT INTO "orders" ("user_id", "total")
-SELECT "u"."user_id" AS "UserId", "o"."total" AS "Total"
-FROM "users" AS "u"
-INNER JOIN "orders" AS "o" ON ("u"."user_id" = "o"."user_id")
-WHERE ("u"."is_active" = @p0)
-
--- Parameters
-@p0 = True

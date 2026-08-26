@@ -1,4 +1,0 @@
-SELECT [summary].[UserId], [summary].[TotalAmount], [summary].[OrderCount]
-FROM (SELECT [o].[user_id] AS [UserId], SUM([o].[total]) AS [TotalAmount], COUNT([o].[order_id]) AS [OrderCount]
-FROM [orders] AS [o]
-GROUP BY [o].[user_id]) AS [summary]

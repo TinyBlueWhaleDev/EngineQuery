@@ -1,3 +1,0 @@
-INSERT INTO [projection_results] ([NormalizedEmail])
-SELECT UPPER([u].[email]) AS [NormalizedEmail]
-FROM [users] AS [u]
