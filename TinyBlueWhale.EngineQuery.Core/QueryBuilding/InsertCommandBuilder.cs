@@ -394,24 +394,22 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (_queryDefinition.SourceDefinitions.ContainsKey(typeof(TSource)))
                 throw new InvalidOperationException($"Entity type '{typeof(TSource).Name}' is already registered in the current INSERT SELECT query scope.");
 
-            var resolvedAlias = string.IsNullOrWhiteSpace(alias)
-                ? QueryAliasGeneratorHelper.Generate(_queryDefinition.SourceDefinitions.Count)
-                : alias;
-
             var sourceDefinition = new QuerySourceDefinition
             {
                 EntityType = typeof(TSource),
                 SchemaName = schemaName,
                 TableName = tableName,
-                TableAlias = resolvedAlias,
+                TableAlias = alias,
                 ColumnMappings = columnMappings
             };
 
             _queryDefinition.InsertDefinition.SourceDefinition = sourceDefinition;
             _queryDefinition.SourceDefinitions[typeof(TSource)] = sourceDefinition;
             _queryDefinition.EntityType = typeof(TSource);
+            _queryDefinition.TableAlias = alias;
 
-            _context.AliasRegistry.Register(resolvedAlias);
+            if (!string.IsNullOrWhiteSpace(alias))
+                _context.AliasRegistry.Register(alias);
         }
 
         // Resolves the mapped database column associated with an INSERT target property.

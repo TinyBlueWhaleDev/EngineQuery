@@ -33,9 +33,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// SQL FROM clause.
         /// </returns>
-        public string Build(
-            CompiledQueryDefinition queryDefinition,
-            QueryCompilationContext context)
+        public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
@@ -54,13 +52,30 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                 : $"FROM {tableName} AS {context.DatabaseDialect.EscapeIdentifier(queryDefinition.TableAlias)}";
         }
 
+        /// <summary>
+        /// Builds the SQL reference associated with the specified query source.
+        /// </summary>
+        /// <param name="sourceDefinition">
+        /// Query source definition to render.
+        /// </param>
+        /// <param name="context">
+        /// Current SQL compilation context.
+        /// </param>
+        /// <returns>
+        /// SQL reference for a physical table or derived table source.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when a derived table does not define an alias or when the query source
+        /// does not represent either a physical table or a derived table.
+        /// </exception>
         private string BuildQuerySourceReference(QuerySourceDefinition sourceDefinition, QueryCompilationContext context)
         {
             if (sourceDefinition.IsDerivedTable)
             {
-                var commandText = _subqueryCompiler.CompileAndReindex(
-                    sourceDefinition.Subquery!,
-                    context);
+                if (string.IsNullOrWhiteSpace(sourceDefinition.TableAlias))
+                    throw new InvalidOperationException("Derived table query sources require an alias.");
+
+                var commandText = _subqueryCompiler.CompileAndReindex(sourceDefinition.Subquery!, context);
 
                 return $"({commandText}) AS {context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
             }
@@ -69,7 +84,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             {
                 var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, sourceDefinition.TableName!, sourceDefinition.SchemaName);
 
-                return $"{tableName} AS {context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+                return string.IsNullOrWhiteSpace(sourceDefinition.TableAlias)
+                    ? tableName
+                    : $"{tableName} AS {context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
             }
 
             throw new InvalidOperationException("Query source must define either a physical table or a derived table subquery.");

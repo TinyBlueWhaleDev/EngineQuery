@@ -14,6 +14,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
     {
         private readonly EntityMetadataRegistry _registry;
         private readonly Dictionary<string, EntityPropertyMetadata> _properties = [];
+        private string? _schemaName;
         private string _tableName = typeof(TEntity).Name;
 
         /// <summary>
@@ -40,11 +41,15 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <returns>
         /// Current entity metadata builder instance.
         /// </returns>
-        public EntityMetadataBuilder<TEntity> ToTable(string tableName)
+        public EntityMetadataBuilder<TEntity> ToTable(string tableName, string? schemaName = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
+            if (schemaName is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(schemaName);
+
             _tableName = tableName;
+            _schemaName = schemaName;
             Save();
 
             return this;
@@ -121,6 +126,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
                 {
                     EntityType = typeof(TEntity),
                     TableName = _tableName,
+                    SchemaName = _schemaName,
                     Properties = _properties
                         .ToDictionary(
                             pair => pair.Key,

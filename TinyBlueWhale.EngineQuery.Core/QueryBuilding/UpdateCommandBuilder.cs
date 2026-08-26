@@ -56,7 +56,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 CommandType = QueryCommandType.Update,
                 SchemaName = schemaName,
                 TableName = tableName,
-                TableAlias = tableName,
+                TableAlias = null,
                 ColumnMappings = columnMappings ?? new Dictionary<string, string>(),
                 EntityType = typeof(T),
                 UpdateDefinition = new QueryUpdateDefinition()
@@ -68,7 +68,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                     EntityType = typeof(T),
                     SchemaName = schemaName,
                     TableName = tableName,
-                    TableAlias = tableName,
+                    TableAlias = null,
                     ColumnMappings = _queryDefinition.ColumnMappings
                 };
 
@@ -79,8 +79,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 MetadataResolver = metadataResolver,
                 AliasRegistry = new QueryAliasRegistry()
             };
-
-            context.AliasRegistry.Register(tableName);
 
             _whereClauseBuilder = new WhereClauseBuilder(context);
         }

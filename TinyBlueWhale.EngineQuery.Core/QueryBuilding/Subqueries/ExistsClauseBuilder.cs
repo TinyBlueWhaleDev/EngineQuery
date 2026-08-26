@@ -14,9 +14,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
         private readonly QueryCommandBuilderContext _context = context;
         private readonly QuerySourceResolver _sourceResolver = new(context);
         private readonly NestedQueryCommandBuilderFactory _nestedFactory = new(context);
+        private readonly QuerySourceAliasResolver _aliasResolver = new(context);
 
-        public void Add<TSubquery>(
-            Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        public void Add<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
         {
             ArgumentNullException.ThrowIfNull(subqueryBuilder);
 
@@ -44,7 +44,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
         {
             ArgumentNullException.ThrowIfNull(subqueryBuilder);
 
-            var outerSource = _sourceResolver.Resolve<TOuter>();
+            var outerSource = _aliasResolver.EnsureAlias<TOuter>(_sourceResolver.Resolve<TOuter>());
             var nestedCommandBuilder = _nestedFactory.CreateMetadataBuilder<TSubquery>(alias);
 
             nestedCommandBuilder.RegisterOuterSources(

@@ -30,7 +30,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// <summary>
         /// Gets the table alias associated with the query source.
         /// </summary>
-        public required string TableAlias { get; init; }
+        public string? TableAlias { get; init; }
 
         /// <summary>
         /// Gets the property-to-column mappings associated with the query source.

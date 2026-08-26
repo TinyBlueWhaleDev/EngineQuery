@@ -1,9 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
+using TinyBlueWhale.EngineQuery.Metadata.Fluent;
+using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
 {
@@ -48,6 +51,129 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
         public void TearDown()
         {
             _serviceProvider.Dispose();
+        }
+
+        /// <summary>
+        /// Validates that fluent table configuration preserves the configured schema name.
+        /// </summary>
+        [Test]
+        public void ToTable_WhenSchemaIsProvided_ShouldStoreSchemaMetadata()
+        {
+            // Arrange
+            var registry = new EntityMetadataRegistry();
+
+            registry.Entity<FluentSchemaUser>()
+                .ToTable(
+                    "fluent_users",
+                    schemaName: "fluent_security")
+                .Property(user => user.Id)
+                    .HasColumnName("fluent_user_id")
+                .Property(user => user.Email)
+                    .HasColumnName("email");
+
+            var resolver = new FluentEntityMetadataResolver(
+                registry);
+
+            // Act
+            var resolved = resolver.TryResolve<FluentSchemaUser>(
+                out var metadata);
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(resolved, Is.True);
+                Assert.That(metadata, Is.Not.Null);
+
+                Assert.That(
+                    metadata!.SchemaName,
+                    Is.EqualTo("fluent_security"));
+
+                Assert.That(
+                    metadata.TableName,
+                    Is.EqualTo("fluent_users"));
+
+                Assert.That(
+                    metadata.Properties["Id"].ColumnName,
+                    Is.EqualTo("fluent_user_id"));
+
+                Assert.That(
+                    metadata.Properties["Email"].ColumnName,
+                    Is.EqualTo("email"));
+            });
+        }
+
+
+        [Test]
+        public void TryResolve_Should_Include_Schema_When_Entity_Has_Table_Schema()
+        {
+            var resolver = new AttributeEntityMetadataResolver();
+
+            var resolved = resolver.TryResolve<AttributeSchemaUser>(
+                out var metadata);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(resolved, Is.True);
+                Assert.That(metadata, Is.Not.Null);
+
+                Assert.That(
+                    metadata!.SchemaName,
+                    Is.EqualTo("attribute_security"));
+
+                Assert.That(
+                    metadata.TableName,
+                    Is.EqualTo("attribute_users"));
+
+                Assert.That(
+                    metadata.Properties["Id"].ColumnName,
+                    Is.EqualTo("attribute_user_id"));
+
+                Assert.That(
+                    metadata.Properties["Email"].ColumnName,
+                    Is.EqualTo("email"));
+            });
+        }
+
+        /// <summary>
+        /// Validates schema-qualified JOIN generation using an explicit table source.
+        /// </summary>
+        [Test]
+        public void InnerJoinTable_WhenSchemaIsProvided_GeneratesQualifiedTableName()
+        {
+            var query = _queryEngine
+                .From<SchemaUser>(alias: "u")
+                .InnerJoinTable<SchemaUser, SchemaProfile>(
+                    tableName: "schema_profiles",
+                    schemaName: "profiles",
+                    alias: "p",
+                    on: (user, profile) => user.Id == profile.UserId)
+                .Select<SchemaUser>(user => user.Id)
+                .Select<SchemaProfile>(profile => profile.Id)
+                .Build();
+
+            Assert.That(
+                query.CommandText,
+                Does.Contain("INNER JOIN [profiles].[schema_profiles] AS [p]"));
+        }
+
+        /// <summary>
+        /// Validates schema-qualified JOIN generation using resolved entity metadata.
+        /// </summary>
+        [Test]
+        public void InnerJoin_WhenJoinedEntityHasSchema_GeneratesQualifiedTableName()
+        {
+            var query = _queryEngine
+                .From<SchemaUser>(alias: "u")
+                .InnerJoin<SchemaUser, SchemaProfile>(
+                    alias: "p",
+                    on: (user, profile) => user.Id == profile.UserId)
+                .Select<SchemaUser>(user => user.Id)
+                .Select<SchemaProfile>(profile => profile.Id)
+                .Build();
+
+            Assert.That(
+                query.CommandText,
+                Does.Contain("INNER JOIN [profiles].[schema_profiles] AS [p]"));
         }
 
         /// <summary>
@@ -237,6 +363,19 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
             /// </param>
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
+                modelBuilder.Entity<SchemaProfile>(entity =>
+                {
+                    entity.ToTable("schema_profiles", "profiles");
+
+                    entity.HasKey(profile => profile.Id);
+
+                    entity.Property(profile => profile.Id)
+                        .HasColumnName("profile_id");
+
+                    entity.Property(profile => profile.UserId)
+                        .HasColumnName("user_id");
+                });
+
                 modelBuilder.Entity<SchemaUser>(entity =>
                 {
                     entity.ToTable("schema_users", "security");
@@ -263,6 +402,22 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
                         .HasColumnName("email");
                 });
             }
+        }
+
+        /// <summary>
+        /// Entity mapped to the profiles schema for JOIN validation.
+        /// </summary>
+        private sealed class SchemaProfile
+        {
+            /// <summary>
+            /// Gets or initializes the profile identifier.
+            /// </summary>
+            public int Id { get; init; }
+
+            /// <summary>
+            /// Gets or initializes the related user identifier.
+            /// </summary>
+            public int UserId { get; init; }
         }
 
         /// <summary>
@@ -293,6 +448,32 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
 
             /// <summary>
             /// Gets or initializes the archived user email address.
+            /// </summary>
+            public string? Email { get; init; }
+        }
+
+        [Table("attribute_users", Schema = "attribute_security")]
+        private sealed class AttributeSchemaUser
+        {
+            [Column("attribute_user_id")]
+            public int Id { get; init; }
+
+            [Column("email")]
+            public string? Email { get; init; }
+        }
+
+        /// <summary>
+        /// Entity used to validate schema-aware fluent metadata configuration.
+        /// </summary>
+        private sealed class FluentSchemaUser
+        {
+            /// <summary>
+            /// Gets or initializes the user identifier.
+            /// </summary>
+            public int Id { get; init; }
+
+            /// <summary>
+            /// Gets or initializes the user email address.
             /// </summary>
             public string? Email { get; init; }
         }

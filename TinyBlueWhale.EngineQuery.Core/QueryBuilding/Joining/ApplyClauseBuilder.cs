@@ -16,6 +16,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
         private readonly QueryCommandBuilderContext _context = context;
         private readonly QuerySourceResolver _sourceResolver = new(context);
         private readonly NestedQueryCommandBuilderFactory _nestedFactory = new(context);
+        private readonly QuerySourceAliasResolver _aliasResolver = new(context);
 
         public void Add<TOuter, TApply>(
             QueryApplyType applyType,
@@ -25,7 +26,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
             ArgumentException.ThrowIfNullOrWhiteSpace(alias);
             ArgumentNullException.ThrowIfNull(applyBuilder);
 
-            var outerSource = _sourceResolver.Resolve<TOuter>();
+            var outerSource = _aliasResolver.EnsureAlias<TOuter>(_sourceResolver.Resolve<TOuter>());
 
             _context.AliasRegistry.Register(alias);
 

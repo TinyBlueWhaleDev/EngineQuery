@@ -283,12 +283,12 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <summary>
         /// Adds an INNER JOIN using an explicit joined table name.
         /// </summary>
-        TBuilder InnerJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
+        TBuilder InnerJoinTable<TSource, TJoin>(string tableName, string? schemaName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
 
         /// <summary>
         /// Adds a LEFT JOIN using an explicit joined table name.
         /// </summary>
-        TBuilder LeftJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
+        TBuilder LeftJoinTable<TSource, TJoin>(string tableName, string? schemaName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
 
         /// <summary>
         /// Adds a CROSS APPLY or provider-equivalent LATERAL subquery join to the current query.

@@ -1,7 +1,6 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
@@ -52,13 +51,18 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentNullException.ThrowIfNull(querySource);
 
+            var resolvedTableName = querySource.TableName ??
+                querySource.TableAlias ??
+                throw new InvalidOperationException("Query source must define either a table name or an alias.");
+
             _queryCompiler = queryCompiler;
             _metadataResolver = metadataResolver;
 
             _queryDefinition = new CompiledQueryDefinition
             {
                 EntityType = typeof(T),
-                TableName = querySource.TableName ?? querySource.TableAlias,
+                SchemaName = querySource.SchemaName,
+                TableName = resolvedTableName,
                 TableAlias = querySource.TableAlias,
                 ColumnMappings = querySource.ColumnMappings
             };
@@ -354,22 +358,20 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         // Registers the root query source in the current query scope.
         private void RegisterRootSource(string tableName, string? tableAlias, string? schemaName)
         {
-            var resolvedAlias = string.IsNullOrWhiteSpace(tableAlias)
-                ? QueryAliasGeneratorHelper.Generate(0)
-                : tableAlias;
-
             _queryDefinition.SourceDefinitions[typeof(T)] =
                 new QuerySourceDefinition
                 {
                     EntityType = typeof(T),
                     SchemaName = schemaName,
                     TableName = tableName,
-                    TableAlias = resolvedAlias,
+                    TableAlias = tableAlias,
                     ColumnMappings = _queryDefinition.ColumnMappings
                 };
 
-            _queryDefinition.TableAlias = resolvedAlias;
-            _context.AliasRegistry.Register(resolvedAlias);
+            _queryDefinition.TableAlias = tableAlias;
+
+            if (!string.IsNullOrWhiteSpace(tableAlias))
+                _context.AliasRegistry.Register(tableAlias);
         }
 
 

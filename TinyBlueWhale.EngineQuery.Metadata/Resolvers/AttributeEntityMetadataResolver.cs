@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
@@ -47,6 +47,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Resolvers
             metadata = new EntityMetadata
             {
                 EntityType = entityType,
+                SchemaName = tableAttribute?.Schema,
                 TableName = tableAttribute?.Name ?? entityType.Name,
                 Properties = properties
             };

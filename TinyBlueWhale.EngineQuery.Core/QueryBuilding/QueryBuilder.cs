@@ -162,7 +162,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Creates a query command builder using a common table expression as the root source.
         /// </summary>
-        public IQueryCommandBuilder<TCte> FromCte<TCte>(string name)
+        public IQueryCommandBuilder<TCte> FromCte<TCte>(string name, string? alias = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -172,7 +172,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             {
                 EntityType = typeof(TCte),
                 TableName = name,
-                TableAlias = name,
+                TableAlias = alias,
                 ColumnMappings = columnMappings
             };
 

@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
@@ -12,6 +12,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the SQL join type.
         /// </summary>
         public required QueryJoinType JoinType { get; init; }
+
+        /// <summary>
+        /// Gets the optional database schema name associated with the joined table.
+        /// </summary>
+        public string? SchemaName { get; init; }
 
         /// <summary>
         /// Gets the joined table name.

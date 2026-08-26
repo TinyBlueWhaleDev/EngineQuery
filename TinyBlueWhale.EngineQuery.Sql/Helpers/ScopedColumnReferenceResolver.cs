@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
@@ -13,8 +13,20 @@ namespace TinyBlueWhale.EngineQuery.Sql.Helpers
         private readonly QueryExpressionScope _expressionScope = expressionScope;
 
         /// <summary>
-        /// Resolves a SQL column reference from a member expression.
+        /// Resolves a SQL column reference from a scoped member expression.
         /// </summary>
+        /// <param name="memberExpression">
+        /// Member expression associated with a query source property.
+        /// </param>
+        /// <returns>
+        /// Escaped SQL column reference, qualified with the source alias when available.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="memberExpression"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the specified expression does not represent a scoped query source property.
+        /// </exception>
         public string Resolve(MemberExpression memberExpression)
         {
             ArgumentNullException.ThrowIfNull(memberExpression);
@@ -23,13 +35,18 @@ namespace TinyBlueWhale.EngineQuery.Sql.Helpers
                 throw new NotSupportedException($"Expression '{memberExpression}' is not a scoped column reference.");
 
             var source = _expressionScope.Resolve(parameterExpression);
+
             var propertyName = memberExpression.Member.Name;
 
-            var columnName = source.ColumnMappings.TryGetValue(propertyName, out var mappedColumnName)
-                ? mappedColumnName
-                : propertyName;
+            var columnName = source.ColumnMappings.TryGetValue(
+                propertyName,
+                out var mappedColumnName)
+                    ? mappedColumnName
+                    : propertyName;
 
-            return _databaseDialect.BuildQualifiedIdentifier(source.TableAlias, columnName);
+            return string.IsNullOrWhiteSpace(source.TableAlias)
+                ? _databaseDialect.EscapeIdentifier(columnName)
+                : _databaseDialect.BuildQualifiedIdentifier(source.TableAlias, columnName);
         }
     }
 }

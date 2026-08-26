@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection
@@ -40,9 +40,9 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection
         }
 
         /// <inheritdoc />
-        public IQueryCommandBuilder<TCte> FromCte<TCte>(string name)
+        public IQueryCommandBuilder<TCte> FromCte<TCte>(string name, string? alias = null)
         {
-            return _innerQueryBuilder.FromCte<TCte>(name);
+            return _innerQueryBuilder.FromCte<TCte>(name, alias);
         }
 
         /// <inheritdoc />

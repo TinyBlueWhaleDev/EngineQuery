@@ -15,7 +15,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
     {
         private readonly QueryCommandBuilderContext _context = context;
         private readonly QuerySourceResolver _sourceResolver = new(context);
-
+        private readonly QuerySourceAliasResolver _aliasResolver = new(context);
         /// <summary>
         /// Adds a metadata-driven JOIN definition.
         /// </summary>
@@ -23,7 +23,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
         {
             ArgumentNullException.ThrowIfNull(on);
 
-            var sourceDefinition = _sourceResolver.Resolve<TSource>();
+            var sourceDefinition = _aliasResolver.EnsureAlias<TSource>(_sourceResolver.Resolve<TSource>());
+
             var joinMetadata = _sourceResolver.ResolveMetadata<TJoin>();
 
             var resolvedAlias = ResolveJoinAlias(alias);
@@ -31,6 +32,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
             var joinSource = new QuerySourceDefinition
             {
                 EntityType = typeof(TJoin),
+                SchemaName = joinMetadata.SchemaName,
                 TableName = joinMetadata.TableName,
                 TableAlias = resolvedAlias,
                 ColumnMappings = QuerySourceResolver.BuildColumnMappings(joinMetadata)
@@ -42,6 +44,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
                 new QueryJoinDefinition
                 {
                     JoinType = joinType,
+                    SchemaName = joinSource.SchemaName,
                     TableName = joinSource.TableName!,
                     TableAlias = joinSource.TableAlias,
                     SourceType = typeof(TSource),
@@ -56,17 +59,45 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
         /// <summary>
         /// Adds an explicit-table JOIN definition.
         /// </summary>
-        public void AddTable<TSource, TJoin>(QueryJoinType joinType, string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        /// <typeparam name="TSource">
+        /// Entity type associated with the existing query source.
+        /// </typeparam>
+        /// <typeparam name="TJoin">
+        /// Entity type associated with the joined table.
+        /// </typeparam>
+        /// <param name="joinType">
+        /// SQL join type.
+        /// </param>
+        /// <param name="tableName">
+        /// Physical table name associated with the joined source.
+        /// </param>
+        /// <param name="schemaName">
+        /// Optional database schema associated with the joined table.
+        /// </param>
+        /// <param name="alias">
+        /// Optional alias associated with the joined table.
+        /// </param>
+        /// <param name="on">
+        /// Expression used to define the JOIN condition.
+        /// </param>
+        public void AddTable<TSource, TJoin>(QueryJoinType joinType, string tableName, string? schemaName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
             ArgumentNullException.ThrowIfNull(on);
 
-            var sourceDefinition = _sourceResolver.Resolve<TSource>();
+            if (schemaName is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(schemaName);
+
+            if (alias is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            var sourceDefinition = _aliasResolver.EnsureAlias<TSource>(_sourceResolver.Resolve<TSource>());
             var resolvedAlias = ResolveJoinAlias(alias);
 
             var joinSource = new QuerySourceDefinition
             {
                 EntityType = typeof(TJoin),
+                SchemaName = schemaName,
                 TableName = tableName,
                 TableAlias = resolvedAlias,
                 ColumnMappings = new Dictionary<string, string>()
@@ -78,12 +109,13 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
                 new QueryJoinDefinition
                 {
                     JoinType = joinType,
+                    SchemaName = joinSource.SchemaName,
                     TableName = joinSource.TableName!,
-                    TableAlias = joinSource.TableAlias,
+                    TableAlias = joinSource.TableAlias!,
                     SourceType = typeof(TSource),
                     JoinTypeEntity = typeof(TJoin),
                     JoinExpression = on,
-                    SourceAlias = sourceDefinition.TableAlias ?? string.Empty,
+                    SourceAlias = sourceDefinition.TableAlias!,
                     SourceColumnMappings = sourceDefinition.ColumnMappings,
                     JoinColumnMappings = joinSource.ColumnMappings
                 });
@@ -102,5 +134,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
 
             return resolvedAlias;
         }
+
+
     }
 }

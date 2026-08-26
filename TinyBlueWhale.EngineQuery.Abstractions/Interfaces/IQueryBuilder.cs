@@ -1,4 +1,4 @@
-namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
+﻿namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
     /// <summary>
     /// Represents the main entry point for creating strongly typed query builders.
@@ -85,10 +85,13 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <param name="name">
         /// Common table expression name.
         /// </param>
+        /// <param name="alias">
+        /// Optional alias assigned to the common table expression source.
+        /// </param>
         /// <returns>
         /// Query command builder for the common table expression source.
         /// </returns>
-        IQueryCommandBuilder<TCte> FromCte<TCte>(string name);
+        IQueryCommandBuilder<TCte> FromCte<TCte>(string name, string? alias = null);
 
         /// <summary>
         /// Registers a recursive common table expression that can be used as a query source.

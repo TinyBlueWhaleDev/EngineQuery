@@ -298,9 +298,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an INNER JOIN using an explicit joined table name.
         /// </summary>
-        public TBuilder InnerJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        public TBuilder InnerJoinTable<TSource, TJoin>(string tableName, string? schemaName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
-            Components.JoinClauseBuilder.AddTable(QueryJoinType.Inner, tableName, alias, on);
+            Components.JoinClauseBuilder.AddTable(QueryJoinType.Inner, tableName, schemaName, alias, on);
 
             return Current;
         }
@@ -308,9 +308,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a LEFT JOIN using an explicit joined table name.
         /// </summary>
-        public TBuilder LeftJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
+        public TBuilder LeftJoinTable<TSource, TJoin>(string tableName, string? schemaName, string? alias, Expression<Func<TSource, TJoin, bool>> on)
         {
-            Components.JoinClauseBuilder.AddTable(QueryJoinType.Left, tableName, alias, on);
+            Components.JoinClauseBuilder.AddTable(QueryJoinType.Left, tableName, schemaName, alias, on);
 
             return Current;
         }

@@ -64,11 +64,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                 _ => throw new NotSupportedException($"Join type '{joinDefinition.JoinType}' is not supported.")
             };
 
-            var tableName = context.DatabaseDialect.EscapeIdentifier(joinDefinition.TableName);
+            var tableReference = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, joinDefinition.TableName, joinDefinition.SchemaName);
             var tableAlias = context.DatabaseDialect.EscapeIdentifier(joinDefinition.TableAlias);
             var joinCondition = BuildJoinCondition(joinDefinition, context);
 
-            return $"{joinKeyword} {tableName} AS {tableAlias} ON {joinCondition}";
+            return $"{joinKeyword} {tableReference} AS {tableAlias} ON {joinCondition}";
         }
 
         private static string BuildJoinCondition(QueryJoinDefinition joinDefinition, QueryCompilationContext context)
