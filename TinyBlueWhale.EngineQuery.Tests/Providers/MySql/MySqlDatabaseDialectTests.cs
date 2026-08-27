@@ -19,5 +19,20 @@ namespace TinyBlueWhale.EngineQuery.Tests.Providers.MySql
 
             Assert.That(result, Is.EqualTo(expected));
         }
+
+        [TestCase(null, null, "")]
+        [TestCase(null, 10, "LIMIT 10")]
+        [TestCase(20, 10, "LIMIT 10 OFFSET 20")]
+        [TestCase(20, null, "LIMIT 18446744073709551615 OFFSET 20")]
+        public void BuildPaginationClause_ShouldGenerateExpectedPagination(int? skip, int? take, string expected)
+        {
+            var dialect = new MySqlDatabaseDialect();
+
+            var result = dialect.BuildPaginationClause(
+                skip,
+                take);
+
+            Assert.That(result, Is.EqualTo(expected));
+        }
     }
 }

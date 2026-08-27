@@ -46,7 +46,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Dialects
             if (take.HasValue)
                 return $"LIMIT {take.Value}";
 
-            return $"OFFSET {skip!.Value}";
+            return $"LIMIT 18446744073709551615 OFFSET {skip!.Value}";
         }
 
         /// <summary>
