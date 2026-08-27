@@ -19,7 +19,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Filtering
         {
             var query = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users")
+                .From<User>()
                 .Where<User>(user =>
                     user.IsActive &&
                     user.Email.Contains("@gmail.com") &&
@@ -47,7 +47,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Filtering
         {
             var query = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users", "u")
+                .From<User>("u")
                 .Where<User>(user =>
                     user.Email.Contains("@gmail.com") ||
                     user.Email.Contains("@company.com"))
@@ -79,7 +79,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Filtering
         {
             var query = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users")
+                .From<User>()
                 .WhereIf<User>(true, user => user.IsActive)
                 .WhereIf<User>(false, user => user.IsDeleted)
                 .Build();
@@ -101,7 +101,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Filtering
 
             var query = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users")
+                .From<User>()
                 .WhereIn(user => user.Id, userIds)
                 .Build();
 
@@ -131,7 +131,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Filtering
 
             var query = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users")
+                .From<User>()
                 .WhereNotIn(user => user.Email, excludedEmails)
                 .Build();
 
@@ -254,7 +254,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Filtering
         {
             var commandBuilder = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users");
+                .From<User>();
 
             IEnumerable<int> values = null!;
 
@@ -281,7 +281,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Filtering
         {
             var commandBuilder = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users");
+                .From<User>();
 
             var values = Array.Empty<int>();
 
@@ -312,7 +312,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Filtering
         {
             var commandBuilder = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users");
+                .From<User>();
 
             IEnumerable<string> values =
             [

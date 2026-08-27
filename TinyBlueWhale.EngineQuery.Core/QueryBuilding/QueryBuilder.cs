@@ -24,31 +24,20 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         private readonly List<QueryCteDefinition> _cteDefinitions = [];
 
         /// <summary>
-        /// Creates a new query builder using an explicit table name.
+        /// Creates a new query builder using resolved entity metadata.
         /// </summary>
         /// <typeparam name="T">
         /// Entity type used as the source of the query.
-        /// </typeparam>
-        /// <param name="tableName">
-        /// Database table name associated with the query.
-        /// </param>
-        /// <param name="alias">
-        /// Optional table alias used to qualify generated SQL column references.
-        /// </param>
+        /// </typeparam>       
         /// <returns>
         /// Fluent query command builder.
         /// </returns>
-        public IQueryCommandBuilder<T> From<T>(string tableName, string? alias = null)
+        public IQueryCommandBuilder<T> From<T>()
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
-
-            if (alias is not null)
-                ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
             var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
             var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
-            return new QueryCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, metadata.SchemaName, alias, columnMappings);
+            return new QueryCommandBuilder<T>(_queryCompiler, _metadataResolver, metadata.TableName, metadata.SchemaName, tableAlias: null, columnMappings);
         }
 
         /// <summary>
@@ -63,15 +52,40 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Fluent query command builder.
         /// </returns>
-        public IQueryCommandBuilder<T> From<T>(string? alias = null)
+        public IQueryCommandBuilder<T> From<T>(string alias)
         {
-            if (alias is not null)
-                ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
             var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
             var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
 
             return new QueryCommandBuilder<T>(_queryCompiler, _metadataResolver, metadata.TableName, metadata.SchemaName, alias, columnMappings);
+        }
+
+        /// <summary>
+        /// Creates a new query builder using an explicit table name.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type used as the source of the query.
+        /// </typeparam>
+        /// <param name="tableName">
+        /// Database table name associated with the query.
+        /// </param>
+        /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
+        /// <returns>
+        /// Fluent query command builder.
+        /// </returns>
+        public IQueryCommandBuilder<T> From<T>(string tableName, string alias)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
+
+            return new QueryCommandBuilder<T>(_queryCompiler, _metadataResolver, tableName, metadata.SchemaName, alias, columnMappings);
         }
 
         /// <summary>
@@ -280,18 +294,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return this;
         }
-
-
-        // Creates a query command builder with inherited outer sources.
-        internal QueryCommandBuilder<TEntity> FromWithOuterSources<TEntity>(string? alias, IReadOnlyDictionary<Type, QuerySourceDefinition> outerSources)
-        {
-            var commandBuilder = (QueryCommandBuilder<TEntity>)From<TEntity>(alias);
-
-            commandBuilder.RegisterOuterSources(outerSources);
-
-            return commandBuilder;
-        }
-
 
         /// <summary>
         /// Creates a new INSERT command builder using an explicit table name.

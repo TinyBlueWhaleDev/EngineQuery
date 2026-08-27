@@ -11,15 +11,21 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection
         private readonly IQueryBuilder _innerQueryBuilder = innerQueryBuilder ?? throw new ArgumentNullException(nameof(innerQueryBuilder));
 
         /// <inheritdoc />
-        public IQueryCommandBuilder<T> From<T>(string tableName, string? alias = null)
+        public IQueryCommandBuilder<T> From<T>()
         {
-            return _innerQueryBuilder.From<T>(tableName, alias);
+            return _innerQueryBuilder.From<T>();
         }
 
         /// <inheritdoc />
-        public IQueryCommandBuilder<T> From<T>(string? alias = null)
+        public IQueryCommandBuilder<T> From<T>(string alias)
         {
             return _innerQueryBuilder.From<T>(alias);
+        }
+
+        /// <inheritdoc />
+        public IQueryCommandBuilder<T> From<T>(string tableName, string alias)
+        {
+            return _innerQueryBuilder.From<T>(tableName, alias);
         }
 
         /// <inheritdoc />

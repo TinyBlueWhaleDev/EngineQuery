@@ -19,7 +19,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Ordering
         {
             var query = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users")
+                .From<User>()
                 .OrderBy<User>(user => user.Email)
                 .ThenByDescending<User>(user => user.CreatedAt)
                 .Build();
@@ -41,7 +41,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Ordering
         {
             var query = _provider
                 .CreateQueryBuilder()
-                .From<User>("Users")
+                .From<User>()
                 .OrderBy<User>(user => user.Email)
                 .Skip(20)
                 .Take(10)
@@ -68,7 +68,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Ordering
             var exception = Assert.Throws<InvalidOperationException>(() =>
                 _provider
                     .CreateQueryBuilder()
-                    .From<User>("Users")
+                    .From<User>()
                     .Skip(10)
                     .Take(5)
                     .Build());

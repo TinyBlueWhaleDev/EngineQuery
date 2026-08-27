@@ -5,6 +5,32 @@
     /// </summary>
     public interface IQueryBuilder
     {
+
+        /// <summary>
+        /// Creates a new query builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type used as the source of the query.
+        /// </typeparam>        
+        /// <returns>
+        /// Fluent query command builder.
+        /// </returns>
+        IQueryCommandBuilder<T> From<T>();
+
+        /// <summary>
+        /// Creates a new query builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type used as the source of the query.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
+        /// <returns>
+        /// Fluent query command builder.
+        /// </returns>
+        IQueryCommandBuilder<T> From<T>(string alias);
+
         /// <summary>
         /// Creates a new query command builder for the specified entity type and table name.
         /// </summary>
@@ -20,21 +46,7 @@
         /// <returns>
         /// A fluent query command builder for composing and generating SQL queries.
         /// </returns>
-        IQueryCommandBuilder<T> From<T>(string tableName, string? alias = null);
-
-        /// <summary>
-        /// Creates a new query builder using resolved entity metadata.
-        /// </summary>
-        /// <typeparam name="T">
-        /// Entity type used as the source of the query.
-        /// </typeparam>
-        /// <param name="alias">
-        /// Optional table alias used to qualify generated SQL column references.
-        /// </param>
-        /// <returns>
-        /// Fluent query command builder.
-        /// </returns>
-        IQueryCommandBuilder<T> From<T>(string? alias = null);
+        IQueryCommandBuilder<T> From<T>(string tableName, string alias);
 
         /// <summary>
         /// Creates a query command builder using a derived table as the root query source.
