@@ -1,7 +1,5 @@
 ﻿using Dapper;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 using TinyBlueWhale.EngineQuery.Labs.Domain.Entities;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.SqlServer;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Helpers;

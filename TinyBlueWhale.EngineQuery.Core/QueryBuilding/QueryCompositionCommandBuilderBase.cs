@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 
@@ -22,13 +23,15 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     /// <remarks>
     /// Initializes a new instance of the <see cref="QueryCompositionCommandBuilderBase{T, TBuilder}"/> class.
     /// </remarks>        
-    public abstract class QueryCompositionCommandBuilderBase<T, TBuilder> : IQueryCompositionCommandBuilder<T, TBuilder>
+    public abstract class QueryCompositionCommandBuilderBase<T, TBuilder, TProfile> :
+        IQueryCompositionCommandBuilder<T, TBuilder, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
 
         /// <summary>
         /// Gets the internal query composition components.
         /// </summary>
-        private protected abstract QueryCommandBuilderComponents Components { get; }
+        private protected abstract QueryCommandBuilderComponents<TProfile> Components { get; }
 
         /// <summary>
         /// Gets the fluent builder instance returned by composition operations.
@@ -234,7 +237,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an EXISTS subquery condition.
         /// </summary>
-        public TBuilder WhereExists<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        public TBuilder WhereExists<TSubquery>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder)
         {
             Components.ExistsClauseBuilder.Add(subqueryBuilder);
 
@@ -244,7 +247,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a correlated EXISTS subquery condition using an outer entity available in the current query scope.
         /// </summary>
-        public TBuilder WhereExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        public TBuilder WhereExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery, TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder)
         {
             Components.ExistsClauseBuilder.AddCorrelated<TOuter, TSubquery>(alias, subqueryBuilder, isNegated: false);
 
@@ -254,7 +257,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an IN subquery condition for an entity available in the current query scope.
         /// </summary>
-        public TBuilder WhereIn<TOuter, TSubquery>(Expression<Func<TOuter, object>> outerSelector, string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        public TBuilder WhereIn<TOuter, TSubquery>(Expression<Func<TOuter, object>> outerSelector, string? alias, Func<IQueryCommandBuilder<TSubquery, TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder)
         {
             Components.InSubqueryClauseBuilder.Add(outerSelector, alias, subqueryBuilder);
 
@@ -264,7 +267,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a correlated NOT EXISTS subquery condition using an outer entity available in the current query scope.
         /// </summary>
-        public TBuilder WhereNotExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        public TBuilder WhereNotExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery, TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder)
         {
             Components.ExistsClauseBuilder.AddCorrelated<TOuter, TSubquery>(alias, subqueryBuilder, isNegated: true);
 
@@ -318,7 +321,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a CROSS APPLY or provider-equivalent LATERAL subquery join to the current query.
         /// </summary>
-        public TBuilder CrossApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
+        public TBuilder CrossApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
         {
             Components.ApplyClauseBuilder.Add<TOuter, TApply>(QueryApplyType.Cross, alias, applyBuilder);
 
@@ -328,7 +331,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an OUTER APPLY or provider-equivalent LEFT LATERAL subquery join to the current query.
         /// </summary>
-        public TBuilder OuterApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
+        public TBuilder OuterApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
         {
             Components.ApplyClauseBuilder.Add<TOuter, TApply>(QueryApplyType.Outer, alias, applyBuilder);
 
@@ -520,7 +523,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a UNION query to the current query.
         /// </summary>
-        public TBuilder Union<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
+        public TBuilder Union<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
         {
             Components.SetOperationClauseBuilder.Add(QuerySetOperation.Union, setBuilder);
 
@@ -530,7 +533,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a UNION ALL query to the current query.
         /// </summary>
-        public TBuilder UnionAll<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
+        public TBuilder UnionAll<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
         {
             Components.SetOperationClauseBuilder.Add(QuerySetOperation.UnionAll, setBuilder);
 
@@ -540,7 +543,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an INTERSECT query to the current query.
         /// </summary>
-        public TBuilder Intersect<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
+        public TBuilder Intersect<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
         {
             Components.SetOperationClauseBuilder.Add(QuerySetOperation.Intersect, setBuilder);
 
@@ -550,7 +553,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an EXCEPT query to the current query.
         /// </summary>
-        public TBuilder Except<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder)
+        public TBuilder Except<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
         {
             Components.SetOperationClauseBuilder.Add(QuerySetOperation.Except, setBuilder);
 

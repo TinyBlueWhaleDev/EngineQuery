@@ -1,6 +1,7 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Clauses;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -72,11 +73,26 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
                 columnReferenceBuilder);
 
             var orderByClauseBuilder = new OrderByClauseBuilder();
-            var paginationClauseBuilder = new PaginationClauseBuilder();
             var setOperationClauseBuilder = new SetOperationClauseBuilder(subqueryCompiler);
 
             var cteClauseBuilder = options.CteClauseBuilderFactory?.Invoke(subqueryCompiler)
                 ?? new CteClauseBuilder(subqueryCompiler);
+
+            var bodyClauseBuilders = new List<IOptionalSqlClauseBuilder>
+            {
+                joinClauseBuilder,
+                applyClauseBuilder,
+                whereClauseBuilder,
+                groupByClauseBuilder,
+                havingClauseBuilder,
+                orderByClauseBuilder
+            };
+
+            if (options.PaginationStrategy is not null)
+            {
+                bodyClauseBuilders.Add(new PaginationClauseBuilder(options.PaginationStrategy));
+            }
+
 
             scriptBuilder = new QueryScriptBuilder(
                 selectClauseBuilder,
@@ -85,15 +101,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
                 updateClauseBuilder,
                 deleteClauseBuilder,
                 whereClauseBuilder,
-                [
-                    joinClauseBuilder,
-                    applyClauseBuilder,
-                    whereClauseBuilder,
-                    groupByClauseBuilder,
-                    havingClauseBuilder,
-                    orderByClauseBuilder,
-                    paginationClauseBuilder
-                ],
+                bodyClauseBuilders,
                 setOperationClauseBuilder,
                 cteClauseBuilder);
 

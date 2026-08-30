@@ -1,5 +1,6 @@
-using TinyBlueWhale.EngineQuery.Sql.Clauses;
+﻿using TinyBlueWhale.EngineQuery.Sql.Clauses;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Composition
 {
@@ -12,6 +13,16 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
     /// </remarks>
     public sealed class QueryScriptBuilderOptions
     {
+
+        /// <summary>
+        /// Gets or initializes the optional pagination strategy used by the query pipeline.
+        /// </summary>
+        /// <remarks>
+        /// When this value is <see langword="null"/>, the pagination clause builder
+        /// is not included in the query compilation pipeline.
+        /// </remarks>
+        public IPaginationStrategy? PaginationStrategy { get; init; }
+
         /// <summary>
         /// Gets or initializes the optional factory used to create the INSERT clause builder.
         /// </summary>

@@ -1,36 +1,32 @@
-using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces
 {
     /// <summary>
-    /// Creates configured EngineQuery instances.
+    /// Creates configured EngineQuery instances based on database provider profiles.
     /// </summary>
-    public interface IQueryEngineFactory
+    public interface IQueryEngineFactory<TProfile, out TEngine>
+            where TProfile : IDatabaseProviderProfile, new()
     {
         /// <summary>
-        /// Creates a query engine for the specified provider.
+        /// Creates a query engine using the configured database provider profile.
         /// </summary>
-        /// <param name="provider">
-        /// Query engine provider.
-        /// </param>
         /// <returns>
-        /// Configured query engine.
+        /// Query engine exposing the feature surface associated with the provider profile.
         /// </returns>
-        IQueryEngine Create(QueryEngineProvider provider);
+        TEngine Create();
 
         /// <summary>
-        /// Creates a query engine for the specified provider and metadata strategy.
+        /// Creates a query engine using the configured database provider profile
+        /// and metadata strategy.
         /// </summary>
-        /// <param name="provider">
-        /// Query engine provider.
-        /// </param>
         /// <param name="metadataStrategy">
-        /// Metadata strategy.
+        /// Metadata strategy used to resolve entity metadata.
         /// </param>
         /// <returns>
-        /// Configured query engine.
+        /// Query engine exposing the feature surface associated with the provider profile.
         /// </returns>
-        IQueryEngine Create(QueryEngineProvider provider, MetadataStrategy metadataStrategy);
+        TEngine Create(MetadataStrategy metadataStrategy);
     }
 }

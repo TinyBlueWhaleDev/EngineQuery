@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
@@ -8,7 +9,12 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// <typeparam name="T">
     /// Root entity type associated with the query.
     /// </typeparam>
-    public interface IOrderedQueryCommandBuilder<T> : IQueryCommandBuilder<T>
+    /// <typeparam name="TProfile">
+    /// Database provider profile type.
+    /// </typeparam>
+    public interface IOrderedQueryCommandBuilder<T, TProfile> :
+        IQueryCommandBuilder<T, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
         /// <summary>
         /// Adds an additional ascending ordering expression for the root entity.
@@ -19,7 +25,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current ordered query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> ThenBy(Expression<Func<T, object>> keySelector);
+        IOrderedQueryCommandBuilder<T, TProfile> ThenBy(Expression<Func<T, object>> keySelector);
 
         /// <summary>
         /// Adds an additional ascending ordering expression for an entity available in the current query scope.
@@ -33,7 +39,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current ordered query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
+        IOrderedQueryCommandBuilder<T, TProfile> ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
 
         /// <summary>
         /// Adds an additional descending ordering expression for the root entity.
@@ -44,7 +50,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current ordered query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> ThenByDescending(Expression<Func<T, object>> keySelector);
+        IOrderedQueryCommandBuilder<T, TProfile> ThenByDescending(Expression<Func<T, object>> keySelector);
 
         /// <summary>
         /// Adds an additional descending ordering expression for an entity available in the current query scope.
@@ -58,6 +64,6 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current ordered query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector);
+        IOrderedQueryCommandBuilder<T, TProfile> ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector);
     }
 }

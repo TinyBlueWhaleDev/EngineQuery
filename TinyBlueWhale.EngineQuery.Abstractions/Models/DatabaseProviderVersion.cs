@@ -1,4 +1,4 @@
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Abstractions.Models
 {
     /// <summary>

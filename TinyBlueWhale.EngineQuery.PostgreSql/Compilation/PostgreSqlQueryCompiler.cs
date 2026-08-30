@@ -2,6 +2,7 @@
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.PostgreSql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Composition;
 
 namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
 {
@@ -9,10 +10,8 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
     /// Compiles query definitions into PostgreSQL command text.
     /// </summary>
     /// <remarks>
-    /// This compiler uses PostgreSQL-specific APPLY behavior while reusing the default SQL builder pipeline.
-    /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="PostgreSqlQueryCompiler"/> class.
+    /// This compiler receives provider capabilities used by features that remain under
+    /// migration and an already resolved SQL feature composition.
     /// </remarks>
     /// <param name="databaseDialect">
     /// PostgreSQL database dialect.
@@ -20,10 +19,17 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
     /// <param name="providerCapabilities">
     /// PostgreSQL provider capabilities.
     /// </param>
+    /// <param name="featureComposition">
+    /// SQL feature composition resolved from the selected provider profile.
+    /// </param>
     public sealed class PostgreSqlQueryCompiler(
         ISqlDatabaseDialect databaseDialect,
-        IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
+        IDatabaseProviderCapabilities providerCapabilities,
+        QueryFeatureComposition featureComposition) :
+        QueryCompilerBase(
             databaseDialect,
             providerCapabilities,
-            PostgreSqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));
+            PostgreSqlQueryCompilerFactory.CreateScriptBuilder(
+                databaseDialect,
+                featureComposition));
 }

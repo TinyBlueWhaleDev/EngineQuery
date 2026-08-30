@@ -1,5 +1,4 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers
 {

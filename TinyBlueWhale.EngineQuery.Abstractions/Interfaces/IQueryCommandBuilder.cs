@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
@@ -9,30 +10,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// <typeparam name="T">
     /// Entity type used as the source of the query.
     /// </typeparam>
-    public interface IQueryCommandBuilder<T> : IQueryCompositionCommandBuilder<T, IQueryCommandBuilder<T>>
+    public interface IQueryCommandBuilder<T, TProfile> :
+        IQueryCompositionCommandBuilder<T, IQueryCommandBuilder<T, TProfile>, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
-
-        /// <summary>
-        /// Skips the specified number of rows when generating paginated SQL.
-        /// </summary>
-        /// <param name="count">
-        /// Number of rows to skip.
-        /// </param>
-        /// <returns>
-        /// Current query command builder instance.
-        /// </returns>
-        IQueryCommandBuilder<T> Skip(int count);
-
-        /// <summary>
-        /// Limits the number of rows returned by the generated SQL query.
-        /// </summary>
-        /// <param name="count">
-        /// Maximum number of rows to return.
-        /// </param>
-        /// <returns>
-        /// Current query command builder instance.
-        /// </returns>
-        IQueryCommandBuilder<T> Take(int count);
 
         /// <summary>
         /// Adds an ascending ordering expression to the query.
@@ -43,7 +24,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Ordered query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> OrderBy(Expression<Func<T, object>> keySelector);
+        IOrderedQueryCommandBuilder<T, TProfile> OrderBy(Expression<Func<T, object>> keySelector);
 
         /// <summary>
         /// Adds an ascending ORDER BY clause for an entity already available in the current query scope.
@@ -57,7 +38,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
+        IOrderedQueryCommandBuilder<T, TProfile> OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
 
         /// <summary>
         /// Adds a descending ordering expression to the query.
@@ -68,7 +49,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Ordered query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> OrderByDescending(Expression<Func<T, object>> keySelector);
+        IOrderedQueryCommandBuilder<T, TProfile> OrderByDescending(Expression<Func<T, object>> keySelector);
 
         /// <summary>
         /// Adds a descending ORDER BY clause for an entity already available in the current query scope.
@@ -82,7 +63,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        IOrderedQueryCommandBuilder<T> OrderByDescending<TEntity>(Expression<Func<TEntity, object>> selector);
+        IOrderedQueryCommandBuilder<T, TProfile> OrderByDescending<TEntity>(Expression<Func<TEntity, object>> selector);
 
         /// <summary>
         /// Builds the current query definition into SQL command text and parameters.

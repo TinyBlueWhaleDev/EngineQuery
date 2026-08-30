@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.MySql.Clauses;
 using TinyBlueWhale.EngineQuery.Sql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -20,12 +20,19 @@ namespace TinyBlueWhale.EngineQuery.MySql.Composition
         /// <param name="databaseDialect">
         /// MySQL database dialect.
         /// </param>
+        /// <param name="featureComposition">
+        /// SQL feature composition resolved from the selected provider profile.
+        /// </param>
         /// <returns>
         /// Configured MySQL query script builder.
         /// </returns>
         public static IQueryScriptBuilder CreateScriptBuilder(
-            ISqlDatabaseDialect databaseDialect)
+            ISqlDatabaseDialect databaseDialect,
+            QueryFeatureComposition featureComposition)
         {
+            ArgumentNullException.ThrowIfNull(databaseDialect);
+            ArgumentNullException.ThrowIfNull(featureComposition);
+
             return QueryCompilerFactory.CreateScriptBuilder(
                 databaseDialect,
                 new QueryScriptBuilderOptions
@@ -33,6 +40,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Composition
                     ApplyClauseBuilderFactory = subqueryCompiler =>
                         new MySqlApplyClauseBuilder(subqueryCompiler),
                     InsertClauseBuilderFactory = () => new MySqlInsertClauseBuilder(),
+                    PaginationStrategy = featureComposition.PaginationStrategy
                 });
         }
     }

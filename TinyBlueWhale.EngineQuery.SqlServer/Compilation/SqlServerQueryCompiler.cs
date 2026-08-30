@@ -1,6 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Composition;
 using TinyBlueWhale.EngineQuery.SqlServer.Composition;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
@@ -9,11 +10,8 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
     /// Compiles query definitions into SQL Server command text.
     /// </summary>
     /// <remarks>
-    /// This compiler uses SQL Server-specific SQL clause builders while delegating
-    /// the compilation workflow to the shared query compiler base.
-    /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="SqlServerQueryCompiler"/> class.
+    /// This compiler receives provider capabilities used by features that remain under
+    /// migration and an already resolved SQL feature composition.
     /// </remarks>
     /// <param name="databaseDialect">
     /// SQL Server database dialect.
@@ -21,10 +19,17 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
     /// <param name="providerCapabilities">
     /// SQL Server provider capabilities.
     /// </param>
+    /// <param name="featureComposition">
+    /// SQL feature composition resolved from the selected provider profile.
+    /// </param>
     public sealed class SqlServerQueryCompiler(
         ISqlDatabaseDialect databaseDialect,
-        IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
+        IDatabaseProviderCapabilities providerCapabilities,
+        QueryFeatureComposition featureComposition) :
+        QueryCompilerBase(
             databaseDialect,
             providerCapabilities,
-            SqlServerQueryCompilerFactory.CreateScriptBuilder(databaseDialect));
+            SqlServerQueryCompilerFactory.CreateScriptBuilder(
+                databaseDialect,
+                featureComposition));
 }

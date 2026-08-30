@@ -16,10 +16,14 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Composition
         /// <param name="databaseDialect">
         /// Database dialect used during SQL generation.
         /// </param>
+        /// <param name="featureComposition">
+        /// SQL feature composition resolved from the selected provider profile.
+        /// </param>
         /// <returns>
         /// Configured SQL script builder instance.
         /// </returns>
-        public static IQueryScriptBuilder CreateScriptBuilder(ISqlDatabaseDialect databaseDialect)
+        public static IQueryScriptBuilder CreateScriptBuilder(ISqlDatabaseDialect databaseDialect,
+           QueryFeatureComposition featureComposition)
         {
             return QueryCompilerFactory.CreateScriptBuilder(
                 databaseDialect,
@@ -28,6 +32,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Composition
                     CteClauseBuilderFactory = subqueryCompiler =>
                         new SqlServerCteClauseBuilder(subqueryCompiler),
                     InsertClauseBuilderFactory = () => new SqlServerInsertClauseBuilder(),
+                    PaginationStrategy = featureComposition.PaginationStrategy
                 });
         }
     }

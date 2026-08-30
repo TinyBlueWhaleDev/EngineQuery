@@ -1,5 +1,4 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Samples.Metadata;
 
 namespace TinyBlueWhale.EngineQuery.Samples.Queries

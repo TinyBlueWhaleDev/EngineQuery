@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries;
@@ -11,17 +12,18 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
     /// <summary>
     /// Builds APPLY query definitions.
     /// </summary>
-    internal sealed class ApplyClauseBuilder(QueryCommandBuilderContext context)
+    internal sealed class ApplyClauseBuilder<TProfile>(QueryCommandBuilderContext context,
+        TProfile profile)
+        where TProfile : IDatabaseProviderProfile
     {
         private readonly QueryCommandBuilderContext _context = context;
         private readonly QuerySourceResolver _sourceResolver = new(context);
-        private readonly NestedQueryCommandBuilderFactory _nestedFactory = new(context);
+        private readonly NestedQueryCommandBuilderFactory<TProfile> _nestedFactory = new(context, profile);
         private readonly QuerySourceAliasResolver _aliasResolver = new(context);
 
-        public void Add<TOuter, TApply>(
-            QueryApplyType applyType,
+        public void Add<TOuter, TApply>(QueryApplyType applyType,
             string alias,
-            Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder)
+            Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(alias);
             ArgumentNullException.ThrowIfNull(applyBuilder);
@@ -41,7 +43,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining
             var configuredBuilder = applyBuilder(nestedCommandBuilder);
 
             var subqueryDefinition =
-                NestedQueryCommandBuilderFactory.ExtractDefinition(
+                NestedQueryCommandBuilderFactory<TProfile>.ExtractDefinition(
                     configuredBuilder,
                     "The APPLY subquery builder returned an unsupported query command builder instance.");
 

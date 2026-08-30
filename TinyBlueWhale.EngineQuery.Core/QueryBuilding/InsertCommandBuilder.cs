@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
@@ -20,19 +21,22 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     /// This builder does not execute database commands.
     /// It only captures INSERT command intent and delegates SQL generation to the query compiler.
     /// </remarks>
-    public sealed class InsertCommandBuilder<T> : QueryCompositionCommandBuilderBase<T, IInsertSelectCommandBuilder<T>>,
-        IInsertCommandBuilder<T>,
+    public sealed class InsertCommandBuilder<T, TProfile> :
+        QueryCompositionCommandBuilderBase<T, IInsertSelectCommandBuilder<T, TProfile>, TProfile>,
+        IInsertCommandBuilder<T, TProfile>,
         IInsertValuesCommandBuilder<T>,
-        IInsertSelectCommandBuilder<T>
+        IInsertSelectCommandBuilder<T, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
         private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
         private readonly IEntityMetadataResolver _metadataResolver;
         private readonly QueryCommandBuilderContext _context;
-        private readonly QueryCommandBuilderComponents _components;
 
-        private protected override QueryCommandBuilderComponents Components => _components;
-        protected override IInsertSelectCommandBuilder<T> Current => this;
+        private readonly TProfile _profile;
+        private readonly QueryCommandBuilderComponents<TProfile> _components;
+        private protected override QueryCommandBuilderComponents<TProfile> Components => _components;
+        protected override IInsertSelectCommandBuilder<T, TProfile> Current => this;
 
 
 
@@ -54,14 +58,21 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver used for metadata-driven query composition.
         /// </param>
-        internal InsertCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? schemaName = null, IReadOnlyDictionary<string, string>? columnMappings = null)
+        internal InsertCommandBuilder(IQueryCompiler queryCompiler,
+            IEntityMetadataResolver metadataResolver,
+            TProfile profile,
+            string tableName,
+            string? schemaName = null,
+            IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentNullException.ThrowIfNull(metadataResolver);
+            ArgumentNullException.ThrowIfNull(profile);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
             _queryCompiler = queryCompiler;
             _metadataResolver = metadataResolver;
+            _profile = profile;
 
             _queryDefinition = new CompiledQueryDefinition
             {
@@ -81,7 +92,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 AliasRegistry = new QueryAliasRegistry()
             };
 
-            _components = QueryCommandBuilderComponentFactory.Create(_context);
+            _components = QueryCommandBuilderComponentFactory.Create(_context, _profile);
         }
 
         /// <summary>
@@ -102,7 +113,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when INSERT value assignments were already configured or when a selected target column was already added.
         /// </exception>
-        public IInsertCommandBuilder<T> Columns(Expression<Func<T, object>> selector)
+        public IInsertCommandBuilder<T, TProfile> Columns(Expression<Func<T, object>> selector)
         {
             ArgumentNullException.ThrowIfNull(selector);
 
@@ -239,7 +250,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when the INSERT command already contains value assignments or when the source entity is already registered.
         /// </exception>
-        public IInsertSelectCommandBuilder<T> From<TSource>(string tableName, string? alias = null)
+        public IInsertSelectCommandBuilder<T, TProfile> From<TSource>(string tableName, string? alias = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
@@ -274,7 +285,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when metadata cannot be resolved, when INSERT value assignments already exist or when the source entity is already registered.
         /// </exception>
-        public IInsertSelectCommandBuilder<T> From<TSource>(string? alias = null)
+        public IInsertSelectCommandBuilder<T, TProfile> From<TSource>(string? alias = null)
         {
             if (alias is not null)
                 ArgumentException.ThrowIfNullOrWhiteSpace(alias);

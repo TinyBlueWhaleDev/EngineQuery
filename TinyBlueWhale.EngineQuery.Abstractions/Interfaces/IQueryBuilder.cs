@@ -1,9 +1,12 @@
-﻿namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+
+namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
     /// <summary>
     /// Represents the main entry point for creating strongly typed query builders.
     /// </summary>
-    public interface IQueryBuilder
+    public interface IQueryBuilder<TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
 
         /// <summary>
@@ -15,7 +18,7 @@
         /// <returns>
         /// Fluent query command builder.
         /// </returns>
-        IQueryCommandBuilder<T> From<T>();
+        IQueryCommandBuilder<T, TProfile> From<T>();
 
         /// <summary>
         /// Creates a new query builder using resolved entity metadata.
@@ -29,7 +32,7 @@
         /// <returns>
         /// Fluent query command builder.
         /// </returns>
-        IQueryCommandBuilder<T> From<T>(string alias);
+        IQueryCommandBuilder<T, TProfile> From<T>(string alias);
 
         /// <summary>
         /// Creates a new query command builder for the specified entity type and table name.
@@ -46,7 +49,7 @@
         /// <returns>
         /// A fluent query command builder for composing and generating SQL queries.
         /// </returns>
-        IQueryCommandBuilder<T> From<T>(string tableName, string alias);
+        IQueryCommandBuilder<T, TProfile> From<T>(string tableName, string alias);
 
         /// <summary>
         /// Creates a query command builder using a derived table as the root query source.
@@ -66,7 +69,7 @@
         /// <returns>
         /// Query command builder for the derived table source.
         /// </returns>
-        IQueryCommandBuilder<TDerived> FromSubquery<TDerived, TSubqueryRoot>(string alias, Func<IQueryBuilder, IQueryCommandBuilder<TSubqueryRoot>> subqueryBuilder);
+        IQueryCommandBuilder<TDerived, TProfile> FromSubquery<TDerived, TSubqueryRoot>(string alias, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> subqueryBuilder);
 
         /// <summary>
         /// Registers a common table expression that can be used as a query source.
@@ -86,7 +89,7 @@
         /// <returns>
         /// Current query builder instance.
         /// </returns>
-        IQueryBuilder With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder, IQueryCommandBuilder<TSubqueryRoot>> cteBuilder);
+        IQueryBuilder<TProfile> With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> cteBuilder);
 
         /// <summary>
         /// Creates a query command builder using a common table expression as the root source.
@@ -103,7 +106,7 @@
         /// <returns>
         /// Query command builder for the common table expression source.
         /// </returns>
-        IQueryCommandBuilder<TCte> FromCte<TCte>(string name, string? alias = null);
+        IQueryCommandBuilder<TCte, TProfile> FromCte<TCte>(string name, string? alias = null);
 
         /// <summary>
         /// Registers a recursive common table expression that can be used as a query source.
@@ -129,10 +132,9 @@
         /// <returns>
         /// Current query builder instance.
         /// </returns>
-        IQueryBuilder WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
-            Func<IQueryBuilder, IQueryCommandBuilder<TBaseRoot>> baseQueryBuilder,
-            Func<IQueryBuilder, IQueryCommandBuilder<TRecursiveRoot>> recursiveQueryBuilder);
-
+        IQueryBuilder<TProfile> WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
+            Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TBaseRoot, TProfile>> baseQueryBuilder,
+            Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TRecursiveRoot, TProfile>> recursiveQueryBuilder);
 
         /// <summary>
         /// Creates a new INSERT command builder for the specified entity type and table name.
@@ -146,7 +148,7 @@
         /// <returns>
         /// Fluent INSERT command builder.
         /// </returns>
-        IInsertCommandBuilder<T> InsertInto<T>(string tableName);
+        IInsertCommandBuilder<T, TProfile> InsertInto<T>(string tableName);
 
         /// <summary>
         /// Creates a new INSERT command builder using resolved entity metadata.
@@ -157,7 +159,7 @@
         /// <returns>
         /// Fluent INSERT command builder.
         /// </returns>
-        IInsertCommandBuilder<T> InsertInto<T>();
+        IInsertCommandBuilder<T, TProfile> InsertInto<T>();
 
         /// <summary>
         /// Creates a new UPDATE command builder for the specified entity type and table name.

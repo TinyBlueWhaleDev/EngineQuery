@@ -1,4 +1,5 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
@@ -9,14 +10,17 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
     /// <summary>
     /// Builds EXISTS and NOT EXISTS query definitions.
     /// </summary>
-    internal sealed class ExistsClauseBuilder(QueryCommandBuilderContext context)
+    internal sealed class ExistsClauseBuilder<TProfile>(QueryCommandBuilderContext context,
+        TProfile profile)
+        where TProfile : IDatabaseProviderProfile
     {
         private readonly QueryCommandBuilderContext _context = context;
         private readonly QuerySourceResolver _sourceResolver = new(context);
-        private readonly NestedQueryCommandBuilderFactory _nestedFactory = new(context);
+        private readonly NestedQueryCommandBuilderFactory<TProfile> _nestedFactory = new(context, profile);
         private readonly QuerySourceAliasResolver _aliasResolver = new(context);
 
-        public void Add<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder)
+        public void Add<TSubquery>(Func<IQueryBuilder<TProfile>,
+            IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder)
         {
             ArgumentNullException.ThrowIfNull(subqueryBuilder);
 
@@ -24,7 +28,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
             var nestedCommandBuilder = subqueryBuilder(nestedQueryBuilder);
 
             var subqueryDefinition =
-                NestedQueryCommandBuilderFactory.ExtractDefinition(
+                NestedQueryCommandBuilderFactory<TProfile>.ExtractDefinition(
                     nestedCommandBuilder,
                     "The EXISTS subquery builder returned an unsupported query command builder instance.");
 
@@ -37,9 +41,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
                 });
         }
 
-        public void AddCorrelated<TOuter, TSubquery>(
-            string? alias,
-            Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder,
+        public void AddCorrelated<TOuter, TSubquery>(string? alias,
+            Func<IQueryCommandBuilder<TSubquery, TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder,
             bool isNegated)
         {
             ArgumentNullException.ThrowIfNull(subqueryBuilder);
@@ -56,7 +59,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Subqueries
             var configuredBuilder = subqueryBuilder(nestedCommandBuilder);
 
             var subqueryDefinition =
-                NestedQueryCommandBuilderFactory.ExtractDefinition(
+                NestedQueryCommandBuilderFactory<TProfile>.ExtractDefinition(
                     configuredBuilder,
                     isNegated
                         ? "The NOT EXISTS subquery builder returned an unsupported query command builder instance."

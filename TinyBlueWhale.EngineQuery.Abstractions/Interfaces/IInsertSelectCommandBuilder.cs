@@ -1,4 +1,5 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
@@ -8,7 +9,12 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// <typeparam name="T">
     /// Entity type associated with the target INSERT table.
     /// </typeparam>
-    public interface IInsertSelectCommandBuilder<T> : IQueryCompositionCommandBuilder<T, IInsertSelectCommandBuilder<T>>
+    /// <typeparam name="TProfile">
+    /// Database provider profile associated with the command.
+    /// </typeparam>
+    public interface IInsertSelectCommandBuilder<T, TProfile> :
+        IQueryCompositionCommandBuilder<T, IInsertSelectCommandBuilder<T, TProfile>, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
         /// <summary>
         /// Builds the current INSERT SELECT command into SQL command text and parameters.

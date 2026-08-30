@@ -6,6 +6,7 @@ using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
+using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
 
 namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
 {
@@ -15,6 +16,23 @@ namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
     [TestFixture]
     internal sealed class QueryEngineFactoryTests
     {
+
+        /// <summary>
+        /// Validates query engine resolution using the SQL Server default profile
+        /// and the explicitly selected attribute metadata strategy.
+        /// </summary>
+        [Test]
+        public void Create_WhenSqlServerDefaultProfileAndAttributeStrategyAreSelected_ShouldResolveEngine()
+        {
+            using var serviceProvider = CreateMultipleMetadataStrategyServiceProvider();
+
+            var factory = serviceProvider.GetRequiredService<IQueryEngineFactory>();
+
+            var queryEngine = factory.Create<SqlServerDefaultProfile>(MetadataStrategy.Attribute);
+
+            Assert.That(queryEngine, Is.Not.Null);
+        }
+
         /// <summary>
         /// Validates direct query engine resolution when a single
         /// metadata strategy is configured.

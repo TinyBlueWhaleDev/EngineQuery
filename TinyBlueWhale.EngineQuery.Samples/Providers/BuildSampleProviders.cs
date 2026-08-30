@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 using Npgsql;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;

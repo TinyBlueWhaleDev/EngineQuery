@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
@@ -8,7 +9,11 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// <typeparam name="T">
     /// Entity type associated with the target INSERT table.
     /// </typeparam>
-    public interface IInsertCommandBuilder<T>
+    /// <typeparam name="TProfile">
+    /// Database provider profile associated with the INSERT command.
+    /// </typeparam>
+    public interface IInsertCommandBuilder<T, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
         /// <summary>
         /// Defines the target columns associated with the INSERT command.
@@ -19,7 +24,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current INSERT command builder instance.
         /// </returns>
-        IInsertCommandBuilder<T> Columns(Expression<Func<T, object>> selector);
+        IInsertCommandBuilder<T, TProfile> Columns(Expression<Func<T, object>> selector);
 
         /// <summary>
         /// Adds a value assignment and transitions the command to INSERT VALUES.
@@ -53,7 +58,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// INSERT SELECT command builder instance.
         /// </returns>
-        IInsertSelectCommandBuilder<T> From<TSource>(string tableName, string? alias = null);
+        IInsertSelectCommandBuilder<T, TProfile> From<TSource>(string tableName, string? alias = null);
 
         /// <summary>
         /// Configures an INSERT SELECT source using resolved entity metadata.
@@ -67,7 +72,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// INSERT SELECT command builder instance.
         /// </returns>
-        IInsertSelectCommandBuilder<T> From<TSource>(string? alias = null);
+        IInsertSelectCommandBuilder<T, TProfile> From<TSource>(string? alias = null);
     }
 }
 

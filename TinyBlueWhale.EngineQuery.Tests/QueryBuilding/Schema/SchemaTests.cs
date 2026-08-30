@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
 
 namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Schema

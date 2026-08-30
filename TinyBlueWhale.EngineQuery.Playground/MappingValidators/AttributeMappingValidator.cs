@@ -1,5 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;

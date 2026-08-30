@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
@@ -18,17 +19,20 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     /// This builder does not execute database commands.
     /// It only captures query intent and delegates SQL generation to the query compiler.
     /// </remarks>
-    public sealed class QueryCommandBuilder<T> : QueryCompositionCommandBuilderBase<T, IQueryCommandBuilder<T>>, IOrderedQueryCommandBuilder<T>
+    public sealed class QueryCommandBuilder<T, TProfile> :
+        QueryCompositionCommandBuilderBase<T, IQueryCommandBuilder<T, TProfile>, TProfile>,
+        IOrderedQueryCommandBuilder<T, TProfile>,
+        IQueryPaginationCommandBuilder<T, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
         private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
         private readonly IEntityMetadataResolver _metadataResolver;
-
+        private readonly TProfile _profile;
         private readonly QueryCommandBuilderContext _context;
-        private readonly QueryCommandBuilderComponents _components;
-        private protected override QueryCommandBuilderComponents Components => _components;
-
-        protected override IQueryCommandBuilder<T> Current => this;
+        private readonly QueryCommandBuilderComponents<TProfile> _components;
+        private protected override QueryCommandBuilderComponents<TProfile> Components => _components;
+        protected override IQueryCommandBuilder<T, TProfile> Current => this;
 
         #region Constructor
         /// <summary>
@@ -46,10 +50,14 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="queryCompiler"/> or <paramref name="querySource"/> is null.
         /// </exception>
-        internal QueryCommandBuilder(IQueryCompiler queryCompiler, QuerySourceDefinition querySource, IEntityMetadataResolver metadataResolver)
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler,
+            QuerySourceDefinition querySource,
+            IEntityMetadataResolver metadataResolver,
+            TProfile profile)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentNullException.ThrowIfNull(querySource);
+            ArgumentNullException.ThrowIfNull(profile);
 
             var resolvedTableName = querySource.TableName ??
                 querySource.TableAlias ??
@@ -57,6 +65,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _queryCompiler = queryCompiler;
             _metadataResolver = metadataResolver;
+            _profile = profile;
 
             _queryDefinition = new CompiledQueryDefinition
             {
@@ -77,7 +86,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 AliasRegistry = new QueryAliasRegistry()
             };
 
-            _components = QueryCommandBuilderComponentFactory.Create(_context);
+            _components = QueryCommandBuilderComponentFactory.Create(_context, _profile);
 
             if (!string.IsNullOrWhiteSpace(querySource.TableAlias))
                 _context.AliasRegistry.Register(querySource.TableAlias);
@@ -105,7 +114,13 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
         /// </param>        
-        internal QueryCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? schemaName = null, string? tableAlias = null, IReadOnlyDictionary<string, string>? columnMappings = null)
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler,
+            IEntityMetadataResolver metadataResolver,
+            TProfile profile,
+            string tableName,
+            string? schemaName = null,
+            string? tableAlias = null,
+            IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
@@ -116,6 +131,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _queryCompiler = queryCompiler;
             _metadataResolver = metadataResolver;
+            _profile = profile;
 
             _queryDefinition = new CompiledQueryDefinition
             {
@@ -134,7 +150,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 AliasRegistry = new QueryAliasRegistry()
             };
 
-            _components = QueryCommandBuilderComponentFactory.Create(_context);
+            _components = QueryCommandBuilderComponentFactory.Create(_context, _profile);
 
             RegisterRootSource(tableName, tableAlias, schemaName);
         }
@@ -157,7 +173,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="keySelector"/> is null.
         /// </exception>
-        public IOrderedQueryCommandBuilder<T> OrderBy(Expression<Func<T, object>> keySelector)
+        public IOrderedQueryCommandBuilder<T, TProfile> OrderBy(Expression<Func<T, object>> keySelector)
         {
             _components.OrderByClauseBuilder.AddAscending(keySelector);
 
@@ -176,7 +192,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Ordered query command builder instance.
         /// </returns>
-        public IOrderedQueryCommandBuilder<T> OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        public IOrderedQueryCommandBuilder<T, TProfile> OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
             _components.OrderByClauseBuilder.AddAscendingForSource(keySelector);
 
@@ -196,7 +212,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="keySelector"/> is null.
         /// </exception>
-        public IOrderedQueryCommandBuilder<T> OrderByDescending(Expression<Func<T, object>> keySelector)
+        public IOrderedQueryCommandBuilder<T, TProfile> OrderByDescending(Expression<Func<T, object>> keySelector)
         {
             _components.OrderByClauseBuilder.AddDescending(keySelector);
 
@@ -215,7 +231,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Ordered query command builder instance.
         /// </returns>
-        public IOrderedQueryCommandBuilder<T> OrderByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        public IOrderedQueryCommandBuilder<T, TProfile> OrderByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
             _components.OrderByClauseBuilder.AddDescendingForSource(keySelector);
 
@@ -231,7 +247,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current ordered query command builder instance.
         /// </returns>
-        public IOrderedQueryCommandBuilder<T> ThenBy(Expression<Func<T, object>> keySelector)
+        public IOrderedQueryCommandBuilder<T, TProfile> ThenBy(Expression<Func<T, object>> keySelector)
         {
             _components.OrderByClauseBuilder.AddAscending(keySelector);
 
@@ -250,7 +266,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current ordered query command builder instance.
         /// </returns>
-        public IOrderedQueryCommandBuilder<T> ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        public IOrderedQueryCommandBuilder<T, TProfile> ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
             _components.OrderByClauseBuilder.AddAscendingForSource(keySelector);
 
@@ -266,7 +282,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current ordered query command builder instance.
         /// </returns>
-        public IOrderedQueryCommandBuilder<T> ThenByDescending(Expression<Func<T, object>> keySelector)
+        public IOrderedQueryCommandBuilder<T, TProfile> ThenByDescending(Expression<Func<T, object>> keySelector)
         {
             _components.OrderByClauseBuilder.AddDescending(keySelector);
 
@@ -285,7 +301,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current ordered query command builder instance.
         /// </returns>
-        public IOrderedQueryCommandBuilder<T> ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        public IOrderedQueryCommandBuilder<T, TProfile> ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
         {
             _components.OrderByClauseBuilder.AddDescendingForSource(keySelector);
 
@@ -296,6 +312,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
 
         #region Pagination Methods
+
         /// <summary>
         /// Sets the number of rows to skip during SQL pagination.
         /// </summary>
@@ -308,7 +325,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="count"/> is negative.
         /// </exception>
-        public IQueryCommandBuilder<T> Skip(int count)
+        public IQueryPaginationCommandBuilder<T, TProfile> Skip(int count)
         {
             _components.PaginationClauseBuilder.SetSkip(count);
 
@@ -327,7 +344,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="count"/> is less than or equal to zero.
         /// </exception>
-        public IQueryCommandBuilder<T> Take(int count)
+        public IQueryPaginationCommandBuilder<T, TProfile> Take(int count)
         {
             _components.PaginationClauseBuilder.SetTake(count);
 

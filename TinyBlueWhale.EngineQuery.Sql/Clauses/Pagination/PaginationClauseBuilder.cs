@@ -1,8 +1,9 @@
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
 
-namespace TinyBlueWhale.EngineQuery.Sql.Clauses
+namespace TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination
 {
     /// <summary>
     /// Builds provider-specific SQL pagination clauses.
@@ -11,8 +12,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// This builder emits pagination syntax only when the query definition contains skip or take values.
     /// Pagination requires at least one ORDER BY clause to guarantee deterministic results.
     /// </remarks>
-    public sealed class PaginationClauseBuilder : IOptionalSqlClauseBuilder
+    public sealed class PaginationClauseBuilder(IPaginationStrategy paginationStrategy) : IOptionalSqlClauseBuilder
     {
+
+        private readonly IPaginationStrategy _paginationStrategy = paginationStrategy ?? throw new ArgumentNullException(nameof(paginationStrategy));
+
         /// <summary>
         /// Determines whether a pagination clause should be built.
         /// </summary>
@@ -49,12 +53,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
 
-            if (queryDefinition.OrderingDefinitions.Count == 0)
-                throw new InvalidOperationException("Pagination requires at least one ORDER BY clause.");
-
-            return context.DatabaseDialect.BuildPaginationClause(
-                queryDefinition.Pagination.Skip,
-                queryDefinition.Pagination.Take);
+            return _paginationStrategy.Build(queryDefinition, context);
         }
     }
 }

@@ -2,6 +2,7 @@
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.MySql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Composition;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Compilation
 {
@@ -9,12 +10,26 @@ namespace TinyBlueWhale.EngineQuery.MySql.Compilation
     /// Compiles query definitions into MySQL command text.
     /// </summary>
     /// <remarks>
-    /// This compiler uses MySQL-specific APPLY behavior while reusing the default SQL builder pipeline.
+    /// This compiler receives provider capabilities used by features that remain under
+    /// migration and an already resolved SQL feature composition.
     /// </remarks>
+    /// <param name="databaseDialect">
+    /// MySQL database dialect.
+    /// </param>
+    /// <param name="providerCapabilities">
+    /// MySQL provider capabilities.
+    /// </param>
+    /// <param name="featureComposition">
+    /// SQL feature composition resolved from the selected provider profile.
+    /// </param>
     public sealed class MySqlQueryCompiler(
         ISqlDatabaseDialect databaseDialect,
-        IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
+        IDatabaseProviderCapabilities providerCapabilities,
+        QueryFeatureComposition featureComposition) :
+        QueryCompilerBase(
             databaseDialect,
             providerCapabilities,
-            MySqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));
+            MySqlQueryCompilerFactory.CreateScriptBuilder(
+                databaseDialect,
+                featureComposition));
 }

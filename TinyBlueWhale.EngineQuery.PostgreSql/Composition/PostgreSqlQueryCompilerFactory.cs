@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.PostgreSql.Clauses;
 using TinyBlueWhale.EngineQuery.Sql.Composition;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -20,12 +20,19 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Composition
         /// <param name="databaseDialect">
         /// PostgreSQL database dialect.
         /// </param>
+        /// <param name="featureComposition">
+        /// SQL feature composition resolved from the selected provider profile.
+        /// </param>
         /// <returns>
         /// Configured PostgreSQL query script builder.
         /// </returns>
         public static IQueryScriptBuilder CreateScriptBuilder(
-            ISqlDatabaseDialect databaseDialect)
+            ISqlDatabaseDialect databaseDialect,
+            QueryFeatureComposition featureComposition)
         {
+            ArgumentNullException.ThrowIfNull(databaseDialect);
+            ArgumentNullException.ThrowIfNull(featureComposition);
+
             return QueryCompilerFactory.CreateScriptBuilder(
                 databaseDialect,
                 new QueryScriptBuilderOptions
@@ -33,6 +40,7 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Composition
                     ApplyClauseBuilderFactory = subqueryCompiler =>
                         new PostgreSqlApplyClauseBuilder(subqueryCompiler),
                     InsertClauseBuilderFactory = () => new PostgreSqlInsertClauseBuilder(),
+                    PaginationStrategy = featureComposition.PaginationStrategy
                 });
         }
     }
