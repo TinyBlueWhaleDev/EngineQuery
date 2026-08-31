@@ -1,4 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
@@ -41,7 +43,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         /// <returns>
         /// Generated SQL query.
         /// </returns>
-        private static GeneratedSqlQuery BuildQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -86,8 +89,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
             try
             {
-                BuildUnsupportedCountQuery(
-                    ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver));
+                BuildUnsupportedCountQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver));
 
                 throw new InvalidOperationException(
                     "Expected COUNT computed aggregate expression exception was not thrown.");
@@ -107,7 +109,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         /// <returns>
         /// Generated SQL query.
         /// </returns>
-        private static GeneratedSqlQuery BuildUnsupportedCountQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildUnsupportedCountQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinOrder>(alias: "o")

@@ -1,4 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
@@ -30,8 +32,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query with a correlated NOT EXISTS subquery.
-        private static GeneratedSqlQuery BuildQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")

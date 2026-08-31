@@ -18,7 +18,6 @@ using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 {
-
     /// <summary>
     /// Validates EngineQuery dependency injection resolution using strongly typed
     /// database provider profiles and generated query engine surfaces.
@@ -31,93 +30,13 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         public static void Run()
         {
             ValidateSingleProviderResolution();
-            ValidateMultiProviderFactoryResolution();
+            ValidateProfileResolution();
+            ValidateMultiProviderResolution();
             ValidateMultipleMetadataRequiresExplicitStrategy();
             ValidateEntityFrameworkMetadataResolution();
             ValidateInsertCommandResolution();
             ValidateUpdateCommandResolution();
             ValidateDeleteCommandResolution();
-        }
-
-        /// <summary>
-        /// Validates DELETE command generation through a strongly typed SQL Server query engine factory.
-        /// </summary>
-        private static void ValidateDeleteCommandResolution()
-        {
-            var services = new ServiceCollection();
-
-            services.AddEngineQuery(options =>
-            {
-                options.Add(QueryEngineProvider.SqlServer, metadata =>
-                {
-                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
-                });
-            });
-
-            using var serviceProvider = services.BuildServiceProvider();
-
-            var factory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
-
-            var queryEngine = factory.Create();
-
-            ProviderQueryPrinter.Print(
-                "DI SQL Server Delete Command",
-                BuildDeleteCommand(queryEngine));
-        }
-
-        /// <summary>
-        /// Validates UPDATE command generation through a strongly typed SQL Server query engine factory.
-        /// </summary>
-        private static void ValidateUpdateCommandResolution()
-        {
-            var services = new ServiceCollection();
-
-            services.AddEngineQuery(options =>
-            {
-                options.Add(QueryEngineProvider.SqlServer, metadata =>
-                {
-                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
-                });
-            });
-
-            using var serviceProvider = services.BuildServiceProvider();
-
-            var factory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
-
-            var queryEngine = factory.Create();
-
-            ProviderQueryPrinter.Print(
-                "DI SQL Server Update Command",
-                BuildUpdateCommand(queryEngine));
-        }
-
-        /// <summary>
-        /// Validates INSERT command generation through a strongly typed SQL Server query engine factory.
-        /// </summary>
-        private static void ValidateInsertCommandResolution()
-        {
-            var services = new ServiceCollection();
-
-            services.AddEngineQuery(options =>
-            {
-                options.Add(QueryEngineProvider.SqlServer, metadata =>
-                {
-                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
-                });
-            });
-
-            using var serviceProvider = services.BuildServiceProvider();
-
-            var factory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
-
-            var queryEngine = factory.Create();
-
-            ProviderQueryPrinter.Print(
-                "DI SQL Server Insert Command",
-                BuildInsertCommand(queryEngine));
         }
 
         /// <summary>
@@ -131,16 +50,16 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             {
                 options.Add(QueryEngineProvider.SqlServer, metadata =>
                 {
-                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
                 });
             });
 
             using var serviceProvider = services.BuildServiceProvider();
 
-            var factory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
-
-            var queryEngine = factory.Create();
+            var queryEngine =
+                serviceProvider.GetRequiredService<
+                    ISqlServerDefaultQueryEngine>();
 
             ProviderQueryPrinter.Print(
                 "DI SQL Server Single Provider",
@@ -148,9 +67,10 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         /// <summary>
-        /// Validates strongly typed query engine factory resolution for multiple database providers.
+        /// Validates that a single SQL Server provider registration can resolve
+        /// the generated query engine surfaces associated with its provider profiles.
         /// </summary>
-        private static void ValidateMultiProviderFactoryResolution()
+        private static void ValidateProfileResolution()
         {
             var services = new ServiceCollection();
 
@@ -158,42 +78,92 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             {
                 options.Add(QueryEngineProvider.SqlServer, metadata =>
                 {
-                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
-                });
-
-                options.Add(QueryEngineProvider.PostgreSql, metadata =>
-                {
-                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
-                });
-
-                options.Add(QueryEngineProvider.MySql, metadata =>
-                {
-                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
                 });
             });
 
             using var serviceProvider = services.BuildServiceProvider();
 
-            var sqlServerFactory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
+            var defaultEngine =
+                serviceProvider.GetRequiredService<
+                    ISqlServerDefaultQueryEngine>();
 
-            var postgreSqlFactory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<PostgreSqlDefaultProfile, IPostgreSqlDefaultQueryEngine>>();
+            var sqlServer2008Engine =
+                serviceProvider.GetRequiredService<
+                    ISqlServer2008QueryEngine>();
 
-            var mySqlFactory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<MySqlDefaultProfile, IMySqlDefaultQueryEngine>>();
-
-            ProviderQueryPrinter.Print(
-                "DI SQL Server Factory",
-                BuildQuery(sqlServerFactory.Create()));
-
-            ProviderQueryPrinter.Print(
-                "DI PostgreSQL Factory",
-                BuildQuery(postgreSqlFactory.Create()));
+            var sqlServer2012Engine =
+                serviceProvider.GetRequiredService<
+                    ISqlServer2012QueryEngine>();
 
             ProviderQueryPrinter.Print(
-                "DI MySQL Factory",
-                BuildQuery(mySqlFactory.Create()));
+                "DI SQL Server Default Profile",
+                BuildQuery(defaultEngine));
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server 2008 Profile",
+                BuildQuery(sqlServer2008Engine));
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server 2012 Profile",
+                BuildQuery(sqlServer2012Engine));
+        }
+
+        /// <summary>
+        /// Validates direct strongly typed query engine resolution when multiple
+        /// database providers are registered simultaneously.
+        /// </summary>
+        private static void ValidateMultiProviderResolution()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer, metadata =>
+                {
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+
+                options.Add(QueryEngineProvider.PostgreSql, metadata =>
+                {
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+
+                options.Add(QueryEngineProvider.MySql, metadata =>
+                {
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var sqlServer =
+                serviceProvider.GetRequiredService<
+                    ISqlServerDefaultQueryEngine>();
+
+            var postgreSql =
+                serviceProvider.GetRequiredService<
+                    IPostgreSqlDefaultQueryEngine>();
+
+            var mySql =
+                serviceProvider.GetRequiredService<
+                    IMySqlDefaultQueryEngine>();
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server Direct Resolution",
+                BuildQuery(sqlServer));
+
+            ProviderQueryPrinter.Print(
+                "DI PostgreSQL Direct Resolution",
+                BuildQuery(postgreSql));
+
+            ProviderQueryPrinter.Print(
+                "DI MySQL Direct Resolution",
+                BuildQuery(mySql));
         }
 
         /// <summary>
@@ -208,15 +178,20 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             {
                 options.Add(QueryEngineProvider.SqlServer, metadata =>
                 {
-                    metadata.UseFluentMetadata(ProviderMetadataFactory.CreateJoinMetadataResolver);
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
+
                     metadata.UseAttributeMetadata();
                 });
             });
 
             using var serviceProvider = services.BuildServiceProvider();
 
-            var factory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
+            var factory =
+                serviceProvider.GetRequiredService<
+                    IQueryEngineFactory<
+                        SqlServerDefaultProfile,
+                        ISqlServerDefaultQueryEngine>>();
 
             try
             {
@@ -232,16 +207,20 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
             ProviderQueryPrinter.Print(
                 "DI SQL Server Explicit Fluent Metadata",
-                BuildQuery(factory.Create(MetadataStrategy.Fluent)));
+                BuildQuery(
+                    factory.Create(
+                        MetadataStrategy.Fluent)));
 
             ProviderQueryPrinter.Print(
                 "DI SQL Server Explicit Attribute Metadata",
-                BuildQuery(factory.Create(MetadataStrategy.Attribute)));
+                BuildQuery(
+                    factory.Create(
+                        MetadataStrategy.Attribute)));
         }
 
         /// <summary>
-        /// Validates Entity Framework metadata resolution through a strongly typed
-        /// SQL Server query engine factory.
+        /// Validates Entity Framework metadata resolution through direct strongly typed
+        /// SQL Server query engine injection.
         /// </summary>
         private static void ValidateEntityFrameworkMetadataResolution()
         {
@@ -249,27 +228,112 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
             services.AddDbContext<EngineQueryValidationDbContext>(options =>
             {
-                options.UseInMemoryDatabase(nameof(EngineQueryValidationDbContext));
+                options.UseInMemoryDatabase(
+                    nameof(EngineQueryValidationDbContext));
             });
 
             services.AddEngineQuery(options =>
             {
                 options.Add(QueryEngineProvider.SqlServer, metadata =>
                 {
-                    metadata.UseEntityFrameworkMetadata<EngineQueryValidationDbContext>();
+                    metadata.UseEntityFrameworkMetadata<
+                        EngineQueryValidationDbContext>();
                 });
             });
 
             using var serviceProvider = services.BuildServiceProvider();
 
-            var factory = serviceProvider.GetRequiredService<
-                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
-
-            var queryEngine = factory.Create();
+            var queryEngine =
+                serviceProvider.GetRequiredService<
+                    ISqlServerDefaultQueryEngine>();
 
             ProviderQueryPrinter.Print(
                 "DI SQL Server Entity Framework Metadata",
                 BuildQuery(queryEngine));
+        }
+
+        /// <summary>
+        /// Validates INSERT command generation through direct strongly typed
+        /// SQL Server query engine injection.
+        /// </summary>
+        private static void ValidateInsertCommandResolution()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer, metadata =>
+                {
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var queryEngine =
+                serviceProvider.GetRequiredService<
+                    ISqlServerDefaultQueryEngine>();
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server Insert Command",
+                BuildInsertCommand(queryEngine));
+        }
+
+        /// <summary>
+        /// Validates UPDATE command generation through direct strongly typed
+        /// SQL Server query engine injection.
+        /// </summary>
+        private static void ValidateUpdateCommandResolution()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer, metadata =>
+                {
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var queryEngine =
+                serviceProvider.GetRequiredService<
+                    ISqlServerDefaultQueryEngine>();
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server Update Command",
+                BuildUpdateCommand(queryEngine));
+        }
+
+        /// <summary>
+        /// Validates DELETE command generation through direct strongly typed
+        /// SQL Server query engine injection.
+        /// </summary>
+        private static void ValidateDeleteCommandResolution()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer, metadata =>
+                {
+                    metadata.UseFluentMetadata(
+                        ProviderMetadataFactory.CreateJoinMetadataResolver);
+                });
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var queryEngine =
+                serviceProvider.GetRequiredService<
+                    ISqlServerDefaultQueryEngine>();
+
+            ProviderQueryPrinter.Print(
+                "DI SQL Server Delete Command",
+                BuildDeleteCommand(queryEngine));
         }
 
         /// <summary>

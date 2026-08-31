@@ -1,4 +1,7 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using System.Formats.Tar;
+using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
@@ -31,7 +34,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Runs all INSERT validation scenarios for the specified provider.
-        private static void RunProvider(string providerName, QueryBuilder queryBuilder)
+        private static void RunProvider<TProfile>(string providerName, IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             ProviderQueryPrinter.Print(
                 $"{providerName} Insert Command",
@@ -83,7 +87,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a strongly typed INSERT VALUES command.
-        private static GeneratedSqlQuery BuildInsertValuesQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertValuesQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinUser>()
@@ -92,7 +97,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a SQL Server or MySQL INSERT command that retrieves the generated identity through a connection-scoped function.
-        private static GeneratedSqlQuery BuildInsertIdentityQuery(QueryBuilder queryBuilder, string providerName)
+        private static GeneratedSqlQuery BuildInsertIdentityQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder, string providerName)
+            where TProfile : IDatabaseProviderProfile   
         {
             var query = queryBuilder.InsertInto<JoinUser>()
                 .Set(user => user.Email, "admin@test.com");
@@ -104,7 +110,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command using explicit target columns.
-        private static GeneratedSqlQuery BuildInsertSelectQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinUser>()
@@ -123,7 +130,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command using an explicit WHERE predicate.
-        private static GeneratedSqlQuery BuildInsertSelectWhereQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectWhereQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinUser>()
@@ -143,7 +151,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command using projections from multiple joined sources.
-        private static GeneratedSqlQuery BuildInsertSelectJoinQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectJoinQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinOrder>()
@@ -167,7 +176,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command inferring target columns from projection aliases.
-        private static GeneratedSqlQuery BuildInsertSelectInferredColumnsQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectInferredColumnsQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinOrder>()
@@ -186,7 +196,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command inferring a target column from an aggregate projection alias.
-        private static GeneratedSqlQuery BuildInsertSelectInferredAggregateQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectInferredAggregateQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinOrder>("projection_results")
@@ -196,7 +207,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command inferring a target column from a scalar function projection alias.
-        private static GeneratedSqlQuery BuildInsertSelectInferredScalarFunctionQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectInferredScalarFunctionQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinUser>("projection_results")
@@ -206,7 +218,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command inferring a target column from a computed expression alias.
-        private static GeneratedSqlQuery BuildInsertSelectInferredComputedQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectInferredComputedQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinOrder>("projection_results")
@@ -216,7 +229,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command inferring a target column from a CASE WHEN projection alias.
-        private static GeneratedSqlQuery BuildInsertSelectInferredCaseWhenQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectInferredCaseWhenQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinOrder>("projection_results")
@@ -226,7 +240,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command inferring a target column from a window function projection alias.
-        private static GeneratedSqlQuery BuildInsertSelectInferredWindowQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectInferredWindowQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinOrder>("projection_results")
@@ -240,7 +255,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command validating inferred target column order across all supported projection types.
-        private static GeneratedSqlQuery BuildInsertSelectMixedInferredProjectionQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectMixedInferredProjectionQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinOrder>("projection_results")

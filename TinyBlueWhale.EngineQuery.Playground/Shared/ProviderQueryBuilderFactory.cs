@@ -35,15 +35,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 
-            var profile = new SqlServerDefaultProfile();
-
-            return new QueryBuilder<SqlServerDefaultProfile>(
-                new SqlServerQueryCompiler(
-                    new SqlServerDatabaseDialect(),
-                    new SqlServerProviderCapabilities(),
-                    new Sql.Composition.QueryFeatureComposition()),
-                metadataResolver,
-                profile);
+            return SqlServerQueryCompiler.Factory.Create(metadataResolver);
         }
 
         /// <summary>
@@ -60,15 +52,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 
-            var profile = new PostgreSqlDefaultProfile();
-
-            return new QueryBuilder<PostgreSqlDefaultProfile>(
-                new PostgreSqlQueryCompiler(
-                    new PostgreSqlDatabaseDialect(),
-                    new PostgreSqlProviderCapabilities(),
-                    new Sql.Composition.QueryFeatureComposition()),
-                metadataResolver,
-                profile);
+            return PostgreSqlQueryCompiler.Factory.Create(metadataResolver);
         }
 
         /// <summary>
@@ -85,16 +69,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 
-            var profile = new MySqlDefaultProfile();
-
-            return new QueryBuilder<MySqlDefaultProfile>(
-                new MySqlQueryCompiler(
-                    new MySqlDatabaseDialect(),
-                    new MySqlProviderCapabilities(),
-                    new Sql.Composition.QueryFeatureComposition()
-                    ),
-                metadataResolver,
-                profile);
+            return MySqlQueryCompiler.Factory.Create(metadataResolver);
         }
     }
 }

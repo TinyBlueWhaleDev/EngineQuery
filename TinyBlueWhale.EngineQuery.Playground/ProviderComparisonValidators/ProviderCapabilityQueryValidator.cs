@@ -32,9 +32,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         {
             var metadataResolver = ProviderMetadataFactory.CreateJoinMetadataResolver();
 
-            return new QueryBuilder(
-                    new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new SqlServer.Capabilities.SqlServerProviderCapabilities()),
-                    metadataResolver)
+            return SqlServerQueryCompiler.Factory.Create(metadataResolver)
                 .From<JoinOrder>(alias: "o")
                 .Select<JoinOrder>(o => new
                 {
@@ -56,9 +54,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
             try
             {
-                _ = new QueryBuilder(
-                        new UnsupportedWindowFunctionQueryCompiler(),
-                        metadataResolver)
+                _ = SqlServerQueryCompiler.Factory.Create(metadataResolver)
                     .From<JoinOrder>(alias: "o")
                     .Select<JoinOrder>(o => new
                     {
@@ -77,36 +73,6 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 Console.WriteLine("--- Provider Capability Unsupported Window Function ---");
                 Console.WriteLine(exception.Message);
                 Console.WriteLine();
-            }
-        }
-
-        private sealed class UnsupportedWindowFunctionCapabilities : IDatabaseProviderCapabilities
-        {
-            public bool SupportsCommonTableExpressions => true;
-
-            public bool SupportsRecursiveCommonTableExpressions => true;
-
-            public bool SupportsWindowFunctions => false;
-
-            public bool SupportsLateralJoins => true;
-
-            public bool SupportsIntersect => true;
-
-            public bool SupportsExcept => true;
-
-            public bool SupportsOffsetFetchPagination => true;
-
-            public bool SupportsLimitOffsetPagination => false;
-        }
-
-        private sealed class UnsupportedWindowFunctionQueryCompiler : QueryCompilerBase
-        {
-            public UnsupportedWindowFunctionQueryCompiler()
-                : base(
-                    new SqlServerDatabaseDialect(),
-                    new UnsupportedWindowFunctionCapabilities(),
-                    SqlServerQueryCompilerFactory.CreateScriptBuilder(new SqlServerDatabaseDialect()))
-            {
             }
         }
     }

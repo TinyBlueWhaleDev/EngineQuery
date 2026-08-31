@@ -1,4 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
@@ -231,8 +233,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query containing multiple OR groups.
-        private static GeneratedSqlQuery BuildMultipleOrGroupsQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildMultipleOrGroupsQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -257,8 +259,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
 
         // Builds a query where an OR group starts after an AND predicate.
-        private static GeneratedSqlQuery BuildTrailingOrQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildTrailingOrQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -277,8 +279,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
 
         // Builds a query containing a single OR group.
-        private static GeneratedSqlQuery BuildSingleOrQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildSingleOrQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -295,8 +297,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query containing an OR group followed by AND.
-        private static GeneratedSqlQuery BuildOrThenAndQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildOrThenAndQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -315,8 +317,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
 
         // Builds a query that preserves the default logical AND behavior.
-        private static GeneratedSqlQuery BuildDefaultAndQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildDefaultAndQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -331,8 +333,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query that connects two predicates with logical OR.
-        private static GeneratedSqlQuery BuildExplicitOrQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildExplicitOrQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -349,8 +351,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query containing a consecutive logical OR sequence.
-        private static GeneratedSqlQuery BuildConsecutiveOrQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildConsecutiveOrQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -370,8 +372,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query where an OR block is followed by an AND predicate.
-        private static GeneratedSqlQuery BuildOrBlockFollowedByAndQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildOrBlockFollowedByAndQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -389,9 +391,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query with an optional logical OR predicate.
-        private static GeneratedSqlQuery BuildConditionalOrQuery(
-            QueryBuilder queryBuilder,
-            bool includeEmailPredicate)
+        private static GeneratedSqlQuery BuildConditionalOrQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder, bool includeEmailPredicate)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")

@@ -1,4 +1,7 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using System.Formats.Tar;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
@@ -43,8 +46,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a CROSS APPLY or provider-equivalent LATERAL join query.
-        private static GeneratedSqlQuery BuildCrossApplyQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildCrossApplyQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -64,14 +67,13 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                         })
                         .WhereComputed<JoinOrder, JoinUser>(
                             (o, u) => o.UserId == u.Id)
-                        .OrderByDescending<JoinOrder>(o => o.Total)
-                        .Take(1))
+                        .OrderByDescending<JoinOrder>(o => o.Total))
                 .Build();
         }
 
         // Builds an OUTER APPLY or provider-equivalent LEFT LATERAL join query.
-        private static GeneratedSqlQuery BuildOuterApplyQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildOuterApplyQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -91,8 +93,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                         })
                         .WhereComputed<JoinOrder, JoinUser>(
                             (o, u) => o.UserId == u.Id)
-                        .OrderByDescending<JoinOrder>(o => o.Total)
-                        .Take(1))
+                        .OrderByDescending<JoinOrder>(o => o.Total))
                 .Build();
         }
     }

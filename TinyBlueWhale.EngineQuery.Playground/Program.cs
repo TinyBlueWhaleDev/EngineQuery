@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
+﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
 
 BasicSelectQueryValidator.Run();
 TableAliasQueryValidator.Run();

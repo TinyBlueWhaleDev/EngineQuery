@@ -1,4 +1,7 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using System.Formats.Tar;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
@@ -43,8 +46,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INTERSECT query.
-        private static GeneratedSqlQuery BuildIntersectQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildIntersectQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<ActiveUser>(alias: "u")
@@ -64,8 +67,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an EXCEPT query.
-        private static GeneratedSqlQuery BuildExceptQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildExceptQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<ActiveUser>(alias: "u")

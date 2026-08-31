@@ -1,4 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
@@ -34,13 +36,13 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a query using dynamic ordering followed by ThenBy and pagination.
-        private static GeneratedSqlQuery BuildQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             const string sortBy = "EMAIL";
             const bool descending = true;
-            const int skip = 20;
-            const int take = 10;
+            //const int skip = 20;
+            //const int take = 10;
 
             var query = queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -50,7 +52,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     u.Email
                 });
 
-            IOrderedQueryCommandBuilder<JoinUser> orderedQuery = sortBy switch
+            IOrderedQueryCommandBuilder<JoinUser, TProfile> orderedQuery = sortBy switch
             {
                 "EMAIL" => descending
                                         ? query.OrderByDescending<JoinUser>(u => u.Email)
@@ -62,8 +64,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
             return orderedQuery
                 .ThenBy<JoinUser>(u => u.Id)
-                .Skip(skip)
-                .Take(take)
+                //.Skip(skip)
+                //.Take(take)
                 .Build();
         }
     }

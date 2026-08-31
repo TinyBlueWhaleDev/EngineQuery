@@ -28,7 +28,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
                 new ConventionEntityMetadataResolver()
             ]);
 
-            var queryBuilder = CreateQueryBuilder(metadataResolver);
+            var queryBuilder = SqlServerQueryCompiler.Factory.Create(metadataResolver);
 
             var sql = queryBuilder
                 .From<CompositeSecurityLog>()
@@ -45,13 +45,6 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
 
             MappingValidatorPrinter.Print(nameof(CompositeMappingValidator), sql);
         }
-
-        private static QueryBuilder CreateQueryBuilder(IEntityMetadataResolver metadataResolver)
-        {
-            return new QueryBuilder(
-                new SqlServerQueryCompiler(
-                    new SqlServerDatabaseDialect(), new SqlServerProviderCapabilities()),
-                metadataResolver);
-        }
+        
     }
 }

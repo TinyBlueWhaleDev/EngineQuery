@@ -108,35 +108,19 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         /// <exception cref="NotSupportedException">
         /// Thrown when the specified provider is not supported.
         /// </exception>
-        private static (Func<IServiceProvider, IDatabaseProviderProfile, IQueryCompiler> BuildCompiler,
-            Type ProfileContract)
-            BuildProviderComposition(QueryEngineProvider provider)
+        private static (Func<IServiceProvider, IDatabaseProviderProfile, IQueryCompiler> BuildCompiler, Type ProfileContract) BuildProviderComposition(QueryEngineProvider provider)
         {
             return provider switch
             {
-                QueryEngineProvider.SqlServer => (
-                    (_, profile) => new SqlServerQueryCompiler(
-                        new SqlServerDatabaseDialect(),
-                        new SqlServerProviderCapabilities(profile.Version),
-                        QueryFeatureCompositionFactory.Create(profile)),
-                    typeof(ISqlServerProfile)),
-
-                QueryEngineProvider.MySql => (
-                    (_, profile) => new MySqlQueryCompiler(
-                        new MySqlDatabaseDialect(),
-                        new MySqlProviderCapabilities(profile.Version),
-                        QueryFeatureCompositionFactory.Create(profile)),
-                    typeof(IMySqlProfile)),
-
-                QueryEngineProvider.PostgreSql => (
-                    (_, profile) => new PostgreSqlQueryCompiler(
-                        new PostgreSqlDatabaseDialect(),
-                        new PostgreSqlProviderCapabilities(profile.Version),
-                        QueryFeatureCompositionFactory.Create(profile)),
-                    typeof(IPostgreSqlProfile)),
-
+                QueryEngineProvider.SqlServer => (BuildSqlServerCompiler, typeof(ISqlServerProfile)),
+                QueryEngineProvider.MySql => (BuildMySqlCompiler, typeof(IMySqlProfile)),
+                QueryEngineProvider.PostgreSql => (BuildPostgreSqlCompiler, typeof(IPostgreSqlProfile)),
                 _ => throw new NotSupportedException($"Provider '{provider}' is not supported.")
             };
         }
+
+        private static IQueryCompiler BuildSqlServerCompiler(IServiceProvider _, IDatabaseProviderProfile profile) => SqlServerQueryCompiler.Factory.CreateCompiler((ISqlServerProfile)profile);
+        private static IQueryCompiler BuildMySqlCompiler(IServiceProvider _, IDatabaseProviderProfile profile) => MySqlQueryCompiler.Factory.CreateCompiler((IMySqlProfile)profile);
+        private static IQueryCompiler BuildPostgreSqlCompiler(IServiceProvider _, IDatabaseProviderProfile profile) => PostgreSqlQueryCompiler.Factory.CreateCompiler((IPostgreSqlProfile)profile);
     }
 }

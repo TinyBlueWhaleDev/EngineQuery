@@ -10,9 +10,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
     {
         public static void Run()
         {
-            var queryBuilder = new QueryBuilder(
-                new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new SqlServerProviderCapabilities()),
-                new AttributeEntityMetadataResolver());
+            var queryBuilder = SqlServerQueryCompiler.Factory.Create(new AttributeEntityMetadataResolver());
 
             var sql = queryBuilder
                 .From<AttributeSystemEvent>()

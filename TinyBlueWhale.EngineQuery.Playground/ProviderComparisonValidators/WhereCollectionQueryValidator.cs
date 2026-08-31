@@ -1,4 +1,7 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using System.Formats.Tar;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
@@ -34,9 +37,10 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Runs all collection filtering scenarios for the specified provider.
-        private static void RunProvider(
+        private static void RunProvider<TProfile>(
             string providerName,
-            QueryBuilder queryBuilder)
+            IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             ProviderQueryPrinter.Print(
                 $"{providerName} Where IN and NOT IN Collections",
@@ -56,8 +60,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a SELECT command using IN and NOT IN collection conditions.
-        private static GeneratedSqlQuery BuildSelectQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildSelectQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -74,8 +78,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an INSERT SELECT command using an IN collection condition.
-        private static GeneratedSqlQuery BuildInsertSelectQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildInsertSelectQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .InsertInto<JoinOrder>()
@@ -95,8 +99,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds an UPDATE command using an IN collection condition.
-        private static GeneratedSqlQuery BuildUpdateQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildUpdateQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .Update<JoinUser>()
@@ -108,8 +112,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
         }
 
         // Builds a DELETE command using a NOT IN collection condition.
-        private static GeneratedSqlQuery BuildDeleteQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildDeleteQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .DeleteFrom<JoinUser>()

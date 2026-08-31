@@ -1,4 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Fluent;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.MySql.Capabilities;
@@ -31,35 +33,27 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
         private static GeneratedSqlQuery BuildSqlServerQuery(FluentEntityMetadataResolver metadataResolver)
         {
-            var queryBuilder = new QueryBuilder(
-                new SqlServerQueryCompiler(
-                    new SqlServerDatabaseDialect(), new SqlServer.Capabilities.SqlServerProviderCapabilities()),
-                metadataResolver);
+            var queryBuilder = SqlServerQueryCompiler.Factory.Create(metadataResolver);
 
             return BuildQuery(queryBuilder);
         }
 
         private static GeneratedSqlQuery BuildPostgreSqlQuery(FluentEntityMetadataResolver metadataResolver)
         {
-            var queryBuilder = new QueryBuilder(
-                new PostgreSqlQueryCompiler(
-                    new PostgreSqlDatabaseDialect(), new PostgreSqlProviderCapabilities()),
-                metadataResolver);
+            var queryBuilder = PostgreSqlQueryCompiler.Factory.Create(metadataResolver);
 
             return BuildQuery(queryBuilder);
         }
 
         private static GeneratedSqlQuery BuildMySqlQuery(FluentEntityMetadataResolver metadataResolver)
         {
-            var queryBuilder = new QueryBuilder(
-                new MySqlQueryCompiler(
-                    new MySqlDatabaseDialect(), new MySqlProviderCapabilities()),
-                metadataResolver);
+            var queryBuilder = MySqlQueryCompiler.Factory.Create(metadataResolver);
 
             return BuildQuery(queryBuilder);
         }
 
-        private static GeneratedSqlQuery BuildQuery(QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<FluentAuditRecord>()
@@ -74,8 +68,6 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     x.Active &&
                     x.Description.Contains("error"))
                 .OrderByDescending(x => x.CreatedOn)
-                .Skip(20)
-                .Take(10)
                 .Build();
         }
 

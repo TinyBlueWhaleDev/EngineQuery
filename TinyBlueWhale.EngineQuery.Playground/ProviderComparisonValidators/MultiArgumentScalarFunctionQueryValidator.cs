@@ -1,4 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
@@ -33,8 +35,8 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
         // Builds a query with multi-argument scalar SQL function projections.
         // Builds a query with multi-argument scalar SQL function projections.
-        private static GeneratedSqlQuery BuildQuery(
-            QueryBuilder queryBuilder)
+        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -43,22 +45,22 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     UserId = u.Id
                 })
                 .SelectScalarFunction<JoinUser>(
-    QueryScalarFunction.Coalesce,
-    u => new object[]
-    {
-        u.Email,
-        "NO_EMAIL"
-    },
-    alias: "SafeEmail")
-.SelectScalarFunction<JoinUser>(
-    QueryScalarFunction.Concat,
-    u => new object[]
-    {
-        u.Email,
-        " - ACTIVE"
-    },
-    alias: "EmailLabel")
+                    QueryScalarFunction.Coalesce,
+                    u => new object[]
+                    {
+                        u.Email,
+                        "NO_EMAIL"
+                    },
+                    alias: "SafeEmail")
+                .SelectScalarFunction<JoinUser>(
+                    QueryScalarFunction.Concat,
+                    u => new object[]
+                    {
+                        u.Email,
+                        " - ACTIVE"
+                    },
+                    alias: "EmailLabel")
                 .Build();
         }
-    }
+    }                        
 }

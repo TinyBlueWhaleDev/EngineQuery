@@ -452,46 +452,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
                     static method => method.Parameters.Length)
                 .ToList();
         }
-
-        /// <summary>
-        /// Adds ordinary methods declared directly by the specified surface.
-        /// </summary>
-        /// <param name="methods">
-        /// Collection receiving discovered methods.
-        /// </param>
-        /// <param name="surface">
-        /// Surface whose directly declared methods are being inspected.
-        /// </param>
-        private static void AddSurfaceMethods(ICollection<IMethodSymbol> methods, INamedTypeSymbol surface)
-        {
-            foreach (var method in surface.GetMembers().OfType<IMethodSymbol>())
-            {
-                if (method.MethodKind != MethodKind.Ordinary || method.IsStatic)
-                    continue;
-
-                methods.Add(method);
-            }
-        }
-
-        /// <summary>
-        /// Builds a deterministic signature used to remove duplicate inherited methods.
-        /// </summary>
-        /// <param name="method">
-        /// Method whose signature is being generated.
-        /// </param>
-        /// <returns>
-        /// Deterministic method signature.
-        /// </returns>
-        private static string GetMethodSignature(IMethodSymbol method)
-        {
-            var parameters = string.Join(
-                "|",
-                method.Parameters.Select(
-                    parameter =>
-                        $"{parameter.RefKind}:{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}"));
-
-            return $"{method.Name}`{method.Arity}({parameters})";
-        }
+       
 
         /// <summary>
         /// Builds the generic parameter list associated with the specified method.
@@ -522,10 +483,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <param name="indentation">
         /// Indentation applied to generated constraint clauses.
         /// </param>
-        private static void AppendGenericConstraints(
-            StringBuilder source,
-            IMethodSymbol method,
-            string indentation)
+        private static void AppendGenericConstraints(StringBuilder source, IMethodSymbol method, string indentation)
         {
             foreach (var typeParameter in method.TypeParameters)
             {
@@ -553,37 +511,20 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <returns>
         /// Collection containing the rendered generic constraints.
         /// </returns>
-        private static IReadOnlyList<string> BuildGenericConstraints(
-            ITypeParameterSymbol typeParameter)
+        private static IReadOnlyList<string> BuildGenericConstraints(ITypeParameterSymbol typeParameter)
         {
             var constraints = new List<string>();
 
             if (typeParameter.HasUnmanagedTypeConstraint)
-            {
                 constraints.Add("unmanaged");
-            }
             else if (typeParameter.HasValueTypeConstraint)
-            {
                 constraints.Add("struct");
-            }
             else if (typeParameter.HasReferenceTypeConstraint)
-            {
-                constraints.Add(
-                    typeParameter.ReferenceTypeConstraintNullableAnnotation ==
-                    NullableAnnotation.Annotated
-                        ? "class?"
-                        : "class");
-            }
+                constraints.Add(typeParameter.ReferenceTypeConstraintNullableAnnotation == NullableAnnotation.Annotated ? "class?" : "class");
             else if (typeParameter.HasNotNullConstraint)
-            {
                 constraints.Add("notnull");
-            }
 
-            constraints.AddRange(
-                typeParameter.ConstraintTypes.Select(
-                    constraint =>
-                        constraint.ToDisplayString(
-                            SymbolDisplayFormat.FullyQualifiedFormat)));
+            constraints.AddRange(typeParameter.ConstraintTypes.Select(constraint => constraint.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
 
             if (typeParameter.HasConstructorConstraint)
                 constraints.Add("new()");
@@ -600,21 +541,15 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <returns>
         /// C# parameter declaration.
         /// </returns>
-        private static string BuildParameterDeclaration(
-            IParameterSymbol parameter)
+        private static string BuildParameterDeclaration(IParameterSymbol parameter)
         {
-            var modifier =
-                GetRefModifier(parameter.RefKind);
+            var modifier = GetRefModifier(parameter.RefKind);
 
-            var type =
-                parameter.Type.ToDisplayString(
-                    SymbolDisplayFormat.FullyQualifiedFormat);
+            var type = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-            var defaultValue =
-                BuildDefaultValue(parameter);
+            var defaultValue = BuildDefaultValue(parameter);
 
-            return
-                $"{modifier}{type} {EscapeIdentifier(parameter.Name)}{defaultValue}";
+            return $"{modifier}{type} {EscapeIdentifier(parameter.Name)}{defaultValue}";
         }
 
         /// <summary>
@@ -626,11 +561,9 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <returns>
         /// C# invocation argument.
         /// </returns>
-        private static string BuildArgument(
-            IParameterSymbol parameter)
+        private static string BuildArgument(IParameterSymbol parameter)
         {
-            return
-                $"{GetRefModifier(parameter.RefKind)}{EscapeIdentifier(parameter.Name)}";
+            return $"{GetRefModifier(parameter.RefKind)}{EscapeIdentifier(parameter.Name)}";
         }
 
         /// <summary>
@@ -767,117 +700,73 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <param name="profiles">
         /// Concrete provider profiles discovered during compilation.
         /// </param>
-        private static void GenerateDependencyInjectionRegistration(
-            SourceProductionContext context,
-            ImmutableArray<INamedTypeSymbol> profiles)
+        private static void GenerateDependencyInjectionRegistration(SourceProductionContext context, ImmutableArray<INamedTypeSymbol> profiles)
         {
             var source = new StringBuilder();
 
             source.AppendLine("// <auto-generated />");
             source.AppendLine("#nullable enable");
             source.AppendLine();
-
-            source.AppendLine(
-                "namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions");
-
+            source.AppendLine("namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions");
             source.AppendLine("{");
             source.AppendLine("    /// <summary>");
-            source.AppendLine(
-                "    /// Provides generated EngineQuery dependency injection registrations.");
+            source.AppendLine("    /// Provides generated EngineQuery dependency injection registrations.");
             source.AppendLine("    /// </summary>");
-            source.AppendLine(
-                "    public static partial class ServiceCollectionExtensions");
+            source.AppendLine(                "    public static partial class ServiceCollectionExtensions");
             source.AppendLine("    {");
-
             source.AppendLine("        /// <summary>");
-            source.AppendLine(
-                "        /// Registers generated strongly typed query engine factories.");
+            source.AppendLine("        /// Registers generated strongly typed query engine factories.");
             source.AppendLine("        /// </summary>");
             source.AppendLine("        /// <param name=\"services\">");
-            source.AppendLine(
-                "        /// Service collection receiving generated query engine factories.");
+            source.AppendLine("        /// Service collection receiving generated query engine factories.");
             source.AppendLine("        /// </param>");
-
-            source.AppendLine(
-                "        static partial void RegisterGeneratedQueryEngineFactories(");
-
-            source.AppendLine(
-                "            global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
-
+            source.AppendLine("        static partial void RegisterGeneratedQueryEngineFactories(");
+            source.AppendLine("            global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
             source.AppendLine("        {");
 
             foreach (var profile in profiles)
-            {
-                AppendFactoryRegistration(
-                    source,
-                    profile);
-            }
+                AppendFactoryRegistration(source, profile);
 
             source.AppendLine("        }");
             source.AppendLine("    }");
             source.AppendLine("}");
 
-            context.AddSource(
-                "ServiceCollectionExtensions.QueryEngineFactories.g.cs",
-                SourceText.From(
-                    source.ToString(),
-                    Encoding.UTF8));
+            context.AddSource("ServiceCollectionExtensions.QueryEngineFactories.g.cs", SourceText.From(source.ToString(), Encoding.UTF8));
         }
 
         /// <summary>
-        /// Appends the dependency injection registration associated with a provider profile.
+        /// Appends the dependency injection registrations associated with a provider profile.
         /// </summary>
         /// <param name="source">
         /// Source builder receiving generated registration code.
         /// </param>
         /// <param name="profile">
-        /// Provider profile whose query engine factory is being registered.
+        /// Provider profile whose query engine factory and direct engine surface are being registered.
         /// </param>
-        private static void AppendFactoryRegistration(
-            StringBuilder source,
-            INamedTypeSymbol profile)
+        private static void AppendFactoryRegistration(StringBuilder source, INamedTypeSymbol profile)
         {
-            var profileType =
-                profile.ToDisplayString(
-                    SymbolDisplayFormat.FullyQualifiedFormat);
+            var profileType = profile.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-            var engineName =
-                GetEngineName(profile);
+            var engineName = GetEngineName(profile);
 
-            var engineInterfaceName =
-                $"global::{GeneratedNamespace}.I{engineName}";
-
-            var engineImplementationName =
-                $"global::{GeneratedNamespace}.{engineName}";
-
-            var factoryInterface =
-                $"global::TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces.IQueryEngineFactory<{profileType}, {engineInterfaceName}>";
-
-            var factoryImplementation =
-                $"global::TinyBlueWhale.EngineQuery.DependencyInjection.Factories.QueryEngineFactory<{profileType}, {engineInterfaceName}>";
+            var engineInterfaceName = $"global::{GeneratedNamespace}.I{engineName}";
+            var engineImplementationName = $"global::{GeneratedNamespace}.{engineName}";
+            var factoryInterface = $"global::TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces.IQueryEngineFactory<{profileType}, {engineInterfaceName}>";
+            var factoryImplementation = $"global::TinyBlueWhale.EngineQuery.DependencyInjection.Factories.QueryEngineFactory<{profileType}, {engineInterfaceName}>";
 
             source.AppendLine();
-
-            source.AppendLine(
-                $"            global::Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddTransient<{factoryInterface}>(");
-
-            source.AppendLine(
-                "                services,");
-
-            source.AppendLine(
-                "                serviceProvider =>");
-
-            source.AppendLine(
-                $"                    new {factoryImplementation}(");
-
-            source.AppendLine(
-                "                        serviceProvider,");
-
-            source.AppendLine(
-                "                        global::Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetServices<global::TinyBlueWhale.EngineQuery.DependencyInjection.Configuration.EngineQueryRegistration>(serviceProvider),");
-
-            source.AppendLine(
-                $"                        queryBuilder => new {engineImplementationName}(queryBuilder)));");
+            source.AppendLine($"            global::Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddTransient<{factoryInterface}>(");
+            source.AppendLine("                services,");
+            source.AppendLine("                serviceProvider =>");
+            source.AppendLine($"                    new {factoryImplementation}(");
+            source.AppendLine("                        serviceProvider,");
+            source.AppendLine("                        global::Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetServices<global::TinyBlueWhale.EngineQuery.DependencyInjection.Configuration.EngineQueryRegistration>(serviceProvider),");
+            source.AppendLine($"                        queryBuilder => new {engineImplementationName}(queryBuilder)));");
+            source.AppendLine();
+            source.AppendLine($"            global::Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddTransient<{engineInterfaceName}>(");
+            source.AppendLine("                services,");
+            source.AppendLine("                serviceProvider =>");
+            source.AppendLine($"                    global::Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<{factoryInterface}>(serviceProvider).Create());");
         }
 
         /// <summary>
@@ -889,22 +778,14 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <returns>
         /// Generated query engine name without the profile suffix.
         /// </returns>
-        private static string GetEngineName(
-            INamedTypeSymbol profile)
+        private static string GetEngineName(INamedTypeSymbol profile)
         {
             const string profileSuffix = "Profile";
 
-            var profileName =
-                profile.Name;
+            var profileName = profile.Name;
 
-            if (profileName.EndsWith(
-                    profileSuffix,
-                    StringComparison.Ordinal))
-            {
-                profileName = profileName.Substring(
-                    0,
-                    profileName.Length - profileSuffix.Length);
-            }
+            if (profileName.EndsWith(profileSuffix, StringComparison.Ordinal))
+                profileName = profileName.Substring(0, profileName.Length - profileSuffix.Length);
 
             return $"{profileName}QueryEngine";
         }
@@ -920,13 +801,9 @@ namespace TinyBlueWhale.EngineQuery.Generators
             /// <param name="interfaceSymbol">
             /// Constructed query builder surface associated with the feature.
             /// </param>
-            public FeatureSurface(
-                INamedTypeSymbol interfaceSymbol)
+            public FeatureSurface(INamedTypeSymbol interfaceSymbol)
             {
-                InterfaceSymbol =
-                    interfaceSymbol ??
-                    throw new ArgumentNullException(
-                        nameof(interfaceSymbol));
+                InterfaceSymbol = interfaceSymbol ?? throw new ArgumentNullException(nameof(interfaceSymbol));
             }
 
             /// <summary>

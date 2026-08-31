@@ -19,9 +19,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
                 .Property(x => x.CreatedOn).HasColumnName("created_at")
                 .Property(x => x.Active).HasColumnName("is_active");
 
-            var queryBuilder = new QueryBuilder(
-                new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new SqlServer.Capabilities.SqlServerProviderCapabilities()),
-                new FluentEntityMetadataResolver(registry));
+            var queryBuilder = SqlServerQueryCompiler.Factory.Create(new FluentEntityMetadataResolver(registry));
 
             var sql = queryBuilder
                 .From<FluentAuditRecord>()

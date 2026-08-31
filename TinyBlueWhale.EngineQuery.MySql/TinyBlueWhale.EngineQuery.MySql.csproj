@@ -9,6 +9,9 @@
   <ItemGroup>
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Core\TinyBlueWhale.EngineQuery.Core.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Sql\TinyBlueWhale.EngineQuery.Sql.csproj" />
+
+    <InternalsVisibleTo Include="TinyBlueWhale.EngineQuery.DependencyInjection" />
+    
   </ItemGroup>
 
   <ItemGroup>
