@@ -1,6 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;

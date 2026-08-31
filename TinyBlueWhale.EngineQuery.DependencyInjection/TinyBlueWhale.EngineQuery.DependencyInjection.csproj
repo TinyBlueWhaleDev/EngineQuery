@@ -17,8 +17,11 @@
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.SqlServer\TinyBlueWhale.EngineQuery.SqlServer.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.MySql\TinyBlueWhale.EngineQuery.MySql.csproj" />
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.PostgreSql\TinyBlueWhale.EngineQuery.PostgreSql.csproj" />
-  </ItemGroup>
 
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Generators\TinyBlueWhale.EngineQuery.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+
+  </ItemGroup>
+  
   <ItemGroup>
     <InternalsVisibleTo Include="TinyBlueWhale.EngineQuery.Metadata.EntityFramework" />
   </ItemGroup>

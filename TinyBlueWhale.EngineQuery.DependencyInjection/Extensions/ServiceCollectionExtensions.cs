@@ -9,10 +9,10 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions
     /// <summary>
     /// Provides EngineQuery dependency injection registration extensions.
     /// </summary>
-    public static class ServiceCollectionExtensions
+    public static partial class ServiceCollectionExtensions
     {
         /// <summary>
-        /// Registers EngineQuery services.
+        /// Registers EngineQuery services, database providers and generated query engine factories.
         /// </summary>
         /// <param name="services">
         /// Service collection where EngineQuery dependencies are registered.
@@ -23,7 +23,9 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions
         /// <returns>
         /// Current service collection.
         /// </returns>
-        public static IServiceCollection AddEngineQuery(this IServiceCollection services, Action<EngineQueryOptions> configureOptions)
+        public static IServiceCollection AddEngineQuery(
+            this IServiceCollection services,
+            Action<EngineQueryOptions> configureOptions)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(configureOptions);
@@ -42,9 +44,19 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions
                 services.AddSingleton(registration);
             }
 
-            services.AddSingleton<IQueryEngineFactory, QueryEngineFactory>();
+            RegisterGeneratedQueryEngineFactories(services);
 
             return services;
         }
+
+        /// <summary>
+        /// Registers strongly typed query engine factories and generated engine surfaces
+        /// discovered from database provider profiles.
+        /// </summary>
+        /// <param name="services">
+        /// Service collection where generated EngineQuery services are registered.
+        /// </param>
+        static partial void RegisterGeneratedQueryEngineFactories(
+            IServiceCollection services);
     }
 }

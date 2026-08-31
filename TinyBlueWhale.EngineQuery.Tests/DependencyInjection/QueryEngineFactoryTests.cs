@@ -1,147 +1,118 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
+using TinyBlueWhale.EngineQuery.Generated;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
+using TinyBlueWhale.EngineQuery.MySql.Profiles;
+using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
+using TinyBlueWhale.EngineQuery.Core.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
 {
     /// <summary>
-    /// Validates query engine dependency injection and factory resolution behavior.
+    /// Validates strongly typed query engine dependency injection and factory resolution behavior.
     /// </summary>
     [TestFixture]
     internal sealed class QueryEngineFactoryTests
     {
-
         /// <summary>
-        /// Validates query engine resolution using the SQL Server default profile
-        /// and the explicitly selected attribute metadata strategy.
+        /// Validates strongly typed query engine factory registration for a configured provider.
         /// </summary>
         [Test]
-        public void Create_WhenSqlServerDefaultProfileAndAttributeStrategyAreSelected_ShouldResolveEngine()
+        public void AddEngineQuery_WhenSqlServerIsConfigured_ShouldRegisterTypedFactory()
         {
-            using var serviceProvider = CreateMultipleMetadataStrategyServiceProvider();
+            var services = new ServiceCollection();
 
-            var factory = serviceProvider.GetRequiredService<IQueryEngineFactory>();
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer);
+            });
 
-            var queryEngine = factory.Create<SqlServerDefaultProfile>(MetadataStrategy.Attribute);
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var factory = serviceProvider.GetService<
+                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
+
+            Assert.That(factory, Is.Not.Null);
+        }
+
+        /// <summary>
+        /// Validates query engine creation using the SQL Server default profile.
+        /// </summary>
+        [Test]
+        public void Create_WhenSqlServerDefaultProfileIsRequested_ShouldResolveEngine()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer);
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var factory = serviceProvider.GetRequiredService<
+                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
+
+            var queryEngine = factory.Create();
 
             Assert.That(queryEngine, Is.Not.Null);
         }
 
         /// <summary>
-        /// Validates direct query engine resolution when a single
-        /// metadata strategy is configured.
-        /// </summary>
-        [Test]
-        public void AddEngineQuery_WhenSingleMetadataStrategyIsConfigured_ShouldAllowDirectEngineResolution()
-        {
-            var services = new ServiceCollection();
-
-            services.AddDbContext<MetadataFallbackDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(nameof(MetadataFallbackDbContext));
-            });
-
-            services.AddEngineQuery(options =>
-            {
-                options.Add(QueryEngineProvider.SqlServer, metadata =>
-                {
-                    metadata.UseEntityFrameworkMetadata<MetadataFallbackDbContext>();
-                });
-            });
-
-            using var serviceProvider = services.BuildServiceProvider();
-
-            var queryEngine = serviceProvider.GetService<IQueryEngine>();
-
-            Assert.That(queryEngine, Is.Not.Null);
-        }
-
-        /// <summary>
-        /// Validates that direct query engine resolution is not registered
-        /// when multiple metadata strategies are configured.
-        /// </summary>
-        [Test]
-        public void AddEngineQuery_WhenMultipleMetadataStrategiesAreConfigured_ShouldNotRegisterDirectEngine()
-        {
-            var services = new ServiceCollection();
-
-            services.AddDbContext<MetadataFallbackDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(nameof(MetadataFallbackDbContext));
-            });
-
-            services.AddEngineQuery(options =>
-            {
-                options.Add(QueryEngineProvider.SqlServer, metadata =>
-                {
-                    metadata.UseAttributeMetadata();
-                    metadata.UseEntityFrameworkMetadata<MetadataFallbackDbContext>();
-                });
-            });
-
-            using var serviceProvider = services.BuildServiceProvider();
-
-            var queryEngine = serviceProvider.GetService<IQueryEngine>();
-
-            Assert.That(queryEngine, Is.Null);
-        }
-
-        /// <summary>
-        /// Validates that the query engine factory requires an explicit
-        /// metadata strategy when multiple strategies are configured.
+        /// Validates that query engine creation requires an explicit metadata strategy
+        /// when multiple compatible metadata registrations are configured.
         /// </summary>
         [Test]
         public void Create_WhenMultipleMetadataStrategiesAreConfiguredWithoutSelection_ShouldThrow()
         {
             using var serviceProvider = CreateMultipleMetadataStrategyServiceProvider();
 
-            var factory = serviceProvider.GetRequiredService<IQueryEngineFactory>();
+            var factory = serviceProvider.GetRequiredService<
+                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
-                factory.Create(QueryEngineProvider.SqlServer));
+                factory.Create());
 
             Assert.That(
                 exception!.Message,
-                Does.Contain("Multiple metadata strategies"));
+                Does.Contain("Multiple registrations support profile"));
         }
 
         /// <summary>
-        /// Validates query engine resolution using the explicitly
-        /// selected attribute metadata strategy.
+        /// Validates query engine resolution using the explicitly selected attribute metadata strategy.
         /// </summary>
         [Test]
         public void Create_WhenAttributeStrategyIsSelected_ShouldResolveEngine()
         {
             using var serviceProvider = CreateMultipleMetadataStrategyServiceProvider();
 
-            var factory = serviceProvider.GetRequiredService<IQueryEngineFactory>();
+            var factory = serviceProvider.GetRequiredService<
+                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
 
             var queryEngine = factory.Create(
-                QueryEngineProvider.SqlServer,
                 MetadataStrategy.Attribute);
 
             Assert.That(queryEngine, Is.Not.Null);
         }
 
         /// <summary>
-        /// Validates query engine resolution using the explicitly selected
-        /// Entity Framework metadata strategy and its convention fallback.
+        /// Validates query engine resolution using the explicitly selected Entity Framework
+        /// metadata strategy and its convention fallback.
         /// </summary>
         [Test]
         public void Create_WhenEntityFrameworkStrategyIsSelected_ShouldUseConventionFallback()
         {
             using var serviceProvider = CreateMultipleMetadataStrategyServiceProvider();
 
-            var factory = serviceProvider.GetRequiredService<IQueryEngineFactory>();
+            var factory = serviceProvider.GetRequiredService<
+                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
 
             var queryEngine = factory.Create(
-                QueryEngineProvider.SqlServer,
                 EntityFrameworkMetadataStrategies.EntityFramework);
 
             var query = queryEngine
@@ -158,8 +129,42 @@ namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
         }
 
         /// <summary>
-        /// Validates that the query engine factory resolves each configured
-        /// provider when convention metadata is used.
+        /// Validates that independently generated query engine factories are registered
+        /// for each configured database provider.
+        /// </summary>
+        [Test]
+        public void AddEngineQuery_WhenMultipleProvidersAreConfigured_ShouldRegisterEachTypedFactory()
+        {
+            var services = new ServiceCollection();
+
+            services.AddEngineQuery(options =>
+            {
+                options.Add(QueryEngineProvider.SqlServer);
+                options.Add(QueryEngineProvider.PostgreSql);
+                options.Add(QueryEngineProvider.MySql);
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var sqlServerFactory = serviceProvider.GetService<
+                IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>();
+
+            var postgreSqlFactory = serviceProvider.GetService<
+                IQueryEngineFactory<PostgreSqlDefaultProfile, IPostgreSqlDefaultQueryEngine>>();
+
+            var mySqlFactory = serviceProvider.GetService<
+                IQueryEngineFactory<MySqlDefaultProfile, IMySqlDefaultQueryEngine>>();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sqlServerFactory, Is.Not.Null);
+                Assert.That(postgreSqlFactory, Is.Not.Null);
+                Assert.That(mySqlFactory, Is.Not.Null);
+            });
+        }
+
+        /// <summary>
+        /// Validates that each configured provider creates its corresponding strongly typed query engine.
         /// </summary>
         [Test]
         public void Create_WhenMultipleProvidersUseConvention_ShouldResolveEachProvider()
@@ -175,11 +180,17 @@ namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
 
             using var serviceProvider = services.BuildServiceProvider();
 
-            var factory = serviceProvider.GetRequiredService<IQueryEngineFactory>();
+            var sqlServer = serviceProvider
+                .GetRequiredService<IQueryEngineFactory<SqlServerDefaultProfile, ISqlServerDefaultQueryEngine>>()
+                .Create();
 
-            var sqlServer = factory.Create(QueryEngineProvider.SqlServer);
-            var postgreSql = factory.Create(QueryEngineProvider.PostgreSql);
-            var mySql = factory.Create(QueryEngineProvider.MySql);
+            var postgreSql = serviceProvider
+                .GetRequiredService<IQueryEngineFactory<PostgreSqlDefaultProfile, IPostgreSqlDefaultQueryEngine>>()
+                .Create();
+
+            var mySql = serviceProvider
+                .GetRequiredService<IQueryEngineFactory<MySqlDefaultProfile, IMySqlDefaultQueryEngine>>()
+                .Create();
 
             Assert.Multiple(() =>
             {
@@ -190,8 +201,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
         }
 
         /// <summary>
-        /// Creates a service provider configured with multiple
-        /// metadata strategies for SQL Server.
+        /// Creates a service provider configured with multiple metadata strategies for SQL Server.
         /// </summary>
         /// <returns>
         /// Configured service provider.
@@ -218,8 +228,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
         }
 
         /// <summary>
-        /// Entity used to validate convention fallback after
-        /// Entity Framework strategy selection.
+        /// Entity used to validate convention fallback after Entity Framework strategy selection.
         /// </summary>
         private sealed class ConventionUser
         {
@@ -235,8 +244,8 @@ namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
         }
 
         /// <summary>
-        /// Entity Framework context intentionally excluding
-        /// <see cref="ConventionUser"/> from its model.
+        /// Entity Framework context intentionally excluding <see cref="ConventionUser"/>
+        /// from its model.
         /// </summary>
         private sealed class MetadataFallbackDbContext(
             DbContextOptions<MetadataFallbackDbContext> options)

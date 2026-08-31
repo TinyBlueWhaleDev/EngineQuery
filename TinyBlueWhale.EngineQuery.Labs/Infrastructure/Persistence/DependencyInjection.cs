@@ -1,5 +1,5 @@
-using FluentValidation;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
+﻿using FluentValidation;
+using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
 using TinyBlueWhale.EngineQuery.Labs.Domain.Enums;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.FluentMappings;

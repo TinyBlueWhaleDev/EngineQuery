@@ -1,4 +1,4 @@
-namespace TinyBlueWhale.EngineQuery.DependencyInjection.Enums
+﻿namespace TinyBlueWhale.EngineQuery.Core.Enums
 {
     /// <summary>
     /// Defines the supported EngineQuery providers.

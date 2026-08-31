@@ -32,14 +32,14 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context
                 WindowFunctionProjectionBuilder = new WindowFunctionProjectionBuilder(context),
                 WhereClauseBuilder = new WhereClauseBuilder(context),
                 JoinClauseBuilder = new JoinClauseBuilder(context),
-                ApplyClauseBuilder = new ApplyClauseBuilder<TProfile>(context),
+                ApplyClauseBuilder = new ApplyClauseBuilder<TProfile>(context, profile),
                 GroupByClauseBuilder = new GroupByClauseBuilder(context),
                 HavingClauseBuilder = new HavingClauseBuilder(context),
                 OrderByClauseBuilder = new OrderByClauseBuilder(context),
                 PaginationClauseBuilder = new PaginationClauseBuilder(context),
-                ExistsClauseBuilder = new ExistsClauseBuilder<TProfile>(context),
-                InSubqueryClauseBuilder = new InSubqueryClauseBuilder<TProfile>(context),
-                SetOperationClauseBuilder = new SetOperationClauseBuilder<TProfile>(context)
+                ExistsClauseBuilder = new ExistsClauseBuilder<TProfile>(context, profile),
+                InSubqueryClauseBuilder = new InSubqueryClauseBuilder<TProfile>(context, profile),
+                SetOperationClauseBuilder = new SetOperationClauseBuilder<TProfile>(context, profile)
             };
         }
     }
