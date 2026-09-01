@@ -18,8 +18,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     public sealed class QueryBuilder<TProfile>(IQueryCompiler queryCompiler,
         IEntityMetadataResolver metadataResolver,
         TProfile profile) :
-        IQueryBuilder<TProfile>,
-        IQueryPaginationBuilder<TProfile>
+        IQueryBuilder<TProfile>
         where TProfile : IDatabaseProviderProfile
     {
         private readonly IQueryCompiler _queryCompiler = queryCompiler ?? throw new ArgumentNullException(nameof(queryCompiler));
@@ -85,63 +84,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return CreateCommandBuilder<T>(tableName, alias);
         }
-
-        /// <summary>
-        /// Creates a new paginable query builder using resolved entity metadata.
-        /// </summary>
-        /// <typeparam name="T">
-        /// Entity type used as the source of the query.
-        /// </typeparam>
-        /// <returns>
-        /// Fluent pagination query command builder.
-        /// </returns>
-        IQueryPaginationCommandBuilder<T, TProfile> IQueryPaginationBuilder<TProfile>.From<T>()
-        {
-            return CreateCommandBuilder<T>();
-        }
-
-        /// <summary>
-        /// Creates a new paginable query builder using resolved entity metadata.
-        /// </summary>
-        /// <typeparam name="T">
-        /// Entity type used as the source of the query.
-        /// </typeparam>
-        /// <param name="alias">
-        /// Optional table alias used to qualify generated SQL column references.
-        /// </param>
-        /// <returns>
-        /// Fluent pagination query command builder.
-        /// </returns>
-        IQueryPaginationCommandBuilder<T, TProfile> IQueryPaginationBuilder<TProfile>.From<T>(string alias)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            return CreateCommandBuilder<T>(alias);
-        }
-
-        /// <summary>
-        /// Creates a new paginable query builder using an explicit table name.
-        /// </summary>
-        /// <typeparam name="T">
-        /// Entity type used as the source of the query.
-        /// </typeparam>
-        /// <param name="tableName">
-        /// Database table name associated with the query.
-        /// </param>
-        /// <param name="alias">
-        /// Optional table alias used to qualify generated SQL column references.
-        /// </param>
-        /// <returns>
-        /// Fluent pagination query command builder.
-        /// </returns>
-        IQueryPaginationCommandBuilder<T, TProfile> IQueryPaginationBuilder<TProfile>.From<T>(string tableName, string alias)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
-            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            return CreateCommandBuilder<T>(tableName, alias);
-        }
-
 
         /// <summary>
         /// Creates a query command builder using a derived table as the root query source.

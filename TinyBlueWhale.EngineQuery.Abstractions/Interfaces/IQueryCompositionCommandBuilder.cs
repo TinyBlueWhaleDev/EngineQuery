@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
@@ -16,6 +17,21 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     public interface IQueryCompositionCommandBuilder<T, TBuilder, TProfile>
         where TProfile : IDatabaseProviderProfile
     {
+
+        /// <summary>
+        /// Applies an internal provider feature operation to the current query composition.
+        /// </summary>
+        /// <param name="operation">
+        /// Feature operation to apply.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        internal TBuilder ApplyFeature(IQueryFeatureOperation operation)
+        {
+            throw new NotSupportedException($"Query feature operation '{operation.GetType().Name}' is not supported by the current query builder.");
+        }
+
         /// <summary>
         /// Defines a projection for selecting specific properties from the query source.
         /// </summary>
@@ -780,5 +796,105 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Current query command builder instance.
         /// </returns>
         TBuilder SelectDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
+
+        /// <summary>
+        /// Adds an ascending ordering expression to the query composition.
+        /// </summary>
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        TBuilder OrderBy(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds an ascending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>
+        /// <param name="keySelector">
+        /// Expression describing the ordered property.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        TBuilder OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
+
+        /// <summary>
+        /// Adds a descending ordering expression to the query.
+        /// </summary>        
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Ordered query command builder instance.
+        /// </returns>
+        TBuilder OrderByDescending(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds a descending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression describing the ordered property.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        TBuilder OrderByDescending<TEntity>(Expression<Func<TEntity, object>> selector);
+
+        /// <summary>
+        /// Adds an additional ascending ordering expression for the root entity.
+        /// </summary>        
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        TBuilder ThenBy(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds an additional ascending ordering expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>        
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        TBuilder ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
+
+        /// <summary>
+        /// Adds an additional descending ordering expression for the root entity.
+        /// </summary>      
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        TBuilder ThenByDescending(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds an additional descending ordering expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>       
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        TBuilder ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector);
     }
 }

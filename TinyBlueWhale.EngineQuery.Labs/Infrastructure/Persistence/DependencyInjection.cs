@@ -27,7 +27,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssemblyContaining<SearchOrdersRequestValidator>();
 
         services.AddKeyedScoped<ISearchOrdersRepository, SearchOrdersRawRepository>(QueryImplementation.Raw);
-        services.AddKeyedScoped<ISearchOrdersRepository, SearchOrdersEngineRepository>(QueryImplementation.EngineQuery);
+        //services.AddKeyedScoped<ISearchOrdersRepository, SearchOrdersEngineRepository>(QueryImplementation.EngineQuery);
 
         return services;
     }

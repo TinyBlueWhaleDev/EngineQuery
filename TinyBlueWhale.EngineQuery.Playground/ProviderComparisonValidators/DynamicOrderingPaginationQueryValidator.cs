@@ -1,4 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Extensions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
@@ -37,12 +39,12 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
         // Builds a query using dynamic ordering followed by ThenBy and pagination.
         private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
-            where TProfile : IDatabaseProviderProfile
+            where TProfile : IDatabaseProviderProfile, IPaginationFeature
         {
             const string sortBy = "EMAIL";
             const bool descending = true;
-            //const int skip = 20;
-            //const int take = 10;
+            const int skip = 20;
+            const int take = 10;
 
             var query = queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -52,20 +54,21 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     u.Email
                 });
 
-            IOrderedQueryCommandBuilder<JoinUser, TProfile> orderedQuery = sortBy switch
+            IQueryCommandBuilder<JoinUser, TProfile> orderedQuery = sortBy switch
             {
                 "EMAIL" => descending
-                                        ? query.OrderByDescending<JoinUser>(u => u.Email)
-                                        : query.OrderBy<JoinUser>(u => u.Email),
+                ? query.OrderByDescending<JoinUser>(u => u.Email)
+                : query.OrderBy<JoinUser>(u => u.Email),
+
                 _ => descending
-                                        ? query.OrderByDescending<JoinUser>(u => u.Id)
-                                        : query.OrderBy<JoinUser>(u => u.Id),
+                    ? query.OrderByDescending<JoinUser>(u => u.Id)
+                    : query.OrderBy<JoinUser>(u => u.Id),
             };
 
             return orderedQuery
                 .ThenBy<JoinUser>(u => u.Id)
-                //.Skip(skip)
-                //.Take(take)
+                .Skip(skip)
+                .Take(take)
                 .Build();
         }
     }

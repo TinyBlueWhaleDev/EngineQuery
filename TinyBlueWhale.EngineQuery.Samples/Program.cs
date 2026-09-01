@@ -6,211 +6,213 @@ using TinyBlueWhale.EngineQuery.Samples.Queries;
 using TinyBlueWhale.EngineQuery.Samples.Results;
 using TinyBlueWhale.EngineQuery.Samples.Settings;
 
-var settings = LoadSampleSettings.Create();
-var providers = BuildSampleProviders.Create(settings.ConnectionStrings);
+Console.WriteLine("========================================");
 
-while (true)
-{
-    Console.Clear();
-    WriteHeader();
+//var settings = LoadSampleSettings.Create();
+//var providers = BuildSampleProviders.Create(settings.ConnectionStrings);
 
-    var provider = SelectProvider(providers);
+//while (true)
+//{
+//    Console.Clear();
+//    WriteHeader();
 
-    if (provider is null)
-        break;
+//    var provider = SelectProvider(providers);
 
-    var executor = SelectExecutor();
+//    if (provider is null)
+//        break;
 
-    if (executor is null)
-        continue;
+//    var executor = SelectExecutor();
 
-    var metadataStrategy = executor.Name == "EF Core"
-        ? MetadataStrategy.EntityFramework
-        : SelectMetadataStrategy();
+//    if (executor is null)
+//        continue;
 
-    if (metadataStrategy is null)
-        continue;
+//    var metadataStrategy = executor.Name == "EF Core"
+//        ? MetadataStrategy.EntityFramework
+//        : SelectMetadataStrategy();
 
-    Console.Clear();
+//    if (metadataStrategy is null)
+//        continue;
 
-    Console.WriteLine("========================================");
-    Console.WriteLine($"Provider : {provider.Name}");
-    Console.WriteLine($"Executor : {executor.Name}");
-    Console.WriteLine($"Metadata : {BuildMetadataResolver.GetDisplayName(metadataStrategy.Value)}");
-    Console.WriteLine("========================================");
-    Console.WriteLine();
+//    Console.Clear();
 
-    await InitializeDatabaseAsync(provider);
-    await RunSamplesAsync(provider, executor, metadataStrategy.Value);
+//    Console.WriteLine("========================================");
+//    Console.WriteLine($"Provider : {provider.Name}");
+//    Console.WriteLine($"Executor : {executor.Name}");
+//    Console.WriteLine($"Metadata : {BuildMetadataResolver.GetDisplayName(metadataStrategy.Value)}");
+//    Console.WriteLine("========================================");
+//    Console.WriteLine();
 
-    Console.WriteLine();
-    Console.WriteLine("Press any key to continue...");
-    Console.ReadKey();
-}
+//    await InitializeDatabaseAsync(provider);
+//    await RunSamplesAsync(provider, executor, metadataStrategy.Value);
 
-static void WriteHeader()
-{
-    Console.WriteLine("========================================");
-    Console.WriteLine("TinyBlueWhale.EngineQuery Samples");
-    Console.WriteLine("========================================");
-    Console.WriteLine();
-}
+//    Console.WriteLine();
+//    Console.WriteLine("Press any key to continue...");
+//    Console.ReadKey();
+//}
 
-static SampleProviderContext? SelectProvider(IReadOnlyList<SampleProviderContext> providers)
-{
-    while (true)
-    {
-        Console.WriteLine("Provider");
-        Console.WriteLine("----------------------------------------");
-        Console.WriteLine("1. SQL Server");
-        Console.WriteLine("2. MySQL");
-        Console.WriteLine("3. PostgreSQL");
-        Console.WriteLine("0. Exit");
-        Console.WriteLine();
+//static void WriteHeader()
+//{
+//    Console.WriteLine("========================================");
+//    Console.WriteLine("TinyBlueWhale.EngineQuery Samples");
+//    Console.WriteLine("========================================");
+//    Console.WriteLine();
+//}
 
-        Console.Write("Select provider: ");
+//static SampleProviderContext? SelectProvider(IReadOnlyList<SampleProviderContext> providers)
+//{
+//    while (true)
+//    {
+//        Console.WriteLine("Provider");
+//        Console.WriteLine("----------------------------------------");
+//        Console.WriteLine("1. SQL Server");
+//        Console.WriteLine("2. MySQL");
+//        Console.WriteLine("3. PostgreSQL");
+//        Console.WriteLine("0. Exit");
+//        Console.WriteLine();
 
-        var option = Console.ReadLine();
+//        Console.Write("Select provider: ");
 
-        Console.WriteLine();
+//        var option = Console.ReadLine();
 
-        switch (option)
-        {
-            case "1":
-                return providers.First(provider => provider.Kind == SampleProviderKind.SqlServer);
+//        Console.WriteLine();
 
-            case "2":
-                return providers.First(provider => provider.Kind == SampleProviderKind.MySql);
+//        switch (option)
+//        {
+//            case "1":
+//                return providers.First(provider => provider.Kind == SampleProviderKind.SqlServer);
 
-            case "3":
-                return providers.First(provider => provider.Kind == SampleProviderKind.PostgreSql);
+//            case "2":
+//                return providers.First(provider => provider.Kind == SampleProviderKind.MySql);
 
-            case "0":
-                return null;
+//            case "3":
+//                return providers.First(provider => provider.Kind == SampleProviderKind.PostgreSql);
 
-            default:
-                Console.WriteLine("Invalid option.");
-                Console.WriteLine();
-                break;
-        }
-    }
-}
+//            case "0":
+//                return null;
 
-static ISampleExecutor? SelectExecutor()
-{
-    while (true)
-    {
-        Console.WriteLine("Executor");
-        Console.WriteLine("----------------------------------------");
-        Console.WriteLine("1. Dapper");
-        Console.WriteLine("2. ADO.NET");
-        Console.WriteLine("3. EF Core");
-        Console.WriteLine("0. Back");
-        Console.WriteLine();
+//            default:
+//                Console.WriteLine("Invalid option.");
+//                Console.WriteLine();
+//                break;
+//        }
+//    }
+//}
 
-        Console.Write("Select executor: ");
+//static ISampleExecutor? SelectExecutor()
+//{
+//    while (true)
+//    {
+//        Console.WriteLine("Executor");
+//        Console.WriteLine("----------------------------------------");
+//        Console.WriteLine("1. Dapper");
+//        Console.WriteLine("2. ADO.NET");
+//        Console.WriteLine("3. EF Core");
+//        Console.WriteLine("0. Back");
+//        Console.WriteLine();
 
-        var option = Console.ReadLine();
+//        Console.Write("Select executor: ");
 
-        Console.WriteLine();
+//        var option = Console.ReadLine();
 
-        return option switch
-        {
-            "1" => new DapperSampleExecutor(),
-            "2" => new AdoNetSampleExecutor(),
-            "3" => new EntityFrameworkSampleExecutor(),
-            "0" => null,
-            _ => InvalidExecutorOption()
-        };
-    }
-}
+//        Console.WriteLine();
 
-static ISampleExecutor? InvalidExecutorOption()
-{
-    Console.WriteLine("Invalid option.");
-    Console.WriteLine();
+//        return option switch
+//        {
+//            "1" => new DapperSampleExecutor(),
+//            "2" => new AdoNetSampleExecutor(),
+//            "3" => new EntityFrameworkSampleExecutor(),
+//            "0" => null,
+//            _ => InvalidExecutorOption()
+//        };
+//    }
+//}
 
-    return null;
-}
+//static ISampleExecutor? InvalidExecutorOption()
+//{
+//    Console.WriteLine("Invalid option.");
+//    Console.WriteLine();
 
-static MetadataStrategy? SelectMetadataStrategy()
-{
-    while (true)
-    {
-        Console.WriteLine("Metadata");
-        Console.WriteLine("----------------------------------------");
-        Console.WriteLine("1. Fluent");
-        Console.WriteLine("2. Attribute");
-        Console.WriteLine("0. Back");
-        Console.WriteLine();
+//    return null;
+//}
 
-        Console.Write("Select metadata: ");
+//static MetadataStrategy? SelectMetadataStrategy()
+//{
+//    while (true)
+//    {
+//        Console.WriteLine("Metadata");
+//        Console.WriteLine("----------------------------------------");
+//        Console.WriteLine("1. Fluent");
+//        Console.WriteLine("2. Attribute");
+//        Console.WriteLine("0. Back");
+//        Console.WriteLine();
 
-        var option = Console.ReadLine();
+//        Console.Write("Select metadata: ");
 
-        Console.WriteLine();
+//        var option = Console.ReadLine();
 
-        return option switch
-        {
-            "1" => MetadataStrategy.Fluent,
-            "2" => MetadataStrategy.Attribute,
-            "0" => null,
-            _ => InvalidMetadataOption()
-        };
-    }
-}
+//        Console.WriteLine();
 
-static MetadataStrategy? InvalidMetadataOption()
-{
-    Console.WriteLine("Invalid option.");
-    Console.WriteLine();
+//        return option switch
+//        {
+//            "1" => MetadataStrategy.Fluent,
+//            "2" => MetadataStrategy.Attribute,
+//            "0" => null,
+//            _ => InvalidMetadataOption()
+//        };
+//    }
+//}
 
-    return null;
-}
+//static MetadataStrategy? InvalidMetadataOption()
+//{
+//    Console.WriteLine("Invalid option.");
+//    Console.WriteLine();
 
-static async Task InitializeDatabaseAsync(SampleProviderContext provider)
-{
-    Console.WriteLine("Initializing database...");
-    Console.WriteLine();
+//    return null;
+//}
 
-    var initializer = BuildDatabaseInitializer.Create(provider);
+//static async Task InitializeDatabaseAsync(SampleProviderContext provider)
+//{
+//    Console.WriteLine("Initializing database...");
+//    Console.WriteLine();
 
-    await initializer.InitializeAsync(provider);
+//    var initializer = BuildDatabaseInitializer.Create(provider);
 
-    Console.WriteLine("Database initialized.");
-    Console.WriteLine();
-}
+//    await initializer.InitializeAsync(provider);
 
-static async Task RunSamplesAsync(
-    SampleProviderContext provider,
-    ISampleExecutor executor,
-    MetadataStrategy metadataStrategy)
-{
-    var scenarios = BuildSalesQueryScenarios.Create(metadataStrategy);
+//    Console.WriteLine("Database initialized.");
+//    Console.WriteLine();
+//}
 
-    foreach (var scenario in scenarios)
-        await RunScenarioAsync(provider, executor, scenario);
-}
+//static async Task RunSamplesAsync(
+//    SampleProviderContext provider,
+//    ISampleExecutor executor,
+//    MetadataStrategy metadataStrategy)
+//{
+//    var scenarios = BuildSalesQueryScenarios.Create(metadataStrategy);
 
-static async Task RunScenarioAsync(
-    SampleProviderContext provider,
-    ISampleExecutor executor,
-    SalesQueryScenario scenario)
-{
-    try
-    {
-        var result = await executor.ExecuteAsync(provider, scenario);
+//    foreach (var scenario in scenarios)
+//        await RunScenarioAsync(provider, executor, scenario);
+//}
 
-        WriteSampleResult.Write(result);
-    }
-    catch (Exception exception)
-    {
-        Console.WriteLine("ERROR");
-        Console.WriteLine($"Provider : {provider.Name}");
-        Console.WriteLine($"Executor : {executor.Name}");
-        Console.WriteLine($"Metadata : {BuildMetadataResolver.GetDisplayName(scenario.MetadataStrategy)}");
-        Console.WriteLine($"Scenario : {scenario.Name}");
-        Console.WriteLine($"Message  : {exception.Message}");
-        Console.WriteLine();
-    }
-}
+//static async Task RunScenarioAsync(
+//    SampleProviderContext provider,
+//    ISampleExecutor executor,
+//    SalesQueryScenario scenario)
+//{
+//    try
+//    {
+//        var result = await executor.ExecuteAsync(provider, scenario);
+
+//        WriteSampleResult.Write(result);
+//    }
+//    catch (Exception exception)
+//    {
+//        Console.WriteLine("ERROR");
+//        Console.WriteLine($"Provider : {provider.Name}");
+//        Console.WriteLine($"Executor : {executor.Name}");
+//        Console.WriteLine($"Metadata : {BuildMetadataResolver.GetDisplayName(scenario.MetadataStrategy)}");
+//        Console.WriteLine($"Scenario : {scenario.Name}");
+//        Console.WriteLine($"Message  : {exception.Message}");
+//        Console.WriteLine();
+//    }
+//}

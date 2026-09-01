@@ -13,7 +13,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Profiles
     /// exposes the EngineQuery pagination feature.
     /// </remarks>
     public class SqlServer2012Profile : SqlServer2008Profile,
-        IPaginationFeature,
+        IOffsetFetchPaginationFeature,
         IPaginationStrategyProvider
     {
         /// <inheritdoc />

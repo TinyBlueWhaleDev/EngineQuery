@@ -30,12 +30,12 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         /// <returns>
         /// Query builder configured for the default SQL Server profile.
         /// </returns>
-        public static QueryBuilder<SqlServerDefaultProfile> CreateSqlServer(
+        public static QueryBuilder<SqlServer2012Profile> CreateSqlServer(
             FluentEntityMetadataResolver metadataResolver)
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 
-            return SqlServerQueryCompiler.Factory.Create(metadataResolver);
+            return SqlServerQueryCompiler.Factory.Create<SqlServer2012Profile>(metadataResolver);
         }
 
         /// <summary>
@@ -47,12 +47,12 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         /// <returns>
         /// Query builder configured for the default PostgreSQL profile.
         /// </returns>
-        public static QueryBuilder<PostgreSqlDefaultProfile> CreatePostgreSql(
+        public static QueryBuilder<PostgreSql93Profile> CreatePostgreSql(
             FluentEntityMetadataResolver metadataResolver)
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 
-            return PostgreSqlQueryCompiler.Factory.Create(metadataResolver);
+            return PostgreSqlQueryCompiler.Factory.Create<PostgreSql93Profile>(metadataResolver);
         }
 
         /// <summary>
@@ -64,12 +64,12 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         /// <returns>
         /// Query builder configured for the default MySQL profile.
         /// </returns>
-        public static QueryBuilder<MySqlDefaultProfile> CreateMySql(
+        public static QueryBuilder<MySql8031Profile> CreateMySql(
             FluentEntityMetadataResolver metadataResolver)
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 
-            return MySqlQueryCompiler.Factory.Create(metadataResolver);
+            return MySqlQueryCompiler.Factory.Create<MySql8031Profile>(metadataResolver);
         }
     }
 }

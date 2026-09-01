@@ -16,7 +16,12 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Profiles
     /// </remarks>
     public class PostgreSql84Profile : DatabaseProviderProfile,
         IPostgreSqlProfile,
-        IPaginationFeature,
+        ICTEFeature,
+        IRecursiveCTEFeature,
+        IWindowFunctionFeature,
+        IIntersectFeature,
+        IExceptFeature,
+        ILimitOffsetPaginationFeature,
         IPaginationStrategyProvider
     {
         /// <inheritdoc />

@@ -12,17 +12,14 @@ namespace TinyBlueWhale.EngineQuery.Generators
     /// </summary>
     /// <remarks>
     /// Provider profiles act as the single source of truth for provider version and
-    /// feature availability. Feature contracts declare their associated query builder
-    /// surfaces through QueryFeatureSurfaceAttribute.
+    /// feature availability. Generated query engine surfaces preserve the concrete
+    /// provider profile type used by the fluent query contracts.
     /// </remarks>
     [Generator]
     public sealed class QueryEngineSurfaceGenerator : IIncrementalGenerator
     {
         private const string DatabaseProviderProfileInterface =
             "TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers.IDatabaseProviderProfile";
-
-        private const string QueryFeatureSurfaceAttribute =
-            "TinyBlueWhale.EngineQuery.Abstractions.Attributes.QueryFeatureSurfaceAttribute";
 
         private const string QueryEngineInterface =
             "TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces.IQueryEngine";
@@ -173,59 +170,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
                 return false;
 
             return type.AllInterfaces.Any(implementedInterface => SymbolEqualityComparer.Default.Equals(implementedInterface, profileContract));
-        }
-
-        /// <summary>
-        /// Discovers the query builder surfaces associated with the feature contracts
-        /// implemented by the specified database provider profile.
-        /// </summary>
-        /// <param name="profile">
-        /// Database provider profile being inspected.
-        /// </param>
-        /// <returns>
-        /// Query builder surfaces exposed by the provider profile.
-        /// </returns>
-        private static IReadOnlyList<FeatureSurface> DiscoverFeatureSurfaces(INamedTypeSymbol profile)
-        {
-            var surfaces = new List<FeatureSurface>();
-
-            foreach (var featureInterface in profile.AllInterfaces)
-            {
-                var attribute = featureInterface
-                    .GetAttributes()
-                    .FirstOrDefault(candidate =>
-                        string.Equals(
-                            candidate.AttributeClass?.ToDisplayString(),
-                            QueryFeatureSurfaceAttribute,
-                            StringComparison.Ordinal));
-
-                if (attribute is null || attribute.ConstructorArguments.Length != 1)
-                    continue;
-
-                if (attribute.ConstructorArguments[0].Value is not INamedTypeSymbol surfaceDefinition)
-                    continue;
-
-                var surfaceOriginalDefinition = surfaceDefinition.OriginalDefinition;
-
-                if (!surfaceOriginalDefinition.IsGenericType || surfaceOriginalDefinition.Arity != 1)
-                    continue;
-
-                var constructedSurface = surfaceOriginalDefinition.Construct(profile);
-
-                surfaces.Add(new FeatureSurface(constructedSurface));
-            }
-
-            return surfaces
-                .GroupBy(
-                    surface => surface.InterfaceSymbol,
-                    SymbolEqualityComparer.Default)
-                .Select(static group => group.First())
-                .OrderBy(
-                    static surface =>
-                        surface.InterfaceSymbol.ToDisplayString(),
-                    StringComparer.Ordinal)
-                .ToList();
-        }
+        }       
 
         /// <summary>
         /// Generates the query engine surface and concrete wrapper associated with
@@ -266,9 +211,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
 
             var engineName = GetEngineName(profile);
 
-            var engineInterfaceName = $"I{engineName}";
-
-            var featureSurfaces = DiscoverFeatureSurfaces(profile);
+            var engineInterfaceName = $"I{engineName}";            
              
             var source = new StringBuilder();
 
@@ -278,11 +221,11 @@ namespace TinyBlueWhale.EngineQuery.Generators
             source.AppendLine($"namespace {GeneratedNamespace}");
             source.AppendLine("{");
 
-            AppendEngineInterface(source, profileType, engineInterfaceName, featureSurfaces);
+            AppendEngineInterface(source, profileType, engineInterfaceName);
 
             source.AppendLine();
 
-            AppendEngineImplementation(source, profileType, engineName, engineInterfaceName, featureSurfaces);
+            AppendEngineImplementation(source, profileType, engineName, engineInterfaceName);
 
             source.AppendLine("}");
 
@@ -301,36 +244,14 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <param name="engineInterfaceName">
         /// Generated query engine interface name.
         /// </param>
-        /// <param name="featureSurfaces">
-        /// Query builder surfaces exposed by the provider profile.
-        /// </param>
-        private static void AppendEngineInterface(StringBuilder source, string profileType, string engineInterfaceName, IReadOnlyList<FeatureSurface> featureSurfaces)
+        private static void AppendEngineInterface(StringBuilder source, string profileType, string engineInterfaceName)
         {
-            var surfaces = new List<string>
-            {
-                $"global::{QueryEngineInterface}<{profileType}>"
-            };
-
-            surfaces.AddRange(featureSurfaces.Select(feature => feature.InterfaceSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
-
             source.AppendLine("    /// <summary>");
             source.AppendLine("    /// Represents the generated query engine surface associated with");
             source.AppendLine($"    /// <see cref=\"{profileType}\"/>.");
             source.AppendLine("    /// </summary>");
-            source.Append($"    public interface {engineInterfaceName} :");
-            source.AppendLine();
-
-            for (var index = 0; index < surfaces.Count;index++)
-            {
-                source.Append("        ");
-                source.Append(surfaces[index]);
-
-                if (index < surfaces.Count - 1)
-                    source.Append(',');
-
-                source.AppendLine();
-            }
-
+            source.AppendLine($"    public interface {engineInterfaceName} :");
+            source.AppendLine($"        global::{QueryEngineInterface}<{profileType}>");
             source.AppendLine("    {");
             source.AppendLine("    }");
         }
@@ -350,345 +271,18 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <param name="engineInterfaceName">
         /// Generated query engine interface name.
         /// </param>
-        /// <param name="featureSurfaces">
-        /// Query builder surfaces exposed by the provider profile.
-        /// </param>
-        private static void AppendEngineImplementation(
-            StringBuilder source,
-            string profileType,
-            string engineName,
-            string engineInterfaceName,
-            IReadOnlyList<FeatureSurface> featureSurfaces)
+        private static void AppendEngineImplementation(StringBuilder source, string profileType, string engineName, string engineInterfaceName)
         {
             source.AppendLine("    /// <summary>");
             source.AppendLine("    /// Provides the generated query engine implementation associated with");
             source.AppendLine($"    /// <see cref=\"{profileType}\"/>.");
             source.AppendLine("    /// </summary>");
-            source.AppendLine("    /// <remarks>");
-            source.AppendLine("    /// The generated implementation delegates query construction to the shared");
-            source.AppendLine("    /// query engine while exposing only the feature surfaces supported by the profile.");
-            source.AppendLine("    /// </remarks>");
             source.AppendLine($"    internal sealed class {engineName}(");
             source.AppendLine($"        global::TinyBlueWhale.EngineQuery.Core.QueryBuilding.QueryBuilder<{profileType}> queryBuilder) :");
             source.AppendLine($"        global::TinyBlueWhale.EngineQuery.DependencyInjection.QueryEngine<{profileType}>(queryBuilder),");
             source.AppendLine($"        {engineInterfaceName}");
             source.AppendLine("    {");
-
-            foreach (var featureSurface in featureSurfaces)
-            {
-                AppendFeatureImplementation(source, featureSurface.InterfaceSymbol);
-            }
-
             source.AppendLine("    }");
-        }
-
-        /// <summary>
-        /// Appends explicit forwarding implementations for the methods exposed by
-        /// the specified feature surface.
-        /// </summary>
-        /// <param name="source">
-        /// Source builder receiving generated code.
-        /// </param>
-        /// <param name="surface">
-        /// Constructed feature surface whose methods are being forwarded.
-        /// </param>
-        private static void AppendFeatureImplementation(StringBuilder source, INamedTypeSymbol surface)
-        {
-            var surfaceType = surface.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-            foreach (var method in GetSurfaceMethods(surface))
-            {
-                var returnType = method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-                var genericParameters = BuildGenericParameterList(method);
-
-                var parameters = string.Join(", ", method.Parameters.Select(BuildParameterDeclaration));
-
-                var arguments = string.Join( ", ", method.Parameters.Select(BuildArgument));
-
-                source.AppendLine("        /// <inheritdoc />");
-                source.AppendLine($"        {returnType}");
-                source.AppendLine($"            {surfaceType}.{method.Name}{genericParameters}({parameters})");
-
-                AppendGenericConstraints(source, method, "            ");
-
-                source.AppendLine("        {");
-                source.Append("            ");
-
-                if (!method.ReturnsVoid)
-                    source.Append("return ");
-
-                source.Append($"(({surfaceType})_innerQueryBuilder).{method.Name}{genericParameters}({arguments});");
-
-                source.AppendLine();
-                source.AppendLine("        }");
-                source.AppendLine();
-            }
-        }
-
-        /// <summary>
-        /// Gets the ordinary instance methods declared directly by the specified
-        /// feature surface.
-        /// </summary>
-        /// <param name="surface">
-        /// Feature surface being inspected.
-        /// </param>
-        /// <returns>
-        /// Methods declared directly by the feature surface and requiring explicit
-        /// forwarding implementations.
-        /// </returns>
-        private static IReadOnlyList<IMethodSymbol> GetSurfaceMethods(INamedTypeSymbol surface)
-        {
-            return surface
-                .GetMembers()
-                .OfType<IMethodSymbol>()
-                .Where(static method =>
-                    method.MethodKind == MethodKind.Ordinary &&
-                    !method.IsStatic)
-                .OrderBy(
-                    static method => method.Name,
-                    StringComparer.Ordinal)
-                .ThenBy(
-                    static method => method.Parameters.Length)
-                .ToList();
-        }
-       
-
-        /// <summary>
-        /// Builds the generic parameter list associated with the specified method.
-        /// </summary>
-        /// <param name="method">
-        /// Method whose generic parameters are being rendered.
-        /// </param>
-        /// <returns>
-        /// Generic parameter list or an empty string when the method is not generic.
-        /// </returns>
-        private static string BuildGenericParameterList(IMethodSymbol method)
-        {
-            if (method.TypeParameters.Length == 0)
-                return string.Empty;
-
-            return $"<{string.Join(", ", method.TypeParameters.Select(static parameter => parameter.Name))}>";
-        }
-
-        /// <summary>
-        /// Appends generic type parameter constraints declared by the specified method.
-        /// </summary>
-        /// <param name="source">
-        /// Source builder receiving generated constraints.
-        /// </param>
-        /// <param name="method">
-        /// Method whose generic constraints are being rendered.
-        /// </param>
-        /// <param name="indentation">
-        /// Indentation applied to generated constraint clauses.
-        /// </param>
-        private static void AppendGenericConstraints(StringBuilder source, IMethodSymbol method, string indentation)
-        {
-            foreach (var typeParameter in method.TypeParameters)
-            {
-                var constraints =
-                    BuildGenericConstraints(typeParameter);
-
-                if (constraints.Count == 0)
-                    continue;
-
-                source.Append(indentation);
-                source.Append("where ");
-                source.Append(typeParameter.Name);
-                source.Append(" : ");
-                source.AppendLine(
-                    string.Join(", ", constraints));
-            }
-        }
-
-        /// <summary>
-        /// Builds the generic constraints associated with the specified type parameter.
-        /// </summary>
-        /// <param name="typeParameter">
-        /// Generic type parameter being inspected.
-        /// </param>
-        /// <returns>
-        /// Collection containing the rendered generic constraints.
-        /// </returns>
-        private static IReadOnlyList<string> BuildGenericConstraints(ITypeParameterSymbol typeParameter)
-        {
-            var constraints = new List<string>();
-
-            if (typeParameter.HasUnmanagedTypeConstraint)
-                constraints.Add("unmanaged");
-            else if (typeParameter.HasValueTypeConstraint)
-                constraints.Add("struct");
-            else if (typeParameter.HasReferenceTypeConstraint)
-                constraints.Add(typeParameter.ReferenceTypeConstraintNullableAnnotation == NullableAnnotation.Annotated ? "class?" : "class");
-            else if (typeParameter.HasNotNullConstraint)
-                constraints.Add("notnull");
-
-            constraints.AddRange(typeParameter.ConstraintTypes.Select(constraint => constraint.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
-
-            if (typeParameter.HasConstructorConstraint)
-                constraints.Add("new()");
-
-            return constraints;
-        }
-
-        /// <summary>
-        /// Builds the source representation of a generated method parameter.
-        /// </summary>
-        /// <param name="parameter">
-        /// Parameter being rendered.
-        /// </param>
-        /// <returns>
-        /// C# parameter declaration.
-        /// </returns>
-        private static string BuildParameterDeclaration(IParameterSymbol parameter)
-        {
-            var modifier = GetRefModifier(parameter.RefKind);
-
-            var type = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-            var defaultValue = BuildDefaultValue(parameter);
-
-            return $"{modifier}{type} {EscapeIdentifier(parameter.Name)}{defaultValue}";
-        }
-
-        /// <summary>
-        /// Builds the forwarding invocation argument associated with a method parameter.
-        /// </summary>
-        /// <param name="parameter">
-        /// Parameter being forwarded.
-        /// </param>
-        /// <returns>
-        /// C# invocation argument.
-        /// </returns>
-        private static string BuildArgument(IParameterSymbol parameter)
-        {
-            return $"{GetRefModifier(parameter.RefKind)}{EscapeIdentifier(parameter.Name)}";
-        }
-
-        /// <summary>
-        /// Gets the C# parameter modifier associated with the specified reference kind.
-        /// </summary>
-        /// <param name="refKind">
-        /// Parameter reference kind.
-        /// </param>
-        /// <returns>
-        /// C# reference modifier or an empty string.
-        /// </returns>
-        private static string GetRefModifier(
-            RefKind refKind)
-        {
-            return refKind switch
-            {
-                RefKind.Ref => "ref ",
-                RefKind.Out => "out ",
-                RefKind.In => "in ",
-                _ => string.Empty
-            };
-        }
-
-        /// <summary>
-        /// Builds the default value declaration associated with an optional parameter.
-        /// </summary>
-        /// <param name="parameter">
-        /// Parameter being inspected.
-        /// </param>
-        /// <returns>
-        /// Default value declaration or an empty string when no explicit default exists.
-        /// </returns>
-        private static string BuildDefaultValue(
-            IParameterSymbol parameter)
-        {
-            if (!parameter.HasExplicitDefaultValue)
-                return string.Empty;
-
-            if (parameter.ExplicitDefaultValue is null)
-                return " = null";
-
-            return parameter.ExplicitDefaultValue switch
-            {
-                bool value =>
-                    value ? " = true" : " = false",
-
-                string value =>
-                    $" = \"{EscapeString(value)}\"",
-
-                char value =>
-                    $" = '{EscapeChar(value)}'",
-
-                float value =>
-                    $" = {value.ToString(System.Globalization.CultureInfo.InvariantCulture)}F",
-
-                double value =>
-                    $" = {value.ToString(System.Globalization.CultureInfo.InvariantCulture)}D",
-
-                decimal value =>
-                    $" = {value.ToString(System.Globalization.CultureInfo.InvariantCulture)}M",
-
-                _ =>
-                    $" = {Convert.ToString(parameter.ExplicitDefaultValue, System.Globalization.CultureInfo.InvariantCulture)}"
-            };
-        }
-
-        /// <summary>
-        /// Escapes a C# identifier when it conflicts with a language keyword.
-        /// </summary>
-        /// <param name="identifier">
-        /// Identifier being escaped.
-        /// </param>
-        /// <returns>
-        /// Escaped C# identifier.
-        /// </returns>
-        private static string EscapeIdentifier(
-            string identifier)
-        {
-            return Microsoft.CodeAnalysis.CSharp.SyntaxFacts.GetKeywordKind(identifier) !=
-                   Microsoft.CodeAnalysis.CSharp.SyntaxKind.None
-                ? $"@{identifier}"
-                : identifier;
-        }
-
-        /// <summary>
-        /// Escapes a string value for inclusion in generated C# source.
-        /// </summary>
-        /// <param name="value">
-        /// String value being escaped.
-        /// </param>
-        /// <returns>
-        /// Escaped string value.
-        /// </returns>
-        private static string EscapeString(
-            string value)
-        {
-            return value
-                .Replace("\\", "\\\\")
-                .Replace("\"", "\\\"")
-                .Replace("\r", "\\r")
-                .Replace("\n", "\\n")
-                .Replace("\t", "\\t");
-        }
-
-        /// <summary>
-        /// Escapes a character value for inclusion in generated C# source.
-        /// </summary>
-        /// <param name="value">
-        /// Character value being escaped.
-        /// </param>
-        /// <returns>
-        /// Escaped character value.
-        /// </returns>
-        private static string EscapeChar(
-            char value)
-        {
-            return value switch
-            {
-                '\\' => "\\\\",
-                '\'' => "\\'",
-                '\r' => "\\r",
-                '\n' => "\\n",
-                '\t' => "\\t",
-                _ => value.ToString()
-            };
         }
 
         /// <summary>
@@ -789,28 +383,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
 
             return $"{profileName}QueryEngine";
         }
-
-        /// <summary>
-        /// Represents a query builder surface associated with a provider feature contract.
-        /// </summary>
-        private sealed class FeatureSurface
-        {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="FeatureSurface"/> class.
-            /// </summary>
-            /// <param name="interfaceSymbol">
-            /// Constructed query builder surface associated with the feature.
-            /// </param>
-            public FeatureSurface(INamedTypeSymbol interfaceSymbol)
-            {
-                InterfaceSymbol = interfaceSymbol ?? throw new ArgumentNullException(nameof(interfaceSymbol));
-            }
-
-            /// <summary>
-            /// Gets the constructed query builder surface associated with the feature.
-            /// </summary>
-            public INamedTypeSymbol InterfaceSymbol { get; }
-        }
+       
     }
-
 }

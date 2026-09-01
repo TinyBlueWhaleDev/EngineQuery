@@ -10,10 +10,10 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces
     /// <typeparam name="TProfile">
     /// Database provider profile associated with the query engine.
     /// </typeparam>
-    public interface IQueryPaginationEngine<TProfile> :
-        IQueryEngine<TProfile>,
-        IQueryPaginationBuilder<TProfile>
-        where TProfile : IDatabaseProviderProfile, IPaginationFeature
-    {
-    }
+    //public interface IQueryPaginationEngine<TProfile> :
+    //    IQueryEngine<TProfile>,
+    //    IQueryPaginationBuilder<TProfile>
+    //    where TProfile : IDatabaseProviderProfile, IPaginationFeature
+    //{
+    //}
 }

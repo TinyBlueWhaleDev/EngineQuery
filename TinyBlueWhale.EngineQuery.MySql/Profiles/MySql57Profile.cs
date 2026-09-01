@@ -16,7 +16,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Profiles
     /// </remarks>
     public class MySql57Profile : DatabaseProviderProfile,
         IMySqlProfile,
-        IPaginationFeature,
+        ILimitOffsetPaginationFeature,
         IPaginationStrategyProvider
     {
         /// <inheritdoc />

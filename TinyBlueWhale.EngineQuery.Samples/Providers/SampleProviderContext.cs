@@ -13,7 +13,7 @@ namespace TinyBlueWhale.EngineQuery.Samples.Providers
 
         public required string ConnectionString { get; init; }
 
-        public required Func<IEntityMetadataResolver, QueryBuilder> BuildQueryBuilder { get; init; }
+        //public required Func<IEntityMetadataResolver, QueryBuilder> BuildQueryBuilder { get; init; }
 
         public required Func<DbConnection> OpenConnection { get; init; }
 

@@ -1,9 +1,11 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Features;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 {
@@ -576,5 +578,164 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
 
         #endregion
+
+        #region Ordering Overloads
+        /// <summary>
+        /// Adds an ascending ordering expression to the query definition.
+        /// </summary>      
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Ordered query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="keySelector"/> is null.
+        /// </exception>
+        public TBuilder OrderBy(Expression<Func<T, object>> keySelector)
+        {
+            Components.OrderByClauseBuilder.AddAscending(keySelector);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds an ascending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>        
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Ordered query command builder instance.
+        /// </returns>
+        public TBuilder OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        {
+            Components.OrderByClauseBuilder.AddAscendingForSource(keySelector);
+
+            return Current;
+        }
+
+
+        /// <summary>
+        /// Adds a descending ordering expression to the query definition.
+        /// </summary>   
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Ordered query command builder instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="keySelector"/> is null.
+        /// </exception>
+        public TBuilder OrderByDescending(Expression<Func<T, object>> keySelector)
+        {
+            Components.OrderByClauseBuilder.AddDescending(keySelector);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds a descending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>   
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Ordered query command builder instance.
+        /// </returns>
+        public TBuilder OrderByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        {
+            Components.OrderByClauseBuilder.AddDescendingForSource(keySelector);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds an additional ascending ordering expression for the root entity.
+        /// </summary>       
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        public TBuilder ThenBy(Expression<Func<T, object>> keySelector)
+        {
+            Components.OrderByClauseBuilder.AddAscending(keySelector);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds an additional ascending ordering expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>       
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        public TBuilder ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        {
+            Components.OrderByClauseBuilder.AddAscendingForSource(keySelector);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds an additional descending ordering expression for the root entity.
+        /// </summary>    
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        public TBuilder ThenByDescending(Expression<Func<T, object>> keySelector)
+        {
+            Components.OrderByClauseBuilder.AddDescending(keySelector);
+
+            return Current;
+        }
+
+        /// <summary>
+        /// Adds an additional descending ordering expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>       
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        public TBuilder ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector)
+        {
+            Components.OrderByClauseBuilder.AddDescendingForSource(keySelector);
+
+            return Current;
+        }
+
+        #endregion
+
+
+        /// <inheritdoc />
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyFeature(IQueryFeatureOperation operation)
+        {
+            QueryFeatureOperationDispatcher.Apply(Components, operation);
+            return Current;
+        }
+
     }
 }
