@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features
+﻿namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features
 {
     /// <summary>
     /// Represents an internal operation that defines the number of rows skipped by query pagination.

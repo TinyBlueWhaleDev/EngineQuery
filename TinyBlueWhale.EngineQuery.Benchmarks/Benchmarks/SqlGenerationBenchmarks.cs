@@ -1,14 +1,4 @@
-﻿using System.Text;
-using BenchmarkDotNet.Attributes;
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
-using TinyBlueWhale.EngineQuery.Benchmarks.Benchmarks.Models;
-using TinyBlueWhale.EngineQuery.Metadata.Fluent;
-using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
-using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
-
-namespace TinyBlueWhale.EngineQuery.Benchmarks.Benchmarks
+﻿namespace TinyBlueWhale.EngineQuery.Benchmarks.Benchmarks
 {
     //[MemoryDiagnoser]
     //public class SqlGenerationBenchmarks

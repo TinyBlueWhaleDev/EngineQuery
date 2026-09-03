@@ -1,7 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
-using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
-
-namespace TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql
+﻿namespace TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql
 {
     //[TestFixture]
     //public sealed class PostgreSqlProviderProfileTests

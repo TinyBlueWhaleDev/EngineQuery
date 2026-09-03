@@ -1,7 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Ordering
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Ordering
 {
     /// <summary>
     /// Validates provider-independent ordering and pagination behavior.

@@ -97,7 +97,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a LAG window function projection to the current query.
         /// </summary>
-        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset)        
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset)
         {
             Components.WindowFunctionProjectionBuilder.AddLag(expression, alias, windowBuilder, offset);
 

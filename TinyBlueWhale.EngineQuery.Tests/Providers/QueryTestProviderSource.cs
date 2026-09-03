@@ -1,8 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Tests.Providers.MySql;
-using TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql;
-using TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer;
-
-namespace TinyBlueWhale.EngineQuery.Tests.Providers
+﻿namespace TinyBlueWhale.EngineQuery.Tests.Providers
 {
     ///// <summary>
     ///// Provides database providers used by shared query feature tests.

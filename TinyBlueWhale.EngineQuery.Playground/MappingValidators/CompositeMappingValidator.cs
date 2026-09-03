@@ -1,10 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Metadata.Fluent;
-using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
 namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
 {
@@ -45,6 +42,6 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
 
             MappingValidatorPrinter.Print(nameof(CompositeMappingValidator), sql);
         }
-        
+
     }
 }

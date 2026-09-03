@@ -32,6 +32,6 @@ namespace TinyBlueWhale.EngineQuery.MySql.Capabilities
 
         /// <inheritdoc />
         public bool SupportsExcept => _version.IsAtLeast(8, 0, 31);
-        
+
     }
 }

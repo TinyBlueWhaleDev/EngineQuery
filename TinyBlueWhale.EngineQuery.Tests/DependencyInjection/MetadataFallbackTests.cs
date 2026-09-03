@@ -1,9 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
-using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
-
-namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
+﻿namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
 {
     ///// <summary>
     ///// Validates convention metadata fallback behavior during dependency injection resolution.

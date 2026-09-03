@@ -1,8 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
-using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Apply
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Apply
 {
     ///// <summary>
     ///// Validates provider-independent APPLY and lateral query behavior.

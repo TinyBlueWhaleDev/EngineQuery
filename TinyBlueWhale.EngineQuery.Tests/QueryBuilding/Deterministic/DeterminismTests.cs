@@ -1,7 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Deterministic
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Deterministic
 {
     ///// <summary>
     ///// Validates deterministic SQL generation behavior.

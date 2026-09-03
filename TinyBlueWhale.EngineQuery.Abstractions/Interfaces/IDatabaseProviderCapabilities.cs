@@ -5,7 +5,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// Defines SQL capabilities supported by a database provider.
     /// </summary>
     public interface IDatabaseProviderCapabilities
-    {       
+    {
         /// <summary>
         /// Gets whether the provider supports LATERAL joins or APPLY-equivalent joins.
         /// </summary>
@@ -20,6 +20,6 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Gets whether the provider supports EXCEPT set operations.
         /// </summary>
         bool SupportsExcept { get; }
-     
+
     }
 }

@@ -1,10 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
-
-namespace TinyBlueWhale.EngineQuery.DependencyInjection
+﻿namespace TinyBlueWhale.EngineQuery.DependencyInjection
 {
     //internal sealed class PaginationQueryEngine<TProfile>(QueryBuilder<TProfile> queryBuilder) :
     //QueryEngine<TProfile>(queryBuilder),

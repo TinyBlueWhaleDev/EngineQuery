@@ -1,7 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Versioning
 {
@@ -19,10 +18,10 @@ namespace TinyBlueWhale.EngineQuery.Tests.Versioning
                 DatabaseProviderVersion.Create(5, 7));
 
             Assert.Multiple(() =>
-            {                                
+            {
                 Assert.That(capabilities.SupportsLateralJoins, Is.False);
                 Assert.That(capabilities.SupportsIntersect, Is.False);
-                Assert.That(capabilities.SupportsExcept, Is.False);                
+                Assert.That(capabilities.SupportsExcept, Is.False);
             });
         }
 
@@ -33,10 +32,10 @@ namespace TinyBlueWhale.EngineQuery.Tests.Versioning
                 DatabaseProviderVersion.Create(8, 0, 31));
 
             Assert.Multiple(() =>
-            {                                
+            {
                 Assert.That(capabilities.SupportsLateralJoins, Is.True);
                 Assert.That(capabilities.SupportsIntersect, Is.True);
-                Assert.That(capabilities.SupportsExcept, Is.True);                
+                Assert.That(capabilities.SupportsExcept, Is.True);
             });
         }
 

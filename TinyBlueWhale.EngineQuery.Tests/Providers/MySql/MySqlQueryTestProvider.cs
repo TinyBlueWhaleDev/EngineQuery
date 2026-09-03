@@ -1,10 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.MySql.Capabilities;
-using TinyBlueWhale.EngineQuery.MySql.Compilation;
-using TinyBlueWhale.EngineQuery.MySql.Dialects;
-using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
-
-namespace TinyBlueWhale.EngineQuery.Tests.Providers.MySql
+﻿namespace TinyBlueWhale.EngineQuery.Tests.Providers.MySql
 {
     ///// <summary>
     ///// Provides MySQL-specific query builder infrastructure

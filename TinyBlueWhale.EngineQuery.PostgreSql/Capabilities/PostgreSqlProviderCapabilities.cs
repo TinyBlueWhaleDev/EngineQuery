@@ -27,7 +27,7 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Capabilities
         public PostgreSqlProviderCapabilities(DatabaseProviderVersion version)
         {
             _version = version ?? throw new ArgumentNullException(nameof(version));
-        }        
+        }
 
         /// <inheritdoc />
         public bool SupportsLateralJoins => _version.IsAtLeast(9, 3);

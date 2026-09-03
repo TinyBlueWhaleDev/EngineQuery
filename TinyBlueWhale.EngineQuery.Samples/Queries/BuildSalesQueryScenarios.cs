@@ -1,7 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Samples.Metadata;
-using TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios;
-
-namespace TinyBlueWhale.EngineQuery.Samples.Queries
+﻿namespace TinyBlueWhale.EngineQuery.Samples.Queries
 {
     //public static class BuildSalesQueryScenarios
     //{

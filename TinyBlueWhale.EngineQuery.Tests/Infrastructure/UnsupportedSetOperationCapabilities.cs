@@ -7,20 +7,10 @@ namespace TinyBlueWhale.EngineQuery.Tests.Infrastructure
     /// </summary>
     internal sealed class UnsupportedSetOperationCapabilities : IDatabaseProviderCapabilities
     {
-        public bool SupportsCommonTableExpressions => true;
-
-        public bool SupportsRecursiveCommonTableExpressions => true;
-
-        public bool SupportsWindowFunctions => true;
-
         public bool SupportsLateralJoins => true;
 
         public bool SupportsIntersect => false;
 
         public bool SupportsExcept => false;
-
-        public bool SupportsOffsetFetchPagination => true;
-
-        public bool SupportsLimitOffsetPagination => false;
     }
 }

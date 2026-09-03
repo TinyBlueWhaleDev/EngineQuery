@@ -3,15 +3,10 @@ using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Fluent;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
-using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
-using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.Playground.Models;
-using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
-using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 {

@@ -1,10 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
-using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
-using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
-
-namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
+﻿namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
 {
     ///// <summary>
     ///// Provides SQL Server-specific query builder infrastructure

@@ -1,10 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-
-using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
-using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Schema
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Schema
 {
     ///// <summary>
     ///// Validates schema-aware SQL generation across supported query commands.

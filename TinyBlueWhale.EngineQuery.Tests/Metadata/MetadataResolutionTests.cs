@@ -1,6 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.Metadata
+﻿namespace TinyBlueWhale.EngineQuery.Tests.Metadata
 {
     ///// <summary>
     ///// Validates metadata resolution behavior used by query builders.

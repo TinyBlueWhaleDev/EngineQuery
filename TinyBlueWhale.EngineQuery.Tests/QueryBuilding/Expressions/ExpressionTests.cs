@@ -1,8 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
-using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Expressions
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Expressions
 {
     /// <summary>
     /// Validates provider-independent scalar, computed and conditional expression behavior.

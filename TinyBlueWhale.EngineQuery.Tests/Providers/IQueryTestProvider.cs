@@ -1,6 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-
-namespace TinyBlueWhale.EngineQuery.Tests.Providers
+﻿namespace TinyBlueWhale.EngineQuery.Tests.Providers
 {
     ///// <summary>
     ///// Defines provider-specific infrastructure used by shared query feature tests.

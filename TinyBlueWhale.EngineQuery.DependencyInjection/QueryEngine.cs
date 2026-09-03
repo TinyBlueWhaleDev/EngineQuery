@@ -42,7 +42,7 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection
         {
             return _innerQueryBuilder.FromSubquery<TDerived, TSubqueryRoot>(alias, subqueryBuilder);
         }
-       
+
         /// <inheritdoc />
         public IInsertCommandBuilder<T, TProfile> InsertInto<T>(string tableName)
         {

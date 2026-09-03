@@ -1,8 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
 namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
 {

@@ -1,15 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using TinyBlueWhale.EngineQuery.Generated;
+using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
+using TinyBlueWhale.EngineQuery.Generated;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
 using TinyBlueWhale.EngineQuery.MySql.Profiles;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
-using TinyBlueWhale.EngineQuery.Core.Enums;
 
 namespace TinyBlueWhale.EngineQuery.Tests.DependencyInjection
 {

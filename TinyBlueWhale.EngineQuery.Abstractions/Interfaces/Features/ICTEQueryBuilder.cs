@@ -29,7 +29,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features
         /// <returns>
         /// Current CTE query builder surface.
         /// </returns>
-        ICTEQueryBuilder<TProfile> With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> cteBuilder);
+        new ICTEQueryBuilder<TProfile> With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> cteBuilder);
 
         /// <summary>
         /// Creates a query command builder using a common table expression as the root source.
@@ -46,7 +46,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features
         /// <returns>
         /// Query command builder for the common table expression source.
         /// </returns>
-        IQueryCommandBuilder<TCte, TProfile> FromCte<TCte>(string name, string? alias = null);
+        new IQueryCommandBuilder<TCte, TProfile> FromCte<TCte>(string name, string? alias = null);
     }
 
     /// <summary>
@@ -102,6 +102,6 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features
         /// <returns>
         /// Current recursive CTE query builder surface.
         /// </returns>
-        IRecursiveCTEQueryBuilder<TProfile> WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TBaseRoot, TProfile>> baseQueryBuilder, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TRecursiveRoot, TProfile>> recursiveQueryBuilder);
+        new IRecursiveCTEQueryBuilder<TProfile> WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TBaseRoot, TProfile>> baseQueryBuilder, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TRecursiveRoot, TProfile>> recursiveQueryBuilder);
     }
 }

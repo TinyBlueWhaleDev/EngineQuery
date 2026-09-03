@@ -1,7 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Join
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Join
 {
     /// <summary>
     /// Validates provider-independent JOIN query behavior.

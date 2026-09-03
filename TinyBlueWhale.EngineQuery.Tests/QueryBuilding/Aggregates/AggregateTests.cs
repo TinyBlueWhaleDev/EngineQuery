@@ -1,8 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
-using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Aggregates
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Aggregates
 {
     ///// <summary>
     ///// Validates provider-independent aggregate query behavior.

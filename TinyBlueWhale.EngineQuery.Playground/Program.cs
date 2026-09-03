@@ -1,7 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
-using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions;
-
-//BasicSelectQueryValidator.Run();
+﻿//BasicSelectQueryValidator.Run();
 //TableAliasQueryValidator.Run();
 //JoinQueryValidator.Run();
 //JoinProjectionQueryValidator.Run();

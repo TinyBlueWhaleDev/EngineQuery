@@ -1,12 +1,4 @@
-﻿using Dapper;
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
-using TinyBlueWhale.EngineQuery.Labs.Domain.Entities;
-using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.SqlServer;
-using TinyBlueWhale.EngineQuery.Labs.Labs.Helpers;
-using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.Interfaces;
-using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.ViewModels;
-
-namespace TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.SearchOrdersEngine;
+﻿namespace TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.SearchOrdersEngine;
 
 //public sealed class SearchOrdersEngineRepository(
 //    IQueryEngine queryBuilder,
@@ -134,7 +126,7 @@ namespace TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders
 //        var countParameters = countQuery.ToDynamicParameters();
 
 //        logger.LogDebug("""
-            
+
 //            Lab001 EngineQuery - Data Query
 
 //            {DataSql}

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
+﻿using System.Collections.Immutable;
 using System.Text;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -861,7 +857,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
                 $"global::{QueryEngineInterface}<{profileType}>"
             };
 
-            surfaces.AddRange(featureSurfaces.Select(surface => surface.ToDisplayString(GeneratedTypeDisplayFormat)));            
+            surfaces.AddRange(featureSurfaces.Select(surface => surface.ToDisplayString(GeneratedTypeDisplayFormat)));
 
             source.AppendLine("    /// <summary>");
             source.AppendLine("    /// Represents the generated query engine surface associated with");
@@ -1477,113 +1473,96 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Represents the complete generation state associated with a compilation.
         /// </summary>
-        private sealed class GenerationModel
+        /// <remarks>
+        /// Initializes a new generation model.
+        /// </remarks>
+        /// <param name="profiles">
+        /// Provider profile surface models discovered by the generator.
+        /// </param>
+        /// <param name="profileContract">
+        /// Database provider profile contract used during structural feature discovery.
+        /// </param>
+        /// <param name="supportsQueryEngineGeneration">
+        /// Indicates whether the current compilation contains dependency injection query engine contracts.
+        /// </param>
+        private sealed class GenerationModel(ImmutableArray<QueryEngineSurfaceGenerator.ProfileSurfaceModel> profiles, INamedTypeSymbol? profileContract, bool supportsQueryEngineGeneration)
         {
-            /// <summary>
-            /// Initializes a new generation model.
-            /// </summary>
-            /// <param name="profiles">
-            /// Provider profile surface models discovered by the generator.
-            /// </param>
-            /// <param name="profileContract">
-            /// Database provider profile contract used during structural feature discovery.
-            /// </param>
-            /// <param name="supportsQueryEngineGeneration">
-            /// Indicates whether the current compilation contains dependency injection query engine contracts.
-            /// </param>
-            public GenerationModel(ImmutableArray<ProfileSurfaceModel> profiles, INamedTypeSymbol? profileContract, bool supportsQueryEngineGeneration)
-            {
-                Profiles = profiles;
-                ProfileContract = profileContract;
-                SupportsQueryEngineGeneration = supportsQueryEngineGeneration;
-            }
 
             /// <summary>
             /// Gets the discovered provider profile surface models.
             /// </summary>
-            public ImmutableArray<ProfileSurfaceModel> Profiles { get; }
+            public ImmutableArray<ProfileSurfaceModel> Profiles { get; } = profiles;
 
             /// <summary>
             /// Gets the database provider profile contract used during structural feature discovery.
             /// </summary>
-            public INamedTypeSymbol? ProfileContract { get; }
+            public INamedTypeSymbol? ProfileContract { get; } = profileContract;
 
             /// <summary>
             /// Gets whether the current compilation supports query engine and dependency injection generation.
             /// </summary>
-            public bool SupportsQueryEngineGeneration { get; }
+            public bool SupportsQueryEngineGeneration { get; } = supportsQueryEngineGeneration;
         }
 
         /// <summary>
         /// Represents a provider profile together with the root query feature surfaces
         /// compatible with the profile.
         /// </summary>
-        private sealed class ProfileSurfaceModel
+        /// <remarks>
+        /// Initializes a new provider profile surface model.
+        /// </remarks>
+        /// <param name="profile">
+        /// Database provider profile represented by the model.
+        /// </param>
+        /// <param name="surfaces">
+        /// Root query feature surfaces compatible with the profile.
+        /// </param>
+        /// <param name="isLocal">
+        /// Indicates whether the profile is declared by the current compilation.
+        /// </param>
+        private sealed class ProfileSurfaceModel(INamedTypeSymbol profile, IReadOnlyList<INamedTypeSymbol> surfaces, bool isLocal)
         {
-            /// <summary>
-            /// Initializes a new provider profile surface model.
-            /// </summary>
-            /// <param name="profile">
-            /// Database provider profile represented by the model.
-            /// </param>
-            /// <param name="surfaces">
-            /// Root query feature surfaces compatible with the profile.
-            /// </param>
-            /// <param name="isLocal">
-            /// Indicates whether the profile is declared by the current compilation.
-            /// </param>
-            public ProfileSurfaceModel(INamedTypeSymbol profile, IReadOnlyList<INamedTypeSymbol> surfaces, bool isLocal)
-            {
-                Profile = profile ?? throw new ArgumentNullException(nameof(profile));
-                Surfaces = surfaces ?? throw new ArgumentNullException(nameof(surfaces));
-                IsLocal = isLocal;
-            }
 
             /// <summary>
             /// Gets the database provider profile represented by the model.
             /// </summary>
-            public INamedTypeSymbol Profile { get; }
+            public INamedTypeSymbol Profile { get; } = profile ?? throw new ArgumentNullException(nameof(profile));
 
             /// <summary>
             /// Gets the root query feature surfaces compatible with the profile.
             /// </summary>
-            public IReadOnlyList<INamedTypeSymbol> Surfaces { get; }
+            public IReadOnlyList<INamedTypeSymbol> Surfaces { get; } = surfaces ?? throw new ArgumentNullException(nameof(surfaces));
 
             /// <summary>
             /// Gets whether the provider profile is declared by the current compilation.
             /// </summary>
-            public bool IsLocal { get; }
+            public bool IsLocal { get; } = isLocal;
         }
 
         /// <summary>
         /// Represents a method declared by a specific root feature surface.
         /// </summary>
-        private sealed class SurfaceMethodModel
+        /// <remarks>
+        /// Initializes a new surface method model.
+        /// </remarks>
+        /// <param name="surface">
+        /// Root feature surface declaring the method.
+        /// </param>
+        /// <param name="method">
+        /// Method declared by the root feature surface.
+        /// </param>
+        private sealed class SurfaceMethodModel(INamedTypeSymbol surface, IMethodSymbol method)
         {
-            /// <summary>
-            /// Initializes a new surface method model.
-            /// </summary>
-            /// <param name="surface">
-            /// Root feature surface declaring the method.
-            /// </param>
-            /// <param name="method">
-            /// Method declared by the root feature surface.
-            /// </param>
-            public SurfaceMethodModel(INamedTypeSymbol surface, IMethodSymbol method)
-            {
-                Surface = surface ?? throw new ArgumentNullException(nameof(surface));
-                Method = method ?? throw new ArgumentNullException(nameof(method));
-            }
 
             /// <summary>
             /// Gets the root feature surface declaring the method.
             /// </summary>
-            public INamedTypeSymbol Surface { get; }
+            public INamedTypeSymbol Surface { get; } = surface ?? throw new ArgumentNullException(nameof(surface));
 
             /// <summary>
             /// Gets the method declared by the root feature surface.
             /// </summary>
-            public IMethodSymbol Method { get; }
+            public IMethodSymbol Method { get; } = method ?? throw new ArgumentNullException(nameof(method));
         }
     }
 }

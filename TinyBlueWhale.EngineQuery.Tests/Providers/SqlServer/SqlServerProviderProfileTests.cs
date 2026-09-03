@@ -1,6 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
-
-namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
+﻿namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
 {
     ///// <summary>
     ///// Validates SQL Server provider version profiles and their

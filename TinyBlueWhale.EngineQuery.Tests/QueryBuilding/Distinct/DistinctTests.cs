@@ -1,7 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Distinct
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Distinct
 {
     ///// <summary>
     ///// Validates provider-independent DISTINCT query behavior.

@@ -1,10 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Samples.Domain.AttributeMapping;
-using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping;
-using TinyBlueWhale.EngineQuery.Samples.Domain.EntityFrameworkMapping.ReadModels;
-using TinyBlueWhale.EngineQuery.Samples.Domain.FluentMapping;
-using TinyBlueWhale.EngineQuery.Samples.Metadata;
-
-namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
+﻿namespace TinyBlueWhale.EngineQuery.Samples.Queries.Scenarios
 {
     //public static class JoinQueries
     //{

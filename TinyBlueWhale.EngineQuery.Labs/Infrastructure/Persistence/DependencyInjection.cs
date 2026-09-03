@@ -5,7 +5,6 @@ using TinyBlueWhale.EngineQuery.Labs.Domain.Enums;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.FluentMappings;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.SqlServer;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.Interfaces;
-using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.SearchOrdersEngine;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.SearchOrdersRaw;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Validators;
 

@@ -1,8 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
-using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.WindowFunctions
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.WindowFunctions
 {
     /// <summary>
     /// Validates provider-independent window function behavior.

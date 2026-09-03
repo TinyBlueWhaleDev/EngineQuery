@@ -1,11 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Extensions;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
-using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Playground.Models;
-using TinyBlueWhale.EngineQuery.Playground.Shared;
-
-namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
+﻿namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 {
 
     //<summary>

@@ -2,18 +2,11 @@
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
-using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
-using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.MySql.Profiles.Interfaces;
-using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
-using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles.Interfaces;
-using TinyBlueWhale.EngineQuery.Sql.Composition;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration

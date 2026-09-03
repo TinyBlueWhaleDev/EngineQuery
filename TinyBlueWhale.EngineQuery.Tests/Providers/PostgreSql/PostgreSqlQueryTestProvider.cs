@@ -1,10 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
-using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
-using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
-using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
-
-namespace TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql
+﻿namespace TinyBlueWhale.EngineQuery.Tests.Providers.PostgreSql
 {
     ///// <summary>
     ///// Provides PostgreSQL-specific query builder infrastructure

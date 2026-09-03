@@ -21,7 +21,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Capabilities
         public SqlServerProviderCapabilities()
             : this(DefaultVersion)
         {
-        }      
+        }
 
         /// <inheritdoc />
         public bool SupportsLateralJoins => true;

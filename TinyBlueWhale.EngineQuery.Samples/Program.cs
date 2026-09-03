@@ -1,12 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Samples.Database;
-using TinyBlueWhale.EngineQuery.Samples.Executors;
-using TinyBlueWhale.EngineQuery.Samples.Metadata;
-using TinyBlueWhale.EngineQuery.Samples.Providers;
-using TinyBlueWhale.EngineQuery.Samples.Queries;
-using TinyBlueWhale.EngineQuery.Samples.Results;
-using TinyBlueWhale.EngineQuery.Samples.Settings;
-
-Console.WriteLine("========================================");
+﻿Console.WriteLine("========================================");
 
 //var settings = LoadSampleSettings.Create();
 //var providers = BuildSampleProviders.Create(settings.ConnectionStrings);

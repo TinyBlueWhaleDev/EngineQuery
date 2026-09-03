@@ -1,16 +1,10 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
-using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
-using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.MySql.Profiles;
-using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
-using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
 
 namespace TinyBlueWhale.EngineQuery.Playground.Shared

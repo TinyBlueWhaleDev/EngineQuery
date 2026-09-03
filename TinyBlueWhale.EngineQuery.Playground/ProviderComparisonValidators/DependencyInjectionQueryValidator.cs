@@ -9,11 +9,9 @@ using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 using TinyBlueWhale.EngineQuery.Generated;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
-using TinyBlueWhale.EngineQuery.MySql.Profiles;
 using TinyBlueWhale.EngineQuery.Playground.EntityFramework;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
-using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
 
 namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators

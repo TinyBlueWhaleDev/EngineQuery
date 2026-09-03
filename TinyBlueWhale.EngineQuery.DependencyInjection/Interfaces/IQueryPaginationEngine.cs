@@ -1,8 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
-
-namespace TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces
+﻿namespace TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces
 {
     /// <summary>
     /// Represents a configured EngineQuery query builder whose provider profile supports pagination.

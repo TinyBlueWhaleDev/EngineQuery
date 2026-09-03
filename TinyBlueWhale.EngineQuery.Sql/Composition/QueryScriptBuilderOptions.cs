@@ -1,5 +1,4 @@
 ﻿using TinyBlueWhale.EngineQuery.Sql.Clauses;
-using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
@@ -48,6 +47,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
         /// <remarks>
         /// When this value is <see langword="null"/>, the default <see cref="ApplyClauseBuilder"/> is used.
         /// </remarks>
-        public Func<SubqueryCompiler, ApplyClauseBuilder>? ApplyClauseBuilderFactory { get; init; }        
+        public Func<SubqueryCompiler, ApplyClauseBuilder>? ApplyClauseBuilderFactory { get; init; }
     }
 }

@@ -1,8 +1,4 @@
-﻿using System.Text;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Tests.Models;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Insert
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Insert
 {
     ///// <summary>
     ///// Validates the public operations exposed by each INSERT command builder stage.

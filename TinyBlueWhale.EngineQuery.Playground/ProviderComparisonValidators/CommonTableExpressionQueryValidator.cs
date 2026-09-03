@@ -160,6 +160,6 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 .WhereComputed<OrderSummary>(summary => summary.TotalAmount > 500)
                 .OrderByDescending<OrderSummary>(summary => summary.TotalAmount)
                 .Build();
-        }       
+        }
     }
 }

@@ -62,5 +62,5 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     alias: "EmailLabel")
                 .Build();
         }
-    }                        
+    }
 }

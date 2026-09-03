@@ -55,7 +55,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Validation
 
             if (queryDefinition.SetOperationDefinitions.Any(setOperation => setOperation.Operation == QuerySetOperation.Except) && !_providerCapabilities.SupportsExcept)
                 throw new NotSupportedException("EXCEPT set operations are not supported by the current provider.");
-            
+
         }
 
         private void ValidateNestedQueries(CompiledQueryDefinition queryDefinition)

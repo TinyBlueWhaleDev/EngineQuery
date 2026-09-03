@@ -1,11 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Samples.Metadata;
-using TinyBlueWhale.EngineQuery.Samples.Providers;
-using TinyBlueWhale.EngineQuery.Samples.Queries;
-using TinyBlueWhale.EngineQuery.Samples.Results;
-
-namespace TinyBlueWhale.EngineQuery.Samples.Executors
+﻿namespace TinyBlueWhale.EngineQuery.Samples.Executors
 {
     //public sealed class EntityFrameworkSampleExecutor : ISampleExecutor
     //{

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
+﻿using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Clauses.Strategies.Cte
 {

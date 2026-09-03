@@ -1,9 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
-using TinyBlueWhale.EngineQuery.Tests.Infrastructure;
-using TinyBlueWhale.EngineQuery.Tests.Models;
-using TinyBlueWhale.EngineQuery.Tests.Providers;
-
-namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.CTE
+﻿namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.CTE
 {
     ///// <summary>
     ///// Validates provider-independent common table expression behavior.
