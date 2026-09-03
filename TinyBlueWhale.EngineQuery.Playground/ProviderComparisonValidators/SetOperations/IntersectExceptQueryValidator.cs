@@ -1,10 +1,12 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Extensions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
-namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.SetOperations
 {
 
     /// <summary>
@@ -46,7 +48,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
         // Builds an INTERSECT query.
         private static GeneratedSqlQuery BuildIntersectQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
-            where TProfile : IDatabaseProviderProfile
+             where TProfile : IDatabaseProviderProfile, IIntersectFeature
         {
             return queryBuilder
                 .From<ActiveUser>(alias: "u")
@@ -55,7 +57,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     u.Email
                 })
                 .Where<ActiveUser>(u => u.Id > 10)
-                .Intersect<ArchivedUser>(set => set
+                .Intersect(set => set
                     .From<ArchivedUser>(alias: "a")
                     .Select<ArchivedUser>(a => new
                     {
@@ -67,7 +69,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
         // Builds an EXCEPT query.
         private static GeneratedSqlQuery BuildExceptQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
-            where TProfile : IDatabaseProviderProfile
+            where TProfile : IDatabaseProviderProfile, IExceptFeature
         {
             return queryBuilder
                 .From<ActiveUser>(alias: "u")
@@ -76,7 +78,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     u.Email
                 })
                 .Where<ActiveUser>(u => u.Id > 10)
-                .Except<ArchivedUser>(set => set
+                .Except(set => set
                     .From<ArchivedUser>(alias: "a")
                     .Select<ArchivedUser>(a => new
                     {

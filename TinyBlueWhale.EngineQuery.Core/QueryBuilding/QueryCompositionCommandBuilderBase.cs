@@ -544,21 +544,19 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         /// <summary>
         /// Adds an INTERSECT query to the current query.
-        /// </summary>
-        public TBuilder Intersect<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
+        /// </summary>        
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyIntersect<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
         {
             Components.SetOperationClauseBuilder.Add(QuerySetOperation.Intersect, setBuilder);
-
             return Current;
         }
 
         /// <summary>
         /// Adds an EXCEPT query to the current query.
         /// </summary>
-        public TBuilder Except<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyExcept<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
         {
             Components.SetOperationClauseBuilder.Add(QuerySetOperation.Except, setBuilder);
-
             return Current;
         }
 

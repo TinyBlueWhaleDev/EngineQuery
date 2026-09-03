@@ -1,4 +1,7 @@
-﻿//BasicSelectQueryValidator.Run();
+﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.SetOperations;
+using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions;
+
+//BasicSelectQueryValidator.Run();
 //TableAliasQueryValidator.Run();
 //JoinQueryValidator.Run();
 //JoinProjectionQueryValidator.Run();
@@ -56,5 +59,11 @@
 //LagLeadWindowFunctionQueryValidator.Run();
 //FirstLastValueWindowFunctionQueryValidator.Run();
 //NtileWindowFunctionQueryValidator.Run();
+
+#endregion
+
+#region SetOperations
+
+IntersectExceptQueryValidator.Run();
 
 #endregion

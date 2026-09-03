@@ -49,13 +49,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Validation
         {
             if (queryDefinition.ApplyDefinitions.Count > 0 && !_providerCapabilities.SupportsLateralJoins)
                 throw new NotSupportedException("APPLY or LATERAL joins are not supported by the current provider.");
-
-            if (queryDefinition.SetOperationDefinitions.Any(setOperation => setOperation.Operation == QuerySetOperation.Intersect) && !_providerCapabilities.SupportsIntersect)
-                throw new NotSupportedException("INTERSECT set operations are not supported by the current provider.");
-
-            if (queryDefinition.SetOperationDefinitions.Any(setOperation => setOperation.Operation == QuerySetOperation.Except) && !_providerCapabilities.SupportsExcept)
-                throw new NotSupportedException("EXCEPT set operations are not supported by the current provider.");
-
         }
 
         private void ValidateNestedQueries(CompiledQueryDefinition queryDefinition)

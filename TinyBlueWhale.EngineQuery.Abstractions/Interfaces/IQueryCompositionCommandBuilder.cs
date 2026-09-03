@@ -705,7 +705,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         TBuilder UnionAll<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder);
 
         /// <summary>
-        /// Adds an INTERSECT query to the current query.
+        /// Adds an internal INTERSECT query to the current query.
         /// </summary>
         /// <typeparam name="TSet">
         /// Root entity type used by the set operation query.
@@ -716,10 +716,13 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder Intersect<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder);
+        internal TBuilder ApplyIntersect<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
+        {
+            throw new NotSupportedException("INTERSECT is not supported by the current query builder.");
+        }
 
         /// <summary>
-        /// Adds an EXCEPT query to the current query.
+        /// Adds an internal EXCEPT query to the current query.
         /// </summary>
         /// <typeparam name="TSet">
         /// Root entity type used by the set operation query.
@@ -730,7 +733,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder Except<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder);
+        internal TBuilder ApplyExcept<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
+        {
+            throw new NotSupportedException("EXCEPT is not supported by the current query builder.");
+        }
 
         /// <summary>
         /// Adds a GROUP BY clause for the root entity.
