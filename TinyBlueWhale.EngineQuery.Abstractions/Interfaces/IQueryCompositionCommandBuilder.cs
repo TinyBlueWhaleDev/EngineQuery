@@ -189,8 +189,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance for method chaining.
         /// </returns>
-        TBuilder SelectLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1);
-
+        internal TBuilder ApplyLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1)
+        {
+            throw new NotSupportedException("LAG window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds a <c>LEAD</c> window function projection to the current query.
         /// </summary>
@@ -214,8 +216,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance for method chaining.
         /// </returns>      
-        TBuilder SelectLead<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1);
-
+        internal TBuilder ApplyLead<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1)
+        {
+            throw new NotSupportedException("LEAD window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds a FIRST_VALUE window function projection to the current query.
         /// </summary>
@@ -234,8 +238,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("FIRST_VALUE window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds a LAST_VALUE window function projection to the current query.
         /// </summary>
@@ -254,8 +260,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("LAST_VALUE window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds an NTILE window function projection to the current query.
         /// </summary>
@@ -271,8 +279,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("NTILE window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
@@ -767,8 +777,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("ROW_NUMBER window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds a RANK window function projection to the current query.
         /// </summary>
@@ -781,7 +793,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
+        internal TBuilder ApplyRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("RANK window function projection is not supported by the current query builder.");
+        }
 
         /// <summary>
         /// Adds a DENSE_RANK window function projection to the current query.
@@ -795,8 +810,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("DENSE_RANK window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds an ascending ordering expression to the query composition.
         /// </summary>

@@ -1,15 +1,18 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Extensions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
-namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions
 {
+
     /// <summary>
-    /// Validates computed SQL expression projections across providers.
+    /// Validates ROW_NUMBER window function generation across providers.
     /// </summary>
-    public static class ComputedExpressionQueryValidator
+    public static class RowNumberWindowFunctionQueryValidator
     {
         /// <summary>
         /// Runs the validator.
@@ -19,35 +22,35 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             var metadataResolver = ProviderMetadataFactory.CreateJoinMetadataResolver();
 
             ProviderQueryPrinter.Print(
-                "SQL Server Computed Expressions",
+                "SQL Server ROW_NUMBER",
                 BuildQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
 
             ProviderQueryPrinter.Print(
-                "PostgreSQL Computed Expressions",
+                "PostgreSQL ROW_NUMBER",
                 BuildQuery(ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
 
             ProviderQueryPrinter.Print(
-                "MySQL Computed Expressions",
+                "MySQL ROW_NUMBER",
                 BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
         }
 
-        // Builds a query with computed SQL expression projections.
+        // Builds a query using ROW_NUMBER with PARTITION BY and ORDER BY.
         private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
-            where TProfile : IDatabaseProviderProfile
+            where TProfile : IDatabaseProviderProfile, IWindowFunctionFeature
         {
             return queryBuilder
                 .From<JoinOrder>(alias: "o")
                 .Select<JoinOrder>(o => new
                 {
                     OrderId = o.Id,
+                    o.UserId,
                     o.Total
                 })
-                .SelectComputed<JoinOrder>(
-                    o => o.Total * 1.16m,
-                    alias: "TotalWithTax")
-                .SelectComputed<JoinOrder>(
-                    o => (o.Total * 1.16m) - 100,
-                    alias: "FinalAmount")
+                .SelectRowNumber(
+                    alias: "UserOrderRank",
+                    window => window
+                        .PartitionBy<JoinOrder>(o => o.UserId)
+                        .OrderByDescending<JoinOrder>(o => o.Total))
                 .Build();
         }
     }

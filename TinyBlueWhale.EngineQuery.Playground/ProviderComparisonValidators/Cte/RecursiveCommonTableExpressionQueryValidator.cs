@@ -7,7 +7,7 @@ using TinyBlueWhale.EngineQuery.Playground.Shared;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
 
-namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Cte
 {
 
     /// <summary>

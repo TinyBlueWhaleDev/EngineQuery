@@ -45,23 +45,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Validation
             ValidateNestedQueries(queryDefinition);
         }
 
-        /// <summary>
-        /// Validates whether pagination is supported by the configured provider.
-        /// </summary>
-        /// <exception cref="NotSupportedException">
-        /// Thrown when the provider does not support any configured pagination syntax.
-        /// </exception>
-        public void ValidatePaginationSupport()
-        {
-            if (!_providerCapabilities.SupportsOffsetFetchPagination && !_providerCapabilities.SupportsLimitOffsetPagination)
-                throw new NotSupportedException("Pagination is not supported by the current provider.");
-        }
-
         private void ValidateCurrentQuery(CompiledQueryDefinition queryDefinition)
-        {            
-            if (queryDefinition.WindowFunctionDefinitions.Count > 0 && !_providerCapabilities.SupportsWindowFunctions)
-                throw new NotSupportedException("Window functions are not supported by the current provider.");
-
+        {
             if (queryDefinition.ApplyDefinitions.Count > 0 && !_providerCapabilities.SupportsLateralJoins)
                 throw new NotSupportedException("APPLY or LATERAL joins are not supported by the current provider.");
 
@@ -70,9 +55,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Validation
 
             if (queryDefinition.SetOperationDefinitions.Any(setOperation => setOperation.Operation == QuerySetOperation.Except) && !_providerCapabilities.SupportsExcept)
                 throw new NotSupportedException("EXCEPT set operations are not supported by the current provider.");
-
-            if (queryDefinition.Pagination.HasPagination)
-                ValidatePaginationSupport();
+            
         }
 
         private void ValidateNestedQueries(CompiledQueryDefinition queryDefinition)

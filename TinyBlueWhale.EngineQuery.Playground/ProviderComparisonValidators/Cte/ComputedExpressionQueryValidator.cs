@@ -4,13 +4,12 @@ using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
-namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Cte
 {
-
     /// <summary>
-    /// Validates NTILE window function generation across providers.
+    /// Validates computed SQL expression projections across providers.
     /// </summary>
-    public static class NtileWindowFunctionQueryValidator
+    public static class ComputedExpressionQueryValidator
     {
         /// <summary>
         /// Runs the validator.
@@ -20,19 +19,19 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             var metadataResolver = ProviderMetadataFactory.CreateJoinMetadataResolver();
 
             ProviderQueryPrinter.Print(
-                "SQL Server NTILE Window Function",
+                "SQL Server Computed Expressions",
                 BuildQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
 
             ProviderQueryPrinter.Print(
-                "PostgreSQL NTILE Window Function",
+                "PostgreSQL Computed Expressions",
                 BuildQuery(ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
 
             ProviderQueryPrinter.Print(
-                "MySQL NTILE Window Function",
+                "MySQL Computed Expressions",
                 BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
         }
 
-        // Builds an NTILE window function query.
+        // Builds a query with computed SQL expression projections.
         private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
             where TProfile : IDatabaseProviderProfile
         {
@@ -41,15 +40,14 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                 .Select<JoinOrder>(o => new
                 {
                     OrderId = o.Id,
-                    o.UserId,
                     o.Total
                 })
-                .SelectNtile(
-                    buckets: 4,
-                    alias: "OrderQuartile",
-                    windowBuilder: window => window
-                        .PartitionBy<JoinOrder>(o => o.UserId)
-                        .OrderByDescending<JoinOrder>(o => o.Total))
+                .SelectComputed<JoinOrder>(
+                    o => o.Total * 1.16m,
+                    alias: "TotalWithTax")
+                .SelectComputed<JoinOrder>(
+                    o => (o.Total * 1.16m) - 100,
+                    alias: "FinalAmount")
                 .Build();
         }
     }

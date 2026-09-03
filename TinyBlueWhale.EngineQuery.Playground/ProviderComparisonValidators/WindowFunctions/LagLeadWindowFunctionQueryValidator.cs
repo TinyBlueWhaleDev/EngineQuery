@@ -1,15 +1,17 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Extensions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
-namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions
 {
     /// <summary>
-    /// Validates FIRST_VALUE and LAST_VALUE window function generation across providers.
+    /// Validates LAG and LEAD window function generation across providers.
     /// </summary>
-    public static class FirstLastValueWindowFunctionQueryValidator
+    public static class LagLeadWindowFunctionQueryValidator
     {
         /// <summary>
         /// Runs the validator.
@@ -19,21 +21,32 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
             var metadataResolver = ProviderMetadataFactory.CreateJoinMetadataResolver();
 
             ProviderQueryPrinter.Print(
-                "SQL Server First Last Value Window Functions",
+                "SQL Server LAG / LEAD Window Functions",
                 BuildQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
 
             ProviderQueryPrinter.Print(
-                "PostgreSQL First Last Value Window Functions",
+                "PostgreSQL LAG / LEAD Window Functions",
                 BuildQuery(ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
 
             ProviderQueryPrinter.Print(
-                "MySQL First Last Value Window Functions",
+                "MySQL LAG / LEAD Window Functions",
                 BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
         }
 
-        // Builds a query using FIRST_VALUE and LAST_VALUE window functions.
+        /// <summary>
+        /// Builds a query using LAG and LEAD window functions.
+        /// </summary>
+        /// <typeparam name="TProfile">
+        /// Database provider profile type.
+        /// </typeparam>
+        /// <param name="queryBuilder">
+        /// Query builder configured with a profile that supports window functions.
+        /// </param>
+        /// <returns>
+        /// Generated SQL query.
+        /// </returns>
         private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
-            where TProfile : IDatabaseProviderProfile
+            where TProfile : IDatabaseProviderProfile, IWindowFunctionFeature
         {
             return queryBuilder
                 .From<JoinOrder>(alias: "o")
@@ -43,15 +56,15 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
                     o.UserId,
                     o.Total
                 })
-                .SelectFirstValue<JoinOrder>(
-                    expression: o => o.Total,
-                    alias: "FirstOrderTotal",
+                .SelectLag(
+                    (JoinOrder o) => o.Total,
+                    alias: "OrderRank",
                     windowBuilder: window => window
                         .PartitionBy<JoinOrder>(o => o.UserId)
-                        .OrderBy<JoinOrder>(o => o.Id))
-                .SelectLastValue<JoinOrder>(
-                    expression: o => o.Total,
-                    alias: "LastOrderTotal",
+                        .OrderBy<JoinOrder>(o => o.Total))
+                .SelectLead(
+                    (JoinOrder o) => o.Total,
+                    alias: "NextOrderTotal",
                     windowBuilder: window => window
                         .PartitionBy<JoinOrder>(o => o.UserId)
                         .OrderBy<JoinOrder>(o => o.Id))

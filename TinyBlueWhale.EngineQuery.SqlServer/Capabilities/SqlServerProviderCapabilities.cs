@@ -24,9 +24,6 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Capabilities
         }      
 
         /// <inheritdoc />
-        public bool SupportsWindowFunctions => true;
-
-        /// <inheritdoc />
         public bool SupportsLateralJoins => true;
 
         /// <inheritdoc />
@@ -34,11 +31,5 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Capabilities
 
         /// <inheritdoc />
         public bool SupportsExcept => true;
-
-        /// <inheritdoc />
-        public bool SupportsOffsetFetchPagination => _version.IsAtLeast(11, 0);
-
-        /// <inheritdoc />
-        public bool SupportsLimitOffsetPagination => false;
     }
 }

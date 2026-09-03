@@ -97,7 +97,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a LAG window function projection to the current query.
         /// </summary>
-        public TBuilder SelectLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset)        
         {
             Components.WindowFunctionProjectionBuilder.AddLag(expression, alias, windowBuilder, offset);
 
@@ -107,7 +107,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a LEAD window function projection to the current query.
         /// </summary>
-        public TBuilder SelectLead<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyLead<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset)
         {
             Components.WindowFunctionProjectionBuilder.AddLead(expression, alias, windowBuilder, offset);
 
@@ -117,7 +117,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a FIRST_VALUE window function projection to the current query.
         /// </summary>
-        public TBuilder SelectFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
             Components.WindowFunctionProjectionBuilder.AddFirstValue(expression, alias, windowBuilder);
 
@@ -127,7 +127,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a LAST_VALUE window function projection to the current query.
         /// </summary>
-        public TBuilder SelectLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
             Components.WindowFunctionProjectionBuilder.AddLastValue(expression, alias, windowBuilder);
 
@@ -137,7 +137,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds an NTILE window function projection to the current query.
         /// </summary>
-        public TBuilder SelectNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
             Components.WindowFunctionProjectionBuilder.AddNtile(buckets, alias, windowBuilder);
 
@@ -147,7 +147,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a ROW_NUMBER window function projection to the current query.
         /// </summary>
-        public TBuilder SelectRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
             Components.WindowFunctionProjectionBuilder.AddRankingFunction(QueryWindowFunction.RowNumber, alias, windowBuilder);
 
@@ -157,7 +157,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a RANK window function projection to the current query.
         /// </summary>
-        public TBuilder SelectRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
             Components.WindowFunctionProjectionBuilder.AddRankingFunction(QueryWindowFunction.Rank, alias, windowBuilder);
 
@@ -167,7 +167,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a DENSE_RANK window function projection to the current query.
         /// </summary>
-        public TBuilder SelectDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
         {
             Components.WindowFunctionProjectionBuilder.AddRankingFunction(QueryWindowFunction.DenseRank, alias, windowBuilder);
 

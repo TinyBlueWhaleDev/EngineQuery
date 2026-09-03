@@ -1,10 +1,12 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Extensions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
 
-namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions
 {
 
     /// <summary>
@@ -34,7 +36,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
 
         // Builds a query using ranking window functions.
         private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
-            where TProfile : IDatabaseProviderProfile
+            where TProfile : IDatabaseProviderProfile, IWindowFunctionFeature
         {
             return queryBuilder
                 .From<JoinOrder>(alias: "o")

@@ -30,9 +30,6 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Capabilities
         }        
 
         /// <inheritdoc />
-        public bool SupportsWindowFunctions => _version.IsAtLeast(8, 4);
-
-        /// <inheritdoc />
         public bool SupportsLateralJoins => _version.IsAtLeast(9, 3);
 
         /// <inheritdoc />
@@ -40,11 +37,5 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Capabilities
 
         /// <inheritdoc />
         public bool SupportsExcept => true;
-
-        /// <inheritdoc />
-        public bool SupportsOffsetFetchPagination => false;
-
-        /// <inheritdoc />
-        public bool SupportsLimitOffsetPagination => true;
     }
 }

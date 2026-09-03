@@ -1,4 +1,5 @@
 ﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
+using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions;
 
 //BasicSelectQueryValidator.Run();
 //TableAliasQueryValidator.Run();
@@ -23,18 +24,12 @@
 //InSubqueryQueryValidator.Run();
 //NotExistsQueryValidator.Run();
 //DerivedTableQueryValidator.Run();
-CommonTableExpressionQueryValidator.Run();
 //UnionQueryValidator.Run();
 //UnionAllQueryValidator.Run();
-//RowNumberWindowFunctionQueryValidator.Run();
 //DistinctQueryValidator.Run();
-//RankingWindowFunctionQueryValidator.Run();
 //IntersectExceptQueryValidator.Run();
 //ApplyLateralJoinQueryValidator.Run();
-RecursiveCommonTableExpressionQueryValidator.Run();
 //AdvancedWindowFunctionQueryValidator.Run();
-//FirstLastValueWindowFunctionQueryValidator.Run();
-//NtileWindowFunctionQueryValidator.Run();
 //ProviderCapabilityQueryValidator.Run();
 //DependencyInjectionQueryValidator.Run();
 //AggregateComputedExpressionQueryValidator.Run();
@@ -45,3 +40,24 @@ RecursiveCommonTableExpressionQueryValidator.Run();
 //InsertCommandQueryValidator.Run();
 //UpdateCommandQueryValidator.Run();
 //DeleteCommandQueryValidator.Run();
+
+#region Pagination
+
+#endregion
+
+#region Common Table Expressions
+
+//CommonTableExpressionQueryValidator.Run();
+//RecursiveCommonTableExpressionQueryValidator.Run();
+
+#endregion
+
+#region Window Functions
+
+//RowNumberWindowFunctionQueryValidator.Run();
+//RankingWindowFunctionQueryValidator.Run();
+//LagLeadWindowFunctionQueryValidator.Run();
+//FirstLastValueWindowFunctionQueryValidator.Run();
+//NtileWindowFunctionQueryValidator.Run();
+
+#endregion

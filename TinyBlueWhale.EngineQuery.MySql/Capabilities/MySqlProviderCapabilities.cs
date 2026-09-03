@@ -25,9 +25,6 @@ namespace TinyBlueWhale.EngineQuery.MySql.Capabilities
         }
 
         /// <inheritdoc />
-        public bool SupportsWindowFunctions => _version.IsAtLeast(8, 0);
-
-        /// <inheritdoc />
         public bool SupportsLateralJoins => _version.IsAtLeast(8, 0, 14);
 
         /// <inheritdoc />
@@ -35,11 +32,6 @@ namespace TinyBlueWhale.EngineQuery.MySql.Capabilities
 
         /// <inheritdoc />
         public bool SupportsExcept => _version.IsAtLeast(8, 0, 31);
-
-        /// <inheritdoc />
-        public bool SupportsOffsetFetchPagination => false;
-
-        /// <inheritdoc />
-        public bool SupportsLimitOffsetPagination => true;
+        
     }
 }

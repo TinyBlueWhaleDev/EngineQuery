@@ -19,12 +19,10 @@ namespace TinyBlueWhale.EngineQuery.Tests.Versioning
                 DatabaseProviderVersion.Create(5, 7));
 
             Assert.Multiple(() =>
-            {                
-                Assert.That(capabilities.SupportsWindowFunctions, Is.False);
+            {                                
                 Assert.That(capabilities.SupportsLateralJoins, Is.False);
                 Assert.That(capabilities.SupportsIntersect, Is.False);
-                Assert.That(capabilities.SupportsExcept, Is.False);
-                Assert.That(capabilities.SupportsLimitOffsetPagination, Is.True);
+                Assert.That(capabilities.SupportsExcept, Is.False);                
             });
         }
 
@@ -35,38 +33,10 @@ namespace TinyBlueWhale.EngineQuery.Tests.Versioning
                 DatabaseProviderVersion.Create(8, 0, 31));
 
             Assert.Multiple(() =>
-            {                
-                Assert.That(capabilities.SupportsWindowFunctions, Is.True);
+            {                                
                 Assert.That(capabilities.SupportsLateralJoins, Is.True);
                 Assert.That(capabilities.SupportsIntersect, Is.True);
-                Assert.That(capabilities.SupportsExcept, Is.True);
-                Assert.That(capabilities.SupportsLimitOffsetPagination, Is.True);
-            });
-        }
-
-        [Test]
-        public void SqlServer2008_Should_Not_Support_OffsetFetch_Pagination()
-        {
-            var capabilities = new SqlServerProviderCapabilities(
-                DatabaseProviderVersion.Create(10, 0));
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(capabilities.SupportsOffsetFetchPagination, Is.False);
-                Assert.That(capabilities.SupportsLimitOffsetPagination, Is.False);
-            });
-        }
-
-        [Test]
-        public void SqlServer2012_Should_Support_OffsetFetch_Pagination()
-        {
-            var capabilities = new SqlServerProviderCapabilities(
-                DatabaseProviderVersion.Create(11, 0));
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(capabilities.SupportsOffsetFetchPagination, Is.True);
-                Assert.That(capabilities.SupportsLimitOffsetPagination, Is.False);
+                Assert.That(capabilities.SupportsExcept, Is.True);                
             });
         }
 
