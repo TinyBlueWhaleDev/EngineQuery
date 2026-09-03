@@ -40,7 +40,8 @@ namespace TinyBlueWhale.EngineQuery.MySql.Composition
                     ApplyClauseBuilderFactory = subqueryCompiler =>
                         new MySqlApplyClauseBuilder(subqueryCompiler),
                     InsertClauseBuilderFactory = () => new MySqlInsertClauseBuilder(),
-                    PaginationStrategy = featureComposition.PaginationStrategy
+                    PaginationStrategy = featureComposition.PaginationStrategy,
+                    CteStrategy = featureComposition.CteStrategy
                 });
         }
     }

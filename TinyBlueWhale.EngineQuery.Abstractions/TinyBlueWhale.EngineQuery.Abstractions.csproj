@@ -10,6 +10,9 @@
     <None Include="..\README.md" Pack="true" PackagePath="\" />
 
     <InternalsVisibleTo Include="TinyBlueWhale.EngineQuery.Core" />
+    <InternalsVisibleTo Include="TinyBlueWhale.EngineQuery.SqlServer" />
+    <InternalsVisibleTo Include="TinyBlueWhale.EngineQuery.PostgreSql" />
+    <InternalsVisibleTo Include="TinyBlueWhale.EngineQuery.MySql" />
   </ItemGroup>
 
 </Project>

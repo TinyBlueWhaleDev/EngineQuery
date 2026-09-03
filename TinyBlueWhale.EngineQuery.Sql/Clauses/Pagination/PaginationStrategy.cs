@@ -1,6 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination
 {

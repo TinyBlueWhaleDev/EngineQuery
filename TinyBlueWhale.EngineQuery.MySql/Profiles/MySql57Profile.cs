@@ -2,7 +2,7 @@
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.MySql.Profiles.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 using TinyBlueWhale.EngineQuery.Sql.Profiles;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Profiles

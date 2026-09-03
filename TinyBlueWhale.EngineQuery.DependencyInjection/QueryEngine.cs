@@ -42,35 +42,7 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection
         {
             return _innerQueryBuilder.FromSubquery<TDerived, TSubqueryRoot>(alias, subqueryBuilder);
         }
-
-        /// <inheritdoc />
-        public IQueryBuilder<TProfile> With<TCte, TSubqueryRoot>(
-            string name,
-            Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> cteBuilder)
-        {
-            _innerQueryBuilder.With<TCte, TSubqueryRoot>(name, cteBuilder);
-            return this;
-        }
-
-        /// <inheritdoc />
-        public IQueryCommandBuilder<TCte, TProfile> FromCte<TCte>(string name, string? alias = null)
-        {
-            return _innerQueryBuilder.FromCte<TCte>(name, alias);
-        }
-
-        /// <inheritdoc />
-        public IQueryBuilder<TProfile> WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(
-            string name,
-            Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TBaseRoot, TProfile>> baseQueryBuilder,
-            Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TRecursiveRoot, TProfile>> recursiveQueryBuilder)
-        {
-            _innerQueryBuilder.WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(
-                name,
-                baseQueryBuilder,
-                recursiveQueryBuilder);
-            return this;
-        }
-
+       
         /// <inheritdoc />
         public IInsertCommandBuilder<T, TProfile> InsertInto<T>(string tableName)
         {

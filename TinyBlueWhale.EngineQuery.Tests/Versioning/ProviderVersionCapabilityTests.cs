@@ -19,9 +19,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Versioning
                 DatabaseProviderVersion.Create(5, 7));
 
             Assert.Multiple(() =>
-            {
-                Assert.That(capabilities.SupportsCommonTableExpressions, Is.False);
-                Assert.That(capabilities.SupportsRecursiveCommonTableExpressions, Is.False);
+            {                
                 Assert.That(capabilities.SupportsWindowFunctions, Is.False);
                 Assert.That(capabilities.SupportsLateralJoins, Is.False);
                 Assert.That(capabilities.SupportsIntersect, Is.False);
@@ -37,9 +35,7 @@ namespace TinyBlueWhale.EngineQuery.Tests.Versioning
                 DatabaseProviderVersion.Create(8, 0, 31));
 
             Assert.Multiple(() =>
-            {
-                Assert.That(capabilities.SupportsCommonTableExpressions, Is.True);
-                Assert.That(capabilities.SupportsRecursiveCommonTableExpressions, Is.True);
+            {                
                 Assert.That(capabilities.SupportsWindowFunctions, Is.True);
                 Assert.That(capabilities.SupportsLateralJoins, Is.True);
                 Assert.That(capabilities.SupportsIntersect, Is.True);

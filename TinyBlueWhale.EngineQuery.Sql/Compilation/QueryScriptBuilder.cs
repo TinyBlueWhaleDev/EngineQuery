@@ -1,6 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Clauses;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Compilation
@@ -54,7 +55,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         IOptionalSqlClauseBuilder whereClauseBuilder,
         IReadOnlyList<IOptionalSqlClauseBuilder> bodyClauseBuilders,
         SetOperationClauseBuilder setOperationClauseBuilder,
-        CteClauseBuilder cteClauseBuilder) : IQueryScriptBuilder
+        CteClauseBuilder? cteClauseBuilder) : IQueryScriptBuilder
     {
         private readonly IRequiredSqlClauseBuilder _selectClauseBuilder = selectClauseBuilder ?? throw new ArgumentNullException(nameof(selectClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _fromClauseBuilder = fromClauseBuilder ?? throw new ArgumentNullException(nameof(fromClauseBuilder));
@@ -64,7 +65,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         private readonly IOptionalSqlClauseBuilder _whereClauseBuilder = whereClauseBuilder ?? throw new ArgumentNullException(nameof(whereClauseBuilder));
         private readonly IReadOnlyList<IOptionalSqlClauseBuilder> _bodyClauseBuilders = bodyClauseBuilders ?? throw new ArgumentNullException(nameof(bodyClauseBuilders));
         private readonly SetOperationClauseBuilder _setOperationClauseBuilder = setOperationClauseBuilder ?? throw new ArgumentNullException(nameof(setOperationClauseBuilder));
-        private readonly CteClauseBuilder _cteClauseBuilder = cteClauseBuilder ?? throw new ArgumentNullException(nameof(cteClauseBuilder));
+        private readonly CteClauseBuilder? _cteClauseBuilder = cteClauseBuilder;
 
         /// <summary>
         /// Builds SQL command text for the specified query definition.
@@ -138,6 +139,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             if (CteClauseBuilder.CanBuild(queryDefinition))
             {
+                if (_cteClauseBuilder is null)
+                    throw new InvalidOperationException("The current provider profile does not provide a common table expression strategy.");
+
                 commandText = _cteClauseBuilder.Build(queryDefinition, context) +
                               Environment.NewLine +
                               commandText;

@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Capabilities
@@ -23,12 +23,6 @@ namespace TinyBlueWhale.EngineQuery.MySql.Capabilities
             : this(DefaultVersion)
         {
         }
-
-        /// <inheritdoc />
-        public bool SupportsCommonTableExpressions => _version.IsAtLeast(8, 0);
-
-        /// <inheritdoc />
-        public bool SupportsRecursiveCommonTableExpressions => _version.IsAtLeast(8, 0);
 
         /// <inheritdoc />
         public bool SupportsWindowFunctions => _version.IsAtLeast(8, 0);

@@ -1,6 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Clauses;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
@@ -75,8 +76,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
             var orderByClauseBuilder = new OrderByClauseBuilder();
             var setOperationClauseBuilder = new SetOperationClauseBuilder(subqueryCompiler);
 
-            var cteClauseBuilder = options.CteClauseBuilderFactory?.Invoke(subqueryCompiler)
-                ?? new CteClauseBuilder(subqueryCompiler);
+            var cteClauseBuilder = options.CteStrategy is not null
+                ? new CteClauseBuilder(subqueryCompiler, options.CteStrategy)
+                : null;
 
             var bodyClauseBuilders = new List<IOptionalSqlClauseBuilder>
             {

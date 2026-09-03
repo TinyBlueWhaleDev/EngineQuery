@@ -1,7 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
-using TinyBlueWhale.EngineQuery.SqlServer.Clauses.Pagination.Strategies;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
+using TinyBlueWhale.EngineQuery.SqlServer.Clauses.Strategies.Pagination;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Profiles
 {

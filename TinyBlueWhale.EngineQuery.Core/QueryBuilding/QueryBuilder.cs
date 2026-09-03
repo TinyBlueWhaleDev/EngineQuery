@@ -143,7 +143,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Registers a common table expression that can be used as a query source.
         /// </summary>
-        public IQueryBuilder<TProfile> With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> cteBuilder)
+        IQueryBuilder<TProfile> IQueryBuilder<TProfile>.With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> cteBuilder)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentNullException.ThrowIfNull(cteBuilder);
@@ -174,7 +174,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Creates a query command builder using a common table expression as the root source.
         /// </summary>
-        public IQueryCommandBuilder<TCte, TProfile> FromCte<TCte>(string name, string? alias = null)
+        IQueryCommandBuilder<TCte, TProfile> IQueryBuilder<TProfile>.FromCte<TCte>(string name, string? alias)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -234,7 +234,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when the recursive common table expression builders return unsupported query command builder instances.
         /// </exception>
-        public IQueryBuilder<TProfile> WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
+        IQueryBuilder<TProfile> IQueryBuilder<TProfile>.WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
             Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TBaseRoot, TProfile>> baseQueryBuilder,
             Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TRecursiveRoot, TProfile>> recursiveQueryBuilder)
         {

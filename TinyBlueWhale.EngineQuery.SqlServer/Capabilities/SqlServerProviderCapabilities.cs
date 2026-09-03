@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.SqlServer.Capabilities
@@ -21,13 +21,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Capabilities
         public SqlServerProviderCapabilities()
             : this(DefaultVersion)
         {
-        }
-
-        /// <inheritdoc />
-        public bool SupportsCommonTableExpressions => true;
-
-        /// <inheritdoc />
-        public bool SupportsRecursiveCommonTableExpressions => true;
+        }      
 
         /// <inheritdoc />
         public bool SupportsWindowFunctions => true;

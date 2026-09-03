@@ -11,6 +11,8 @@
     <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Sql\TinyBlueWhale.EngineQuery.Sql.csproj" />
 
     <InternalsVisibleTo Include="TinyBlueWhale.EngineQuery.DependencyInjection" />
+
+    <ProjectReference Include="..\TinyBlueWhale.EngineQuery.Generators\TinyBlueWhale.EngineQuery.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     
   </ItemGroup>
 

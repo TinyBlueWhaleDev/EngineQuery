@@ -1,5 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.SqlServer.Clauses.Pagination.Strategies;
-using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
+﻿using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
 
 namespace TinyBlueWhale.EngineQuery.Tests.Providers.SqlServer
 {

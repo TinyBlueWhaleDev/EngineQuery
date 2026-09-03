@@ -1,8 +1,9 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles.Interfaces;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 using TinyBlueWhale.EngineQuery.Sql.Profiles;
 
 namespace TinyBlueWhale.EngineQuery.PostgreSql.Profiles
@@ -22,10 +23,16 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Profiles
         IIntersectFeature,
         IExceptFeature,
         ILimitOffsetPaginationFeature,
-        IPaginationStrategyProvider
+        IPaginationStrategyProvider,
+        ICTEStrategyProvider
     {
         /// <inheritdoc />
         public override DatabaseProviderVersion Version { get; } = DatabaseProviderVersion.Create(8, 4);
+
+        public ICTEStrategy CreateCteStrategy()
+        {
+            return new CteStrategy();
+        }
 
         public IPaginationStrategy CreatePaginationStrategy()
         {

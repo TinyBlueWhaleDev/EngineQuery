@@ -1,4 +1,4 @@
-
+﻿
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
     /// <summary>
@@ -6,15 +6,6 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// </summary>
     public interface IDatabaseProviderCapabilities
     {
-        /// <summary>
-        /// Gets whether the provider supports common table expressions.
-        /// </summary>
-        bool SupportsCommonTableExpressions { get; }
-
-        /// <summary>
-        /// Gets whether the provider supports recursive common table expressions.
-        /// </summary>
-        bool SupportsRecursiveCommonTableExpressions { get; }
 
         /// <summary>
         /// Gets whether the provider supports SQL window functions.

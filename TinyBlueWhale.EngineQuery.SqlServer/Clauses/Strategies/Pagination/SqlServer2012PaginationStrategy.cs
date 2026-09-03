@@ -2,7 +2,7 @@
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 
-namespace TinyBlueWhale.EngineQuery.SqlServer.Clauses.Pagination.Strategies
+namespace TinyBlueWhale.EngineQuery.SqlServer.Clauses.Strategies.Pagination
 {
     /// <summary>
     /// Provides SQL Server 2012 and later pagination behavior.

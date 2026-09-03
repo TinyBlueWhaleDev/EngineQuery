@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.PostgreSql.Capabilities
@@ -27,13 +27,7 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Capabilities
         public PostgreSqlProviderCapabilities(DatabaseProviderVersion version)
         {
             _version = version ?? throw new ArgumentNullException(nameof(version));
-        }
-
-        /// <inheritdoc />
-        public bool SupportsCommonTableExpressions => _version.IsAtLeast(8, 4);
-
-        /// <inheritdoc />
-        public bool SupportsRecursiveCommonTableExpressions => _version.IsAtLeast(8, 4);
+        }        
 
         /// <inheritdoc />
         public bool SupportsWindowFunctions => _version.IsAtLeast(8, 4);

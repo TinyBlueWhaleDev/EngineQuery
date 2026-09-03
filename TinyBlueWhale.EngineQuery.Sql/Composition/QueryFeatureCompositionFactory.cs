@@ -1,5 +1,5 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Composition
 {
@@ -25,6 +25,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
             {
                 PaginationStrategy = profile is IPaginationStrategyProvider paginationStrategyProvider
                     ? paginationStrategyProvider.CreatePaginationStrategy()
+                    : null,
+
+                CteStrategy = profile is ICTEStrategyProvider cteStrategyProvider
+                    ? cteStrategyProvider.CreateCteStrategy()
                     : null
             };
         }

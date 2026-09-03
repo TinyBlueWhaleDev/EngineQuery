@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 
@@ -58,13 +58,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Validation
         }
 
         private void ValidateCurrentQuery(CompiledQueryDefinition queryDefinition)
-        {
-            if (queryDefinition.CteDefinitions.Count > 0 && !_providerCapabilities.SupportsCommonTableExpressions)
-                throw new NotSupportedException("Common table expressions are not supported by the current provider.");
-
-            if (queryDefinition.CteDefinitions.Any(cteDefinition => cteDefinition.IsRecursive) && !_providerCapabilities.SupportsRecursiveCommonTableExpressions)
-                throw new NotSupportedException("Recursive common table expressions are not supported by the current provider.");
-
+        {            
             if (queryDefinition.WindowFunctionDefinitions.Count > 0 && !_providerCapabilities.SupportsWindowFunctions)
                 throw new NotSupportedException("Window functions are not supported by the current provider.");
 

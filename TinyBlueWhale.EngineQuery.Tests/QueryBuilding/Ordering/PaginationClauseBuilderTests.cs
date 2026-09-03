@@ -3,7 +3,7 @@ using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
 namespace TinyBlueWhale.EngineQuery.Tests.QueryBuilding.Ordering
 {

@@ -29,10 +29,9 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Composition
                 databaseDialect,
                 new QueryScriptBuilderOptions
                 {
-                    CteClauseBuilderFactory = subqueryCompiler =>
-                        new SqlServerCteClauseBuilder(subqueryCompiler),
                     InsertClauseBuilderFactory = () => new SqlServerInsertClauseBuilder(),
-                    PaginationStrategy = featureComposition.PaginationStrategy
+                    PaginationStrategy = featureComposition.PaginationStrategy,
+                    CteStrategy = featureComposition.CteStrategy
                 });
         }
     }

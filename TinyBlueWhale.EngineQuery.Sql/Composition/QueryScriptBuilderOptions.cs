@@ -1,6 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Sql.Clauses;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
-using TinyBlueWhale.EngineQuery.Sql.Interfaces.ClauseStrategies;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Composition
 {
@@ -24,6 +25,15 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
         public IPaginationStrategy? PaginationStrategy { get; init; }
 
         /// <summary>
+        /// Gets or initializes the common table expression strategy associated with the provider profile.
+        /// </summary>
+        /// <remarks>
+        /// A <see langword="null"/> value indicates that the configured provider profile
+        /// does not expose common table expression support.
+        /// </remarks>
+        public ICTEStrategy? CteStrategy { get; init; }
+
+        /// <summary>
         /// Gets or initializes the optional factory used to create the INSERT clause builder.
         /// </summary>
         /// <remarks>
@@ -38,14 +48,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
         /// <remarks>
         /// When this value is <see langword="null"/>, the default <see cref="ApplyClauseBuilder"/> is used.
         /// </remarks>
-        public Func<SubqueryCompiler, ApplyClauseBuilder>? ApplyClauseBuilderFactory { get; init; }
-
-        /// <summary>
-        /// Gets or initializes the optional factory used to create the CTE clause builder.
-        /// </summary>
-        /// <remarks>
-        /// When this value is <see langword="null"/>, the default <see cref="CteClauseBuilder"/> is used.
-        /// </remarks>
-        public Func<SubqueryCompiler, CteClauseBuilder>? CteClauseBuilderFactory { get; init; }
+        public Func<SubqueryCompiler, ApplyClauseBuilder>? ApplyClauseBuilderFactory { get; init; }        
     }
 }

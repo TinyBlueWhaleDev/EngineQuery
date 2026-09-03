@@ -40,7 +40,8 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Composition
                     ApplyClauseBuilderFactory = subqueryCompiler =>
                         new PostgreSqlApplyClauseBuilder(subqueryCompiler),
                     InsertClauseBuilderFactory = () => new PostgreSqlInsertClauseBuilder(),
-                    PaginationStrategy = featureComposition.PaginationStrategy
+                    PaginationStrategy = featureComposition.PaginationStrategy,
+                    CteStrategy = featureComposition.CteStrategy
                 });
         }
     }

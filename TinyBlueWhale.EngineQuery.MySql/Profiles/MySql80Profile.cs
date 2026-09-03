@@ -1,5 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Profiles
 {
@@ -13,9 +15,15 @@ namespace TinyBlueWhale.EngineQuery.MySql.Profiles
     public class MySql80Profile : MySql57Profile,
         ICTEFeature,
         IRecursiveCTEFeature,
-        IWindowFunctionFeature
+        IWindowFunctionFeature,
+        ICTEStrategyProvider
     {
         /// <inheritdoc />
         public override DatabaseProviderVersion Version { get; } = DatabaseProviderVersion.Create(8, 0);
+
+        public ICTEStrategy CreateCteStrategy()
+        {
+            return new CteStrategy();
+        }
     }
 }
