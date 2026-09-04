@@ -76,19 +76,22 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
 
             var bodyClauseBuilders = new List<IOptionalSqlClauseBuilder>
             {
-                joinClauseBuilder,
-                whereClauseBuilder,
-                groupByClauseBuilder,
-                havingClauseBuilder,
-                orderByClauseBuilder
+                joinClauseBuilder
             };
-
-            if (featureComposition.PaginationStrategy is not null)
-                bodyClauseBuilders.Add(new PaginationClauseBuilder(featureComposition.PaginationStrategy));
 
             if (featureComposition.LateralJoinStrategy is not null)
                 bodyClauseBuilders.Add(new ApplyClauseBuilder(subqueryCompiler, featureComposition.LateralJoinStrategy));
 
+            bodyClauseBuilders.AddRange(new IOptionalSqlClauseBuilder[]
+            {
+                whereClauseBuilder,
+                groupByClauseBuilder,
+                havingClauseBuilder,
+                orderByClauseBuilder
+            });
+
+            if (featureComposition.PaginationStrategy is not null)
+                bodyClauseBuilders.Add(new PaginationClauseBuilder(featureComposition.PaginationStrategy));
 
             scriptBuilder = new QueryScriptBuilder(
                 selectClauseBuilder,
