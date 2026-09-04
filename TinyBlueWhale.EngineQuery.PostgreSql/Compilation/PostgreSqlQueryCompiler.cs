@@ -1,7 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
-using TinyBlueWhale.EngineQuery.PostgreSql.Composition;
 using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles.Interfaces;
@@ -32,7 +31,7 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
             QueryFeatureComposition featureComposition)
             : base(
                 databaseDialect,
-                PostgreSqlQueryCompilerFactory.CreateScriptBuilder(
+                QueryCompilerFactory.CreateScriptBuilder(
                     databaseDialect,
                     featureComposition))
         {

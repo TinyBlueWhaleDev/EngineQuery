@@ -20,26 +20,23 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
     public static class QueryCompilerFactory
     {
         /// <summary>
-        /// Creates a SQL script builder using the specified provider options.
+        /// Creates a query script builder using the specified database dialect and query feature composition.
         /// </summary>
         /// <param name="databaseDialect">
-        /// SQL database dialect used by helper services and compilation context.
+        /// Database dialect used to render provider-specific SQL syntax.
         /// </param>
-        /// <param name="options">
-        /// Provider-specific query script builder options.
+        /// <param name="featureComposition">
+        /// Query feature strategies associated with the active provider profile.
         /// </param>
         /// <returns>
-        /// Configured SQL script builder.
+        /// Configured query script builder.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="databaseDialect"/> or <paramref name="options"/> is <see langword="null"/>.
-        /// </exception>
         public static IQueryScriptBuilder CreateScriptBuilder(
             ISqlDatabaseDialect databaseDialect,
-            QueryScriptBuilderOptions options)
+            QueryFeatureComposition featureComposition)
         {
             ArgumentNullException.ThrowIfNull(databaseDialect);
-            ArgumentNullException.ThrowIfNull(options);
+            ArgumentNullException.ThrowIfNull(featureComposition);
 
             var columnReferenceBuilder = new SqlColumnReferenceBuilder(databaseDialect);
             var parameterRewriter = new SqlParameterRewriter();
@@ -54,7 +51,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
 
             var selectClauseBuilder = new SelectClauseBuilder(columnReferenceBuilder);
 
-            var insertClauseBuilder = new InsertClauseBuilder(options.InsertIdentityRetrievalStrategy);
+            var insertClauseBuilder = new InsertClauseBuilder(featureComposition.InsertIdentityRetrievalStrategy);
 
             var updateClauseBuilder = new UpdateClauseBuilder();
             var deleteClauseBuilder = new DeleteClauseBuilder();
@@ -73,8 +70,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
             var orderByClauseBuilder = new OrderByClauseBuilder();
             var setOperationClauseBuilder = new SetOperationClauseBuilder(subqueryCompiler);
 
-            var cteClauseBuilder = options.CteStrategy is not null
-                ? new CteClauseBuilder(subqueryCompiler, options.CteStrategy)
+            var cteClauseBuilder = featureComposition.CteStrategy is not null
+                ? new CteClauseBuilder(subqueryCompiler, featureComposition.CteStrategy)
                 : null;
 
             var bodyClauseBuilders = new List<IOptionalSqlClauseBuilder>
@@ -86,11 +83,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
                 orderByClauseBuilder
             };
 
-            if (options.PaginationStrategy is not null)
-                bodyClauseBuilders.Add(new PaginationClauseBuilder(options.PaginationStrategy));
+            if (featureComposition.PaginationStrategy is not null)
+                bodyClauseBuilders.Add(new PaginationClauseBuilder(featureComposition.PaginationStrategy));
 
-            if (options.LateralJoinStrategy is not null)
-                bodyClauseBuilders.Add(new ApplyClauseBuilder(subqueryCompiler, options.LateralJoinStrategy));
+            if (featureComposition.LateralJoinStrategy is not null)
+                bodyClauseBuilders.Add(new ApplyClauseBuilder(subqueryCompiler, featureComposition.LateralJoinStrategy));
 
 
             scriptBuilder = new QueryScriptBuilder(

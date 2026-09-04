@@ -3,7 +3,6 @@ using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Composition;
-using TinyBlueWhale.EngineQuery.SqlServer.Composition;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles.Interfaces;
@@ -45,7 +44,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
             QueryFeatureComposition featureComposition)
             : base(
                 databaseDialect,
-                SqlServerQueryCompilerFactory.CreateScriptBuilder(
+                QueryCompilerFactory.CreateScriptBuilder(
                     databaseDialect,
                     featureComposition))
         {

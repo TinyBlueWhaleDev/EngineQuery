@@ -1,7 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
-using TinyBlueWhale.EngineQuery.MySql.Composition;
 using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.MySql.Profiles;
 using TinyBlueWhale.EngineQuery.MySql.Profiles.Interfaces;
@@ -32,7 +31,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Compilation
             QueryFeatureComposition featureComposition)
             : base(
                 databaseDialect,
-                MySqlQueryCompilerFactory.CreateScriptBuilder(
+                QueryCompilerFactory.CreateScriptBuilder(
                     databaseDialect,
                     featureComposition))
         {
