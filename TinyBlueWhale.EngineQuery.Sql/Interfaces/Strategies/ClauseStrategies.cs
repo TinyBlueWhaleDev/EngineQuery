@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Commands;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies

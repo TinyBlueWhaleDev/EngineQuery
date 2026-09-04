@@ -1,4 +1,5 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -38,18 +39,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
 
-            var rootSource = queryDefinition.SourceDefinitions.TryGetValue(queryDefinition.EntityType, out var sourceDefinition)
-                ? sourceDefinition
-                : null;
-
-            if (rootSource is not null)
-                return $"FROM {BuildQuerySourceReference(rootSource, context)}";
-
-            var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, queryDefinition.TableName, queryDefinition.SchemaName);
-
-            return string.IsNullOrWhiteSpace(queryDefinition.TableAlias)
-                ? $"FROM {tableName}"
-                : $"FROM {tableName} AS {context.DatabaseDialect.EscapeIdentifier(queryDefinition.TableAlias)}";
+            return $"FROM {BuildQuerySourceReference(queryDefinition.RootSource, context)}";
         }
 
         /// <summary>
@@ -82,7 +72,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
             if (sourceDefinition.IsTable)
             {
-                var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, sourceDefinition.TableName!, sourceDefinition.SchemaName);
+                var tableName = SqlIdentifierHelper.BuildTableReference(
+                    context.DatabaseDialect,
+                    sourceDefinition.TableName!,
+                    sourceDefinition.SchemaName);
 
                 return string.IsNullOrWhiteSpace(sourceDefinition.TableAlias)
                     ? tableName

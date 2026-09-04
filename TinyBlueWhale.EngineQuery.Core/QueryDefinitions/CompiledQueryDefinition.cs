@@ -1,5 +1,14 @@
 ﻿
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Commands;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Cte;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Filtering;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Grouping;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Ordering;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Pagination;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Projection;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.SetOperations;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
 {
@@ -18,21 +27,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public QueryCommandType CommandType { get; set; } = QueryCommandType.Select;
 
         /// <summary>
-        /// Gets or sets the optional database schema name associated with the root query source.
-        /// </summary>
-        public string? SchemaName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the source table name associated with the query.
-        /// </summary>
-        public required string TableName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the optional table alias used to qualify generated SQL column references.
-        /// </summary>
-        public string? TableAlias { get; set; }
-
-        /// <summary>
         /// Gets the SQL join definitions associated with the query.
         /// </summary>
         public List<QueryJoinDefinition> JoinDefinitions { get; } = [];
@@ -41,11 +35,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets the APPLY join definitions associated with the query.
         /// </summary>
         public List<QueryApplyDefinition> ApplyDefinitions { get; } = [];
-
-        /// <summary>
-        /// Gets or sets the property-to-column mapping used during SQL generation.
-        /// </summary>
-        public IReadOnlyDictionary<string, string> ColumnMappings { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Gets the selected columns included in the query projection.
@@ -77,7 +66,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// </summary>
         public bool IsDistinct { get; set; }
 
-        /// /// <summary>
+        /// <summary>
         /// Gets SQL window function projections associated with the query.
         /// </summary>
         public List<QueryWindowFunctionDefinition> WindowFunctionDefinitions { get; } = [];
@@ -98,14 +87,19 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         public List<QueryWhereCollectionDefinition> WhereCollectionDefinitions { get; } = [];
 
         /// <summary>
-        /// Gets the query sources inherited from an outer query scope.
+        /// Gets or sets the root query source associated with the current query scope.
         /// </summary>
-        public Dictionary<Type, QuerySourceDefinition> OuterSourceDefinitions { get; } = [];
+        public required QuerySourceDefinition RootSource { get; set; }
 
         /// <summary>
-        /// Gets the query sources available in the current SQL generation scope.
+        /// Gets the query sources available in the current query scope.
         /// </summary>
-        public Dictionary<Type, QuerySourceDefinition> SourceDefinitions { get; } = [];
+        public List<QuerySourceDefinition> Sources { get; } = [];
+
+        /// <summary>
+        /// Gets the query sources inherited from the outer query scope.
+        /// </summary>
+        public List<QuerySourceDefinition> OuterSources { get; } = [];
 
         /// <summary>
         /// Gets the SQL aggregate SELECT definitions associated with the query.
@@ -136,6 +130,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets computed SQL WHERE expressions associated with the query.
         /// </summary>
         public List<QueryWhereComputedExpressionDefinition> WhereComputedExpressionDefinitions { get; } = [];
+
         /// <summary>
         /// Gets the SQL GROUP BY definitions associated with the query.
         /// </summary>
@@ -155,11 +150,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions
         /// Gets or sets the pagination definition used to generate SQL paging syntax.
         /// </summary>
         public QueryPaginationDefinition Pagination { get; set; } = new();
-
-        /// <summary>
-        /// Gets or sets the root entity type associated with the query.
-        /// </summary>
-        public required Type EntityType { get; set; }
 
         /// <summary>
         /// Gets or sets whether selected columns should always be projected using CLR property aliases.

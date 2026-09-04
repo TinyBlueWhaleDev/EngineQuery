@@ -1,4 +1,5 @@
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Grouping;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;

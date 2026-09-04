@@ -1,5 +1,5 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Helpers
 {

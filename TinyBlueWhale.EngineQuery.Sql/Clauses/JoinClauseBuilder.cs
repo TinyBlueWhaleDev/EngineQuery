@@ -1,6 +1,8 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Core.Enums;
+using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
@@ -55,6 +57,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return string.Join(Environment.NewLine, joinClauses);
         }
 
+        // Builds a single JOIN clause.
         private static string BuildJoinClause(QueryJoinDefinition joinDefinition, QueryCompilationContext context)
         {
             var joinKeyword = joinDefinition.JoinType switch
@@ -64,19 +67,47 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                 _ => throw new NotSupportedException($"Join type '{joinDefinition.JoinType}' is not supported.")
             };
 
-            var tableReference = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, joinDefinition.TableName, joinDefinition.SchemaName);
-            var tableAlias = context.DatabaseDialect.EscapeIdentifier(joinDefinition.TableAlias);
+            var joinSource = joinDefinition.JoinSource;
+
+            if (string.IsNullOrWhiteSpace(joinSource.TableName))
+                throw new InvalidOperationException("JOIN source does not define a table name.");
+
+            if (string.IsNullOrWhiteSpace(joinSource.TableAlias))
+                throw new InvalidOperationException("JOIN source does not define a table alias.");
+
+            var tableReference = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, joinSource.TableName, joinSource.SchemaName);
+            var tableAlias = context.DatabaseDialect.EscapeIdentifier(joinSource.TableAlias);
             var joinCondition = BuildJoinCondition(joinDefinition, context);
 
             return $"{joinKeyword} {tableReference} AS {tableAlias} ON {joinCondition}";
         }
 
+        // Builds the complete JOIN condition.
         private static string BuildJoinCondition(QueryJoinDefinition joinDefinition, QueryCompilationContext context)
         {
-            return BuildJoinExpression(joinDefinition.JoinExpression.Body, joinDefinition, context);
+            var expressionScope = CreateExpressionScope(joinDefinition);
+
+            return BuildJoinExpression(joinDefinition.JoinExpression.Body, expressionScope, context);
         }
 
-        private static string BuildJoinExpression(Expression expression, QueryJoinDefinition joinDefinition, QueryCompilationContext context)
+        // Creates the expression scope associated with the JOIN lambda parameters.
+        private static QueryExpressionScope CreateExpressionScope(QueryJoinDefinition joinDefinition)
+        {
+            var parameters = joinDefinition.JoinExpression.Parameters;
+
+            if (parameters.Count != 2)
+                throw new InvalidOperationException("JOIN expressions must define exactly two source parameters.");
+
+            var expressionScope = new QueryExpressionScope();
+
+            expressionScope.Register(parameters[0], joinDefinition.Source);
+            expressionScope.Register(parameters[1], joinDefinition.JoinSource);
+
+            return expressionScope;
+        }
+
+        // Builds a JOIN boolean expression.
+        private static string BuildJoinExpression(Expression expression, QueryExpressionScope expressionScope, QueryCompilationContext context)
         {
             expression = SqlComputedExpressionParser.UnwrapConvertExpression(expression);
 
@@ -85,9 +116,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
             if (binaryExpression.NodeType is ExpressionType.AndAlso or ExpressionType.OrElse)
             {
-                var left = BuildJoinExpression(binaryExpression.Left, joinDefinition, context);
-
-                var right = BuildJoinExpression(binaryExpression.Right, joinDefinition, context);
+                var left = BuildJoinExpression(binaryExpression.Left, expressionScope, context);
+                var right = BuildJoinExpression(binaryExpression.Right, expressionScope, context);
 
                 var sqlOperator = binaryExpression.NodeType == ExpressionType.AndAlso
                     ? "AND"
@@ -97,14 +127,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             }
 
             var comparisonOperator = ResolveJoinComparisonOperator(binaryExpression.NodeType);
-
-            var leftColumn = BuildJoinColumnReference(binaryExpression.Left, joinDefinition, context);
-
-            var rightColumn = BuildJoinColumnReference(binaryExpression.Right, joinDefinition, context);
+            var leftColumn = BuildJoinColumnReference(binaryExpression.Left, expressionScope, context);
+            var rightColumn = BuildJoinColumnReference(binaryExpression.Right, expressionScope, context);
 
             return $"({leftColumn} {comparisonOperator} {rightColumn})";
         }
 
+        // Resolves the SQL comparison operator associated with a JOIN expression.
         private static string ResolveJoinComparisonOperator(ExpressionType expressionType)
         {
             return expressionType switch
@@ -115,12 +144,12 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                 ExpressionType.GreaterThanOrEqual => ">=",
                 ExpressionType.LessThan => "<",
                 ExpressionType.LessThanOrEqual => "<=",
-                _ => throw new NotSupportedException(
-                    $"Join operator '{expressionType}' is not supported.")
+                _ => throw new NotSupportedException($"Join operator '{expressionType}' is not supported.")
             };
         }
 
-        private static string BuildJoinColumnReference(Expression expression, QueryJoinDefinition joinDefinition, QueryCompilationContext context)
+        // Builds a qualified column reference from the source bound to the expression parameter.
+        private static string BuildJoinColumnReference(Expression expression, QueryExpressionScope expressionScope, QueryCompilationContext context)
         {
             expression = SqlComputedExpressionParser.UnwrapConvertExpression(expression);
 
@@ -130,29 +159,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             if (memberExpression.Expression is not ParameterExpression parameterExpression)
                 throw new NotSupportedException($"Join expression member '{expression}' is not supported.");
 
+            var source = expressionScope.Resolve(parameterExpression);
             var propertyName = memberExpression.Member.Name;
+            var columnName = SqlColumnReferenceBuilder.ResolveMappedColumnName(source.ColumnMappings, propertyName);
 
-            if (parameterExpression.Type == joinDefinition.SourceType)
-            {
-                var columnName = SqlColumnReferenceBuilder.ResolveMappedColumnName(
-                    joinDefinition.SourceColumnMappings,
-                    propertyName);
+            if (string.IsNullOrWhiteSpace(source.TableAlias))
+                throw new InvalidOperationException($"Query source '{source.EntityType.Name}' does not define an alias required by the JOIN expression.");
 
-                return context.DatabaseDialect.BuildQualifiedIdentifier(
-                    joinDefinition.SourceAlias,
-                    columnName);
-            }
-
-            if (parameterExpression.Type == joinDefinition.JoinTypeEntity)
-            {
-                var columnName = SqlColumnReferenceBuilder.ResolveMappedColumnName(
-                    joinDefinition.JoinColumnMappings,
-                    propertyName);
-
-                return context.DatabaseDialect.BuildQualifiedIdentifier(joinDefinition.TableAlias, columnName);
-            }
-
-            throw new NotSupportedException($"Join expression parameter '{parameterExpression.Type.Name}' is not supported.");
+            return context.DatabaseDialect.BuildQualifiedIdentifier(source.TableAlias, columnName);
         }
     }
 }

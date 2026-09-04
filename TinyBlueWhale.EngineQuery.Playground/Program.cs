@@ -49,6 +49,7 @@ using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFu
 //MultiSourceOrderByQueryValidator.Run();
 //MultiSourceComputedWhereQueryValidator.Run();
 //ApplyLateralJoinQueryValidator.Run();
+SelfJoinQueryValidator.Run();
 
 //#endregion
 
@@ -142,13 +143,13 @@ using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFu
 
 //#region Updates
 
-UpdateCommandQueryValidator.Run();
+//UpdateCommandQueryValidator.Run();
 
 //#endregion
 
 //#region Deletes
 
-DeleteCommandQueryValidator.Run();
+//DeleteCommandQueryValidator.Run();
 
 //#endregion
 

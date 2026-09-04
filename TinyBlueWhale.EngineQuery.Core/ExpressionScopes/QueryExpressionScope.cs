@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 
 namespace TinyBlueWhale.EngineQuery.Core.ExpressionScopes
 {

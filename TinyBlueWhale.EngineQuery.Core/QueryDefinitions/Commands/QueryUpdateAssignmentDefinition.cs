@@ -1,0 +1,18 @@
+﻿namespace TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Commands
+{
+    /// <summary>
+    /// Represents a column value assignment in a SQL UPDATE command.
+    /// </summary>
+    public sealed record QueryUpdateAssignmentDefinition
+    {
+        /// <summary>
+        /// Gets the resolved database column name associated with the assigned value.
+        /// </summary>
+        public required string ColumnName { get; init; }
+
+        /// <summary>
+        /// Gets the value assigned to the target database column.
+        /// </summary>
+        public object? Value { get; init; }
+    }
+}

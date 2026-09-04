@@ -1,6 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources
 {
@@ -15,17 +15,13 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources
         /// <summary>
         /// Ensures that the specified query source has an alias.
         /// </summary>
-        /// <typeparam name="TSource">
-        /// Entity type associated with the query source.
-        /// </typeparam>
         /// <param name="sourceDefinition">
         /// Query source definition whose alias is resolved.
         /// </param>
         /// <returns>
-        /// Original source when an alias already exists; otherwise,
-        /// a new source definition containing a generated deterministic alias.
+        /// Query source containing the resolved alias.
         /// </returns>
-        public QuerySourceDefinition EnsureAlias<TSource>(QuerySourceDefinition sourceDefinition)
+        public QuerySourceDefinition EnsureAlias(QuerySourceDefinition sourceDefinition)
         {
             ArgumentNullException.ThrowIfNull(sourceDefinition);
 
@@ -34,23 +30,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources
 
             var resolvedAlias = QueryAliasGeneratorHelper.Generate(_context.AliasRegistry.Count);
 
-            var aliasedSource = sourceDefinition with
-            {
-                TableAlias = resolvedAlias
-            };
-
-            _context.QueryDefinition.SourceDefinitions[typeof(TSource)] =
-                aliasedSource;
-
-            if (_context.QueryDefinition.EntityType == typeof(TSource))
-            {
-                _context.QueryDefinition.TableAlias =
-                    resolvedAlias;
-            }
-
+            sourceDefinition.TableAlias = resolvedAlias;
             _context.AliasRegistry.Register(resolvedAlias);
 
-            return aliasedSource;
+            return sourceDefinition;
         }
     }
 }

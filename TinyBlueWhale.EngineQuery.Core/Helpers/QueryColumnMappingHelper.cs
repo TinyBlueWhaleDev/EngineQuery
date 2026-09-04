@@ -1,63 +1,63 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 
 namespace TinyBlueWhale.EngineQuery.Core.Helpers
 {
     /// <summary>
-    /// Provides helper methods for resolving database column mappings.
+    /// Provides helper methods for resolving mapped query source columns.
     /// </summary>
     public static class QueryColumnMappingHelper
     {
         /// <summary>
-        /// Resolves the database column name associated with the specified CLR property name.
+        /// Resolves the database column name associated with the specified entity property.
         /// </summary>
-        /// <param name="queryDefinition">
-        /// Query definition containing configured column mappings.
+        /// <param name="source">
+        /// Query source containing the property-to-column mappings.
         /// </param>
         /// <param name="propertyName">
-        /// CLR property name.
+        /// CLR property name whose database column should be resolved.
         /// </param>
         /// <returns>
-        /// Resolved database column name when a mapping exists; otherwise, the original property name.
+        /// Mapped database column name when available; otherwise, the original property name.
         /// </returns>
-        public static string ResolveColumnName(CompiledQueryDefinition queryDefinition, string propertyName)
+        public static string ResolveColumnName(QuerySourceDefinition source, string propertyName)
         {
-            ArgumentNullException.ThrowIfNull(queryDefinition);
+            ArgumentNullException.ThrowIfNull(source);
             ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
 
-            return queryDefinition.ColumnMappings.TryGetValue(
-                propertyName,
-                out var columnName)
-                    ? columnName
-                    : propertyName;
+            return source.ColumnMappings.TryGetValue(propertyName, out var mappedColumn)
+                ? mappedColumn
+                : propertyName;
         }
 
         /// <summary>
-        /// Resolves the database column reference associated with the specified CLR property name.
+        /// Resolves the qualified SQL column reference associated with the specified entity property.
         /// </summary>
-        /// <param name="queryDefinition">
-        /// Query definition containing configured table alias and column mappings.
+        /// <param name="source">
+        /// Query source containing the column mappings and optional table alias.
         /// </param>
         /// <param name="databaseDialect">
-        /// Database dialect used to generate provider-specific identifiers.
+        /// Database dialect used to escape SQL identifiers.
         /// </param>
         /// <param name="propertyName">
-        /// CLR property name.
+        /// CLR property name whose SQL column reference should be resolved.
         /// </param>
         /// <returns>
-        /// Resolved SQL column reference.
+        /// Escaped SQL column reference.
         /// </returns>
-        public static string ResolveColumnReference(CompiledQueryDefinition queryDefinition, ISqlDatabaseDialect databaseDialect, string propertyName)
+        public static string ResolveColumnReference(QuerySourceDefinition source, ISqlDatabaseDialect databaseDialect, string propertyName)
         {
-            ArgumentNullException.ThrowIfNull(queryDefinition);
+            ArgumentNullException.ThrowIfNull(source);
             ArgumentNullException.ThrowIfNull(databaseDialect);
             ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
 
-            var columnName = ResolveColumnName(queryDefinition, propertyName);
+            var columnName = ResolveColumnName(source, propertyName);
+            var escapedColumnName = databaseDialect.EscapeIdentifier(columnName);
 
-            return string.IsNullOrWhiteSpace(queryDefinition.TableAlias)
-                ? databaseDialect.EscapeIdentifier(columnName)
-                : databaseDialect.BuildQualifiedIdentifier(queryDefinition.TableAlias, columnName);
+            return string.IsNullOrWhiteSpace(source.TableAlias)
+                ? escapedColumnName
+                : $"{databaseDialect.EscapeIdentifier(source.TableAlias)}.{escapedColumnName}";
         }
     }
 }

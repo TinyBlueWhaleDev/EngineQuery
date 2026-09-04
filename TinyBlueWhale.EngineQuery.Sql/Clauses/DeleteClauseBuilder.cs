@@ -29,12 +29,23 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="queryDefinition"/> or <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the DELETE root source does not define a physical table name.
+        /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
 
-            var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, queryDefinition.TableName, queryDefinition.SchemaName);
+            var targetSource = queryDefinition.RootSource;
+
+            if (string.IsNullOrWhiteSpace(targetSource.TableName))
+                throw new InvalidOperationException("The DELETE target source does not define a table name.");
+
+            var tableName = SqlIdentifierHelper.BuildTableReference(
+                context.DatabaseDialect,
+                targetSource.TableName,
+                targetSource.SchemaName);
 
             return $"DELETE FROM {tableName}";
         }

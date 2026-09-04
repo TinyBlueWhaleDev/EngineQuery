@@ -4,6 +4,8 @@ using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Cte;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
@@ -13,6 +15,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     /// </summary>
     /// <typeparam name="T">
     /// Entity type used as the source of the query.
+    /// </typeparam>
+    /// <typeparam name="TProfile">
+    /// Database provider profile associated with the query builder.
     /// </typeparam>
     /// <remarks>
     /// This builder does not execute database commands.
@@ -29,12 +34,15 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         private readonly TProfile _profile;
         private readonly QueryCommandBuilderContext _context;
         private readonly QueryCommandBuilderComponents<TProfile> _components;
+
         private protected override QueryCommandBuilderComponents<TProfile> Components => _components;
+
         protected override IQueryCommandBuilder<T, TProfile> Current => this;
 
-        #region Constructor
+        #region Constructors
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="QueryCommandBuilder{T}"/> class using a prebuilt query source.
+        /// Initializes a new instance of the <see cref="QueryCommandBuilder{T, TProfile}"/> class using a prebuilt query source.
         /// </summary>
         /// <param name="queryCompiler">
         /// Query compiler used to generate SQL.
@@ -45,21 +53,17 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="metadataResolver">
         /// Optional entity metadata resolver.
         /// </param>
+        /// <param name="profile">
+        /// Database provider profile associated with the query builder.
+        /// </param>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="queryCompiler"/> or <paramref name="querySource"/> is null.
+        /// Thrown when <paramref name="queryCompiler"/>, <paramref name="querySource"/> or <paramref name="profile"/> is null.
         /// </exception>
-        internal QueryCommandBuilder(IQueryCompiler queryCompiler,
-            QuerySourceDefinition querySource,
-            IEntityMetadataResolver metadataResolver,
-            TProfile profile)
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler, QuerySourceDefinition querySource, IEntityMetadataResolver metadataResolver, TProfile profile)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentNullException.ThrowIfNull(querySource);
             ArgumentNullException.ThrowIfNull(profile);
-
-            var resolvedTableName = querySource.TableName ??
-                querySource.TableAlias ??
-                throw new InvalidOperationException("Query source must define either a table name or an alias.");
 
             _queryCompiler = queryCompiler;
             _metadataResolver = metadataResolver;
@@ -67,14 +71,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _queryDefinition = new CompiledQueryDefinition
             {
-                EntityType = typeof(T),
-                SchemaName = querySource.SchemaName,
-                TableName = resolvedTableName,
-                TableAlias = querySource.TableAlias,
-                ColumnMappings = querySource.ColumnMappings
+                RootSource = querySource
             };
 
-            _queryDefinition.SourceDefinitions[typeof(T)] = querySource;
+            _queryDefinition.Sources.Add(querySource);
 
             _context = new QueryCommandBuilderContext
             {
@@ -86,19 +86,20 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _components = QueryCommandBuilderComponentFactory.Create(_context, _profile);
 
-            if (!string.IsNullOrWhiteSpace(querySource.TableAlias))
-                _context.AliasRegistry.Register(querySource.TableAlias);
+            RegisterAlias(querySource.TableAlias);
         }
 
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="QueryCommandBuilder{T}"/> class.
+        /// Initializes a new instance of the <see cref="QueryCommandBuilder{T, TProfile}"/> class.
         /// </summary>
         /// <param name="queryCompiler">
         /// Query compiler used to generate provider-specific query output.
         /// </param>
         /// <param name="metadataResolver">
         /// Metadata resolver used to resolve entity table and column mappings.
+        /// </param>
+        /// <param name="profile">
+        /// Database provider profile associated with the query builder.
         /// </param>
         /// <param name="tableName">
         /// Database table name associated with the query.
@@ -111,21 +112,27 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </param>
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
-        /// </param>        
-        internal QueryCommandBuilder(IQueryCompiler queryCompiler,
-            IEntityMetadataResolver metadataResolver,
-            TProfile profile,
-            string tableName,
-            string? schemaName = null,
-            string? tableAlias = null,
-            IReadOnlyDictionary<string, string>? columnMappings = null)
+        /// </param>
+        internal QueryCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, TProfile profile, string tableName, string? schemaName = null, string? tableAlias = null, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
+            ArgumentNullException.ThrowIfNull(profile);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+
+            if (schemaName is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(schemaName);
 
             if (tableAlias is not null)
                 ArgumentException.ThrowIfNullOrWhiteSpace(tableAlias);
 
+            var rootSource = new QuerySourceDefinition
+            {
+                EntityType = typeof(T),
+                SchemaName = schemaName,
+                TableName = tableName,
+                TableAlias = tableAlias,
+                ColumnMappings = columnMappings ?? new Dictionary<string, string>()
+            };
 
             _queryCompiler = queryCompiler;
             _metadataResolver = metadataResolver;
@@ -133,12 +140,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _queryDefinition = new CompiledQueryDefinition
             {
-                TableName = tableName,
-                SchemaName = schemaName,
-                TableAlias = tableAlias,
-                ColumnMappings = columnMappings ?? new Dictionary<string, string>(),
-                EntityType = typeof(T)
+                RootSource = rootSource
             };
+
+            _queryDefinition.Sources.Add(rootSource);
 
             _context = new QueryCommandBuilderContext
             {
@@ -150,7 +155,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             _components = QueryCommandBuilderComponentFactory.Create(_context, _profile);
 
-            RegisterRootSource(tableName, tableAlias, schemaName);
+            RegisterAlias(rootSource.TableAlias);
         }
 
         #endregion
@@ -171,26 +176,12 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return _queryCompiler.Compile(_queryDefinition);
         }
 
-
-        // Registers the root query source in the current query scope.
-        private void RegisterRootSource(string tableName, string? tableAlias, string? schemaName)
+        // Registers the specified source alias in the current query scope.
+        private void RegisterAlias(string? alias)
         {
-            _queryDefinition.SourceDefinitions[typeof(T)] =
-                new QuerySourceDefinition
-                {
-                    EntityType = typeof(T),
-                    SchemaName = schemaName,
-                    TableName = tableName,
-                    TableAlias = tableAlias,
-                    ColumnMappings = _queryDefinition.ColumnMappings
-                };
-
-            _queryDefinition.TableAlias = tableAlias;
-
-            if (!string.IsNullOrWhiteSpace(tableAlias))
-                _context.AliasRegistry.Register(tableAlias);
+            if (!string.IsNullOrWhiteSpace(alias))
+                _context.AliasRegistry.Register(alias);
         }
-
 
         // Builds the query definition without compiling SQL.
         internal CompiledQueryDefinition BuildDefinition()
@@ -199,12 +190,15 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         // Registers inherited outer query sources in the current query definition.
-        internal void RegisterOuterSources(IReadOnlyDictionary<Type, QuerySourceDefinition> outerSources)
+        internal void RegisterOuterSources(IReadOnlyList<QuerySourceDefinition> outerSources)
         {
             ArgumentNullException.ThrowIfNull(outerSources);
 
             foreach (var outerSource in outerSources)
-                _queryDefinition.OuterSourceDefinitions[outerSource.Key] = outerSource.Value;
+            {
+                if (!_queryDefinition.OuterSources.Contains(outerSource))
+                    _queryDefinition.OuterSources.Add(outerSource);
+            }
         }
 
         // Registers common table expressions inherited from the query builder.

@@ -1,6 +1,8 @@
-using TinyBlueWhale.EngineQuery.Core.Enums;
+﻿using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Ordering;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Projection;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -50,44 +52,35 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
             var orderingClauses = queryDefinition.OrderingDefinitions
                 .SelectMany(orderingDefinition =>
-                    BuildOrderingColumnReferences(queryDefinition, context, orderingDefinition)
+                    BuildOrderingColumnReferences(context, orderingDefinition)
                         .Select(columnReference =>
                             $"{columnReference} {ResolveSqlOrderingDirection(orderingDefinition.Direction)}"));
 
             return "ORDER BY " + string.Join(", ", orderingClauses);
         }
 
-        private static IEnumerable<string> BuildOrderingColumnReferences(
-            CompiledQueryDefinition queryDefinition,
-            QueryCompilationContext context,
-            QueryOrderingDefinition orderingDefinition)
+        // Builds the column references associated with an ordering definition.
+        private static IEnumerable<string> BuildOrderingColumnReferences(QueryCompilationContext context, QueryOrderingDefinition orderingDefinition)
         {
             foreach (var orderingColumn in orderingDefinition.Columns)
             {
                 yield return BuildOrderingColumnReference(
-                    queryDefinition,
                     context,
                     orderingDefinition,
                     orderingColumn);
             }
         }
 
-        private static string BuildOrderingColumnReference(
-            CompiledQueryDefinition queryDefinition,
-            QueryCompilationContext context,
-            QueryOrderingDefinition orderingDefinition,
-            QueryColumnDefinition orderingColumn)
+        // Builds a column reference using the source captured by the ordering definition.
+        private static string BuildOrderingColumnReference(QueryCompilationContext context, QueryOrderingDefinition orderingDefinition, QueryColumnDefinition orderingColumn)
         {
-            if (!string.IsNullOrWhiteSpace(orderingDefinition.Source.TableAlias))
-            {
-                var columnName = SqlColumnReferenceBuilder.ResolveMappedColumnName(orderingDefinition.Source.ColumnMappings, orderingColumn.PropertyName);
-
-                return context.DatabaseDialect.BuildQualifiedIdentifier(orderingDefinition.Source.TableAlias, columnName);
-            }
-
-            return QueryColumnMappingHelper.ResolveColumnReference(queryDefinition, context.DatabaseDialect, orderingColumn.PropertyName);
+            return QueryColumnMappingHelper.ResolveColumnReference(
+                orderingDefinition.Source,
+                context.DatabaseDialect,
+                orderingColumn.PropertyName);
         }
 
+        // Resolves the SQL ordering direction.
         private static string ResolveSqlOrderingDirection(QueryOrderingDirection direction)
         {
             return direction == QueryOrderingDirection.Ascending ? "ASC" : "DESC";

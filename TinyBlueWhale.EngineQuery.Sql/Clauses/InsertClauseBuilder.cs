@@ -34,8 +34,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// Thrown when <paramref name="queryDefinition"/> or <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the compiled query definition does not contain INSERT values
-        /// or identity retrieval is requested without an available provider strategy.
+        /// Thrown when the compiled query definition does not contain INSERT values,
+        /// a valid INSERT target source, or identity retrieval is requested without
+        /// an available provider strategy.
         /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
@@ -49,6 +50,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
             var insertTarget = BuildTarget(queryDefinition, context);
             var parameters = insertDefinition.ValueDefinitions.Select(definition => context.AddParameter(definition.Value));
+
             var commandText =
                 $"{insertTarget}{Environment.NewLine}" +
                 $"VALUES ({string.Join(", ", parameters)})";
@@ -78,7 +80,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// Thrown when <paramref name="queryDefinition"/> or <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the compiled query definition does not contain INSERT target columns.
+        /// Thrown when the compiled query definition does not contain INSERT target columns
+        /// or the root query source does not define a table name.
         /// </exception>
         public string BuildTarget(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
@@ -95,7 +98,16 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             if (!columns.Any())
                 throw new InvalidOperationException("The INSERT command requires at least one target column.");
 
-            var tableName = SqlIdentifierHelper.BuildTableReference(context.DatabaseDialect, queryDefinition.TableName, queryDefinition.SchemaName);
+            var targetSource = queryDefinition.RootSource;
+
+            if (string.IsNullOrWhiteSpace(targetSource.TableName))
+                throw new InvalidOperationException("The INSERT target source does not define a table name.");
+
+            var tableName = SqlIdentifierHelper.BuildTableReference(
+                context.DatabaseDialect,
+                targetSource.TableName,
+                targetSource.SchemaName);
+
             var escapedColumns = columns.Select(context.DatabaseDialect.EscapeIdentifier);
 
             return $"INSERT INTO {tableName} ({string.Join(", ", escapedColumns)})";

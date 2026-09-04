@@ -1,6 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Filtering;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
@@ -116,8 +117,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                     var parser = new QueryWhereClauseExpressionParser(
                         context.DatabaseDialect,
                         context.Parameters,
-                        whereDefinition.Source.ColumnMappings ?? queryDefinition.ColumnMappings,
-                        whereDefinition.Source.TableAlias ?? queryDefinition.TableAlias);
+                        whereDefinition.Source.ColumnMappings,
+                        whereDefinition.Source.TableAlias);
 
                     var sqlCondition = parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
 
