@@ -1,5 +1,7 @@
-﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Inserts;
+﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators;
+using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Inserts;
 using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Joins;
+using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Pagination;
 using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.SetOperations;
 using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions;
 
@@ -42,7 +44,7 @@ using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFu
 //DeleteCommandQueryValidator.Run();
 
 #region Pagination
-
+PaginationQueryValidator.Run();
 #endregion
 
 #region Common Table Expressions
@@ -75,5 +77,5 @@ using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFu
 #endregion
 
 #region Inserts
-InsertCommandQueryValidator.Run();
+//InsertCommandQueryValidator.Run();
 #endregion

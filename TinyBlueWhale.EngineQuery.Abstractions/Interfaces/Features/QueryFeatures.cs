@@ -1,12 +1,6 @@
 ﻿
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features
 {
-
-    /// <summary>
-    /// Represents an internal operation applied by a provider feature to the current query composition.
-    /// </summary>
-    internal interface IQueryFeatureOperation;
-
     /// <summary>
     /// Identifies a database provider profile that supports common table expressions.
     /// </summary>

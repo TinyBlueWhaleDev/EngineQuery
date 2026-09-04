@@ -19,20 +19,6 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     {
 
         /// <summary>
-        /// Applies an internal provider feature operation to the current query composition.
-        /// </summary>
-        /// <param name="operation">
-        /// Feature operation to apply.
-        /// </param>
-        /// <returns>
-        /// Current query composition builder instance.
-        /// </returns>
-        internal TBuilder ApplyFeature(IQueryFeatureOperation operation)
-        {
-            throw new NotSupportedException($"Query feature operation '{operation.GetType().Name}' is not supported by the current query builder.");
-        }
-
-        /// <summary>
         /// Defines a projection for selecting specific properties from the query source.
         /// </summary>
         /// <param name="selector">
@@ -922,5 +908,33 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// Current ordered query command builder instance.
         /// </returns>
         TBuilder ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector);
+
+        /// <summary>
+        /// Applies the pagination skip value to the current query composition.
+        /// </summary>
+        /// <param name="count">
+        /// Number of rows to skip.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        internal TBuilder ApplySkip(int count)
+        {
+            throw new NotSupportedException("Pagination SKIP is not supported by the current query builder.");
+        }
+
+        /// <summary>
+        /// Applies the pagination take value to the current query composition.
+        /// </summary>
+        /// <param name="count">
+        /// Maximum number of rows to return.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        internal TBuilder ApplyTake(int count)
+        {
+            throw new NotSupportedException("Pagination TAKE is not supported by the current query builder.");
+        }
     }
 }

@@ -10,19 +10,19 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Extensions
     public static class QueryPaginationExtensions
     {
         /// <summary>
-        /// Defines the number of rows to skip from the query result.
+        /// Skips the specified number of rows before returning query results.
         /// </summary>
         /// <typeparam name="T">
-        /// Entity type used as the source of the query.
+        /// Entity type associated with the current query composition.
         /// </typeparam>
         /// <typeparam name="TBuilder">
-        /// Fluent builder type associated with the current query composition.
+        /// Fluent query builder type returned by the current composition.
         /// </typeparam>
         /// <typeparam name="TProfile">
-        /// Database provider profile type.
+        /// Database provider profile used to configure query features.
         /// </typeparam>
         /// <param name="queryBuilder">
-        /// Current query composition builder.
+        /// Query composition builder to configure.
         /// </param>
         /// <param name="count">
         /// Number of rows to skip.
@@ -30,28 +30,33 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Extensions
         /// <returns>
         /// Current query composition builder instance.
         /// </returns>
-        public static TBuilder Skip<T, TBuilder, TProfile>(this IQueryCompositionCommandBuilder<T, TBuilder, TProfile> queryBuilder, int count)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryBuilder"/> is <see langword="null"/>.
+        /// </exception>
+        public static TBuilder Skip<T, TBuilder, TProfile>(
+            this IQueryCompositionCommandBuilder<T, TBuilder, TProfile> queryBuilder,
+            int count)
             where TProfile : IDatabaseProviderProfile, IPaginationFeature
         {
             ArgumentNullException.ThrowIfNull(queryBuilder);
 
-            return queryBuilder.ApplyFeature(new PaginationSkipOperation(count));
+            return queryBuilder.ApplySkip(count);
         }
 
         /// <summary>
-        /// Defines the maximum number of rows returned by the query.
+        /// Limits the maximum number of rows returned by the query.
         /// </summary>
         /// <typeparam name="T">
-        /// Entity type used as the source of the query.
+        /// Entity type associated with the current query composition.
         /// </typeparam>
         /// <typeparam name="TBuilder">
-        /// Fluent builder type associated with the current query composition.
+        /// Fluent query builder type returned by the current composition.
         /// </typeparam>
         /// <typeparam name="TProfile">
-        /// Database provider profile type.
+        /// Database provider profile used to configure query features.
         /// </typeparam>
         /// <param name="queryBuilder">
-        /// Current query composition builder.
+        /// Query composition builder to configure.
         /// </param>
         /// <param name="count">
         /// Maximum number of rows to return.
@@ -59,12 +64,17 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Extensions
         /// <returns>
         /// Current query composition builder instance.
         /// </returns>
-        public static TBuilder Take<T, TBuilder, TProfile>(this IQueryCompositionCommandBuilder<T, TBuilder, TProfile> queryBuilder, int count)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryBuilder"/> is <see langword="null"/>.
+        /// </exception>
+        public static TBuilder Take<T, TBuilder, TProfile>(
+            this IQueryCompositionCommandBuilder<T, TBuilder, TProfile> queryBuilder,
+            int count)
             where TProfile : IDatabaseProviderProfile, IPaginationFeature
         {
             ArgumentNullException.ThrowIfNull(queryBuilder);
 
-            return queryBuilder.ApplyFeature(new PaginationTakeOperation(count));
+            return queryBuilder.ApplyTake(count);
         }
     }
 }

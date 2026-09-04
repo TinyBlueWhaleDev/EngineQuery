@@ -1,11 +1,9 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Features;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 {
@@ -724,13 +722,27 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
         #endregion
 
+        #region Pagination
 
-        /// <inheritdoc />
-        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyFeature(IQueryFeatureOperation operation)
+        /// <summary>
+        /// Adds a Skip query to the current query.
+        /// </summary>
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplySkip(int count)
         {
-            QueryFeatureOperationDispatcher.Apply(Components, operation);
+            Components.PaginationClauseBuilder.SetSkip(count);
             return Current;
         }
+
+        /// <summary>
+        /// Adds a Take query to the current query.
+        /// </summary>
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyTake(int count)
+        {
+            Components.PaginationClauseBuilder.SetTake(count);
+            return Current;
+        }
+
+        #endregion
 
     }
 }
