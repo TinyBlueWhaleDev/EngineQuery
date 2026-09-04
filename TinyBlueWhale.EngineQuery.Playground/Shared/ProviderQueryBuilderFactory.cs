@@ -1,4 +1,5 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
 using TinyBlueWhale.EngineQuery.MySql.Profiles;
@@ -25,7 +26,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         /// Query builder configured for the default SQL Server profile.
         /// </returns>
         public static QueryBuilder<SqlServer2012Profile> CreateSqlServer(
-            FluentEntityMetadataResolver metadataResolver)
+            IEntityMetadataResolver metadataResolver)
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 
@@ -42,7 +43,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         /// Query builder configured for the default PostgreSQL profile.
         /// </returns>
         public static QueryBuilder<PostgreSql93Profile> CreatePostgreSql(
-            FluentEntityMetadataResolver metadataResolver)
+            IEntityMetadataResolver metadataResolver)
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 
@@ -59,7 +60,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.Shared
         /// Query builder configured for the default MySQL profile.
         /// </returns>
         public static QueryBuilder<MySql8031Profile> CreateMySql(
-            FluentEntityMetadataResolver metadataResolver)
+            IEntityMetadataResolver metadataResolver)
         {
             ArgumentNullException.ThrowIfNull(metadataResolver);
 

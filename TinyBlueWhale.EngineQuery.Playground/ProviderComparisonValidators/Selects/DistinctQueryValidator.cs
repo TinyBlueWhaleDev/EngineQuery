@@ -21,28 +21,30 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Sele
 
             ProviderQueryPrinter.Print(
                 "SQL Server DISTINCT",
-                BuildQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
+                BuildDistinctCompositionQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
 
             ProviderQueryPrinter.Print(
                 "PostgreSQL DISTINCT",
-                BuildQuery(ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
+                BuildDistinctCompositionQuery(ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
 
             ProviderQueryPrinter.Print(
                 "MySQL DISTINCT",
-                BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
+                BuildDistinctCompositionQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
         }
 
         // Builds a DISTINCT query.
-        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+        private static GeneratedSqlQuery BuildDistinctCompositionQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
             where TProfile : IDatabaseProviderProfile
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
-                .Distinct()
-                .Select<JoinUser>(u => new
+                .Select<JoinUser>(user => new
                 {
-                    u.Email
+                    user.Email
                 })
+                .Distinct()
+                .Where<JoinUser>(user => user.IsActive)
+                .OrderBy<JoinUser>(user => user.Email)
                 .Build();
         }
     }

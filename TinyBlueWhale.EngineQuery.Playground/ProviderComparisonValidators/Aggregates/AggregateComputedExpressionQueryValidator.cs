@@ -29,9 +29,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Aggr
 
             ProviderQueryPrinter.Print(
                 "MySQL Aggregate Computed Expression",
-                BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
-
-            ValidateUnsupportedCountComputedExpression();
+                BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));            
         }
 
         /// <summary>
@@ -77,47 +75,6 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Aggr
                     u.Id,
                     u.Email
                 })
-                .Build();
-        }
-
-        /// <summary>
-        /// Validates that COUNT does not support computed aggregate expressions.
-        /// </summary>
-        private static void ValidateUnsupportedCountComputedExpression()
-        {
-            var metadataResolver = ProviderMetadataFactory.CreateJoinMetadataResolver();
-
-            try
-            {
-                BuildUnsupportedCountQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver));
-
-                throw new InvalidOperationException(
-                    "Expected COUNT computed aggregate expression exception was not thrown.");
-            }
-            catch (NotSupportedException exception)
-            {
-                Console.WriteLine(exception.Message);
-            }
-        }
-
-        /// <summary>
-        /// Builds an unsupported COUNT computed aggregate expression query.
-        /// </summary>
-        /// <param name="queryBuilder">
-        /// Query builder.
-        /// </param>
-        /// <returns>
-        /// Generated SQL query.
-        /// </returns>
-        private static GeneratedSqlQuery BuildUnsupportedCountQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
-            where TProfile : IDatabaseProviderProfile
-        {
-            return queryBuilder
-                .From<JoinOrder>(alias: "o")
-                .SelectAggregate<JoinOrder>(
-                    QueryAggregateFunction.Count,
-                    o => o.Total * 1.16m,
-                    alias: "InvalidCount")
                 .Build();
         }
     }

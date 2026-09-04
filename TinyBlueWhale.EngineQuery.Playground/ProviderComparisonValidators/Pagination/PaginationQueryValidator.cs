@@ -20,17 +20,99 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Pagi
         {
             var metadataResolver = ProviderMetadataFactory.CreateJoinMetadataResolver();
 
+            RunProvider(
+                "SQL Server",
+                ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver));
+
+            RunProvider(
+                "PostgreSQL",
+                ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver));
+
+            RunProvider(
+                "MySQL",
+                ProviderQueryBuilderFactory.CreateMySql(metadataResolver));
+        }
+
+        /// <summary>
+        /// Runs all pagination scenarios for a database provider.
+        /// </summary>
+        /// <typeparam name="TProfile">
+        /// Database provider profile used to configure query features.
+        /// </typeparam>
+        /// <param name="providerName">
+        /// Display name of the database provider.
+        /// </param>
+        /// <param name="queryBuilder">
+        /// Query builder used to construct pagination queries.
+        /// </param>
+        private static void RunProvider<TProfile>(string providerName, IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile, IPaginationFeature
+        {
             ProviderQueryPrinter.Print(
-                "SQL Server Pagination",
-                BuildQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
+                $"{providerName} Pagination - Take Only",
+                BuildTakeOnlyQuery(queryBuilder));
 
             ProviderQueryPrinter.Print(
-                "PostgreSQL Pagination",
-                BuildQuery(ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
+                $"{providerName} Pagination - Skip Only",
+                BuildSkipOnlyQuery(queryBuilder));
 
             ProviderQueryPrinter.Print(
-                "MySQL Pagination",
-                BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
+                $"{providerName} Pagination - Skip And Take",
+                BuildSkipAndTakeQuery(queryBuilder));
+        }
+
+        /// <summary>
+        /// Builds an ordered query using only the take pagination operation.
+        /// </summary>
+        /// <typeparam name="TProfile">
+        /// Database provider profile used to configure query features.
+        /// </typeparam>
+        /// <param name="queryBuilder">
+        /// Query builder used to construct the pagination query.
+        /// </param>
+        /// <returns>
+        /// Compiled SQL query containing provider-specific take pagination syntax.
+        /// </returns>
+        private static GeneratedSqlQuery BuildTakeOnlyQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile, IPaginationFeature
+        {
+            return queryBuilder
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(u => new
+                {
+                    UserId = u.Id,
+                    u.Email
+                })
+                .OrderBy<JoinUser>(u => u.Id)
+                .Take(10)
+                .Build();
+        }
+
+        /// <summary>
+        /// Builds an ordered query using only the skip pagination operation.
+        /// </summary>
+        /// <typeparam name="TProfile">
+        /// Database provider profile used to configure query features.
+        /// </typeparam>
+        /// <param name="queryBuilder">
+        /// Query builder used to construct the pagination query.
+        /// </param>
+        /// <returns>
+        /// Compiled SQL query containing provider-specific skip pagination syntax.
+        /// </returns>
+        private static GeneratedSqlQuery BuildSkipOnlyQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile, IPaginationFeature
+        {
+            return queryBuilder
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(u => new
+                {
+                    UserId = u.Id,
+                    u.Email
+                })
+                .OrderBy<JoinUser>(u => u.Id)
+                .Skip(20)
+                .Build();
         }
 
         /// <summary>
@@ -45,7 +127,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Pagi
         /// <returns>
         /// Compiled SQL query containing provider-specific pagination syntax.
         /// </returns>
-        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+        private static GeneratedSqlQuery BuildSkipAndTakeQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
             where TProfile : IDatabaseProviderProfile, IPaginationFeature
         {
             return queryBuilder

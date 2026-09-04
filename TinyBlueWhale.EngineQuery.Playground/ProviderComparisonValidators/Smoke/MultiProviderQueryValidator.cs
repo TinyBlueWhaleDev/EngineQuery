@@ -8,7 +8,7 @@ using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
 
-namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Smoke
 {
     public static class MultiProviderQueryValidator
     {

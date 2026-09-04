@@ -3,6 +3,7 @@ using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.MySql.Profiles;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.Playground.Shared;
@@ -18,7 +19,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Join
     public static class ApplyLateralJoinQueryValidator
     {
         /// <summary>
-        /// Runs the validator.
+        /// Runs APPLY, LATERAL join, and clause composition validation scenarios.
         /// </summary>
         public static void Run()
         {
@@ -53,19 +54,29 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Join
                 "MySQL LEFT LATERAL JOIN",
                 BuildMySqlOuterApplyQuery(
                     ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
+
+            ProviderQueryPrinter.Print(
+                "SQL Server Lateral Composition",
+                BuildSqlServerLateralCompositionQuery(
+                    ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
+
+            ProviderQueryPrinter.Print(
+                "PostgreSQL Lateral Composition",
+                BuildPostgreSqlLateralCompositionQuery(
+                    ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
+
+            ProviderQueryPrinter.Print(
+                "MySQL Lateral Composition",
+                BuildMySqlLateralCompositionQuery(
+                    ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
         }
 
         /// <summary>
         /// Builds a SQL Server CROSS APPLY query.
         /// </summary>
-        /// <param name="queryBuilder">
-        /// SQL Server query builder.
-        /// </param>
-        /// <returns>
-        /// Generated SQL query.
-        /// </returns>
-        private static GeneratedSqlQuery BuildSqlServerCrossApplyQuery(
-            IQueryBuilder<SqlServer2012Profile> queryBuilder)
+        /// <param name="queryBuilder">SQL Server query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildSqlServerCrossApplyQuery(IQueryBuilder<SqlServer2012Profile> queryBuilder)
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -92,14 +103,9 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Join
         /// <summary>
         /// Builds a PostgreSQL LATERAL join query.
         /// </summary>
-        /// <param name="queryBuilder">
-        /// PostgreSQL query builder.
-        /// </param>
-        /// <returns>
-        /// Generated SQL query.
-        /// </returns>
-        private static GeneratedSqlQuery BuildPostgreSqlCrossApplyQuery(
-            IQueryBuilder<PostgreSql93Profile> queryBuilder)
+        /// <param name="queryBuilder">PostgreSQL query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildPostgreSqlCrossApplyQuery(IQueryBuilder<PostgreSql93Profile> queryBuilder)
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -126,14 +132,9 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Join
         /// <summary>
         /// Builds a MySQL LATERAL join query.
         /// </summary>
-        /// <param name="queryBuilder">
-        /// MySQL query builder.
-        /// </param>
-        /// <returns>
-        /// Generated SQL query.
-        /// </returns>
-        private static GeneratedSqlQuery BuildMySqlCrossApplyQuery(
-            IQueryBuilder<MySql8031Profile> queryBuilder)
+        /// <param name="queryBuilder">MySQL query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildMySqlCrossApplyQuery(IQueryBuilder<MySql8031Profile> queryBuilder)
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -160,14 +161,9 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Join
         /// <summary>
         /// Builds a SQL Server OUTER APPLY query.
         /// </summary>
-        /// <param name="queryBuilder">
-        /// SQL Server query builder.
-        /// </param>
-        /// <returns>
-        /// Generated SQL query.
-        /// </returns>
-        private static GeneratedSqlQuery BuildSqlServerOuterApplyQuery(
-            IQueryBuilder<SqlServer2012Profile> queryBuilder)
+        /// <param name="queryBuilder">SQL Server query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildSqlServerOuterApplyQuery(IQueryBuilder<SqlServer2012Profile> queryBuilder)
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -194,14 +190,9 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Join
         /// <summary>
         /// Builds a PostgreSQL LEFT LATERAL join query.
         /// </summary>
-        /// <param name="queryBuilder">
-        /// PostgreSQL query builder.
-        /// </param>
-        /// <returns>
-        /// Generated SQL query.
-        /// </returns>
-        private static GeneratedSqlQuery BuildPostgreSqlOuterApplyQuery(
-            IQueryBuilder<PostgreSql93Profile> queryBuilder)
+        /// <param name="queryBuilder">PostgreSQL query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildPostgreSqlOuterApplyQuery(IQueryBuilder<PostgreSql93Profile> queryBuilder)
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -228,14 +219,9 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Join
         /// <summary>
         /// Builds a MySQL LEFT LATERAL join query.
         /// </summary>
-        /// <param name="queryBuilder">
-        /// MySQL query builder.
-        /// </param>
-        /// <returns>
-        /// Generated SQL query.
-        /// </returns>
-        private static GeneratedSqlQuery BuildMySqlOuterApplyQuery(
-            IQueryBuilder<MySql8031Profile> queryBuilder)
+        /// <param name="queryBuilder">MySQL query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildMySqlOuterApplyQuery(IQueryBuilder<MySql8031Profile> queryBuilder)
         {
             return queryBuilder
                 .From<JoinUser>(alias: "u")
@@ -256,6 +242,102 @@ namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Join
                         .WhereComputed<JoinOrder, JoinUser>(
                             (o, u) => o.UserId == u.Id)
                         .OrderByDescending<JoinOrder>(o => o.Total))
+                .Build();
+        }
+
+        /// <summary>
+        /// Builds a SQL Server CROSS APPLY query composed with filtering, ordering, and pagination.
+        /// </summary>
+        /// <param name="queryBuilder">SQL Server query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildSqlServerLateralCompositionQuery(IQueryBuilder<SqlServer2012Profile> queryBuilder)
+        {
+            return queryBuilder
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(u => new
+                {
+                    UserId = u.Id,
+                    u.Email
+                })
+                .CrossApply<JoinUser, JoinOrder>(
+                    alias: "latest_order",
+                    applyBuilder: apply => apply
+                        .Select<JoinOrder>(o => new
+                        {
+                            OrderId = o.Id,
+                            o.UserId,
+                            o.Total
+                        })
+                        .WhereComputed<JoinOrder, JoinUser>(
+                            (o, u) => o.UserId == u.Id)
+                        .OrderByDescending<JoinOrder>(o => o.Total))
+                .Where<JoinUser>(u => u.IsActive)
+                .OrderBy<JoinUser>(u => u.Id)
+                .Take(10)
+                .Build();
+        }
+
+        /// <summary>
+        /// Builds a PostgreSQL LATERAL join query composed with filtering, ordering, and pagination.
+        /// </summary>
+        /// <param name="queryBuilder">PostgreSQL query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildPostgreSqlLateralCompositionQuery(IQueryBuilder<PostgreSql93Profile> queryBuilder)
+        {
+            return queryBuilder
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(u => new
+                {
+                    UserId = u.Id,
+                    u.Email
+                })
+                .CrossApply<JoinUser, JoinOrder>(
+                    alias: "latest_order",
+                    applyBuilder: apply => apply
+                        .Select<JoinOrder>(o => new
+                        {
+                            OrderId = o.Id,
+                            o.UserId,
+                            o.Total
+                        })
+                        .WhereComputed<JoinOrder, JoinUser>(
+                            (o, u) => o.UserId == u.Id)
+                        .OrderByDescending<JoinOrder>(o => o.Total))
+                .Where<JoinUser>(u => u.IsActive)
+                .OrderBy<JoinUser>(u => u.Id)
+                .Take(10)
+                .Build();
+        }
+
+        /// <summary>
+        /// Builds a MySQL LATERAL join query composed with filtering, ordering, and pagination.
+        /// </summary>
+        /// <param name="queryBuilder">MySQL query builder.</param>
+        /// <returns>Generated SQL query.</returns>
+        private static GeneratedSqlQuery BuildMySqlLateralCompositionQuery(IQueryBuilder<MySql8031Profile> queryBuilder)
+        {
+            return queryBuilder
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(u => new
+                {
+                    UserId = u.Id,
+                    u.Email
+                })
+                .CrossApply<JoinUser, JoinOrder>(
+                    alias: "latest_order",
+                    applyBuilder: apply => apply
+                        .Select<JoinOrder>(o => new
+                        {
+                            OrderId = o.Id,
+                            o.UserId,
+                            o.Total
+                        })
+                        .WhereComputed<JoinOrder, JoinUser>(
+                            (o, u) => o.UserId == u.Id)
+                        .OrderByDescending<JoinOrder>(o => o.Total))
+                .Where<JoinUser>(u => u.IsActive)
+                .OrderBy<JoinUser>(u => u.Id)
+                .Take(10)
                 .Build();
         }
     }
