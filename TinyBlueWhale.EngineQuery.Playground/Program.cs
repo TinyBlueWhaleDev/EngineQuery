@@ -1,4 +1,5 @@
-﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Joins;
+﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Inserts;
+using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Joins;
 using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.SetOperations;
 using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions;
 
@@ -69,6 +70,10 @@ using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFu
 
 #region Joins
 
-ApplyLateralJoinQueryValidator.Run();
+//ApplyLateralJoinQueryValidator.Run();
 
+#endregion
+
+#region Inserts
+InsertCommandQueryValidator.Run();
 #endregion

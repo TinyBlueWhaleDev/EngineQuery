@@ -37,7 +37,7 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Composition
                 databaseDialect,
                 new QueryScriptBuilderOptions
                 {
-                    InsertClauseBuilderFactory = () => new PostgreSqlInsertClauseBuilder(),
+                    InsertIdentityRetrievalStrategy = featureComposition.InsertIdentityRetrievalStrategy,
                     PaginationStrategy = featureComposition.PaginationStrategy,
                     CteStrategy = featureComposition.CteStrategy,
                     LateralJoinStrategy = featureComposition.LateralJoinStrategy

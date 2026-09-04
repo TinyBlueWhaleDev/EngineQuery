@@ -37,7 +37,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Composition
                 databaseDialect,
                 new QueryScriptBuilderOptions
                 {
-                    InsertClauseBuilderFactory = () => new MySqlInsertClauseBuilder(),
+                    InsertIdentityRetrievalStrategy = featureComposition.InsertIdentityRetrievalStrategy,
                     PaginationStrategy = featureComposition.PaginationStrategy,
                     CteStrategy = featureComposition.CteStrategy,
                     LateralJoinStrategy = featureComposition.LateralJoinStrategy

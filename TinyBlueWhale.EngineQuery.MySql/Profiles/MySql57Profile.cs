@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.MySql.Clauses.Strategies.InsertIdentityRetrieval;
 using TinyBlueWhale.EngineQuery.MySql.Profiles.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
@@ -17,7 +18,8 @@ namespace TinyBlueWhale.EngineQuery.MySql.Profiles
     public class MySql57Profile : DatabaseProviderProfile,
         IMySqlProfile,
         ILimitOffsetPaginationFeature,
-        IPaginationStrategyProvider
+        IPaginationStrategyProvider,
+        IInsertIdentityRetrievalStrategyProvider
     {
         /// <inheritdoc />
         public override DatabaseProviderVersion Version { get; } = DatabaseProviderVersion.Create(5, 7);
@@ -25,6 +27,11 @@ namespace TinyBlueWhale.EngineQuery.MySql.Profiles
         public IPaginationStrategy CreatePaginationStrategy()
         {
             return new PaginationStrategy();
+        }
+
+        public IInsertIdentityRetrievalStrategy CreateInsertIdentityRetrievalStrategy()
+        {
+            return new MySql57InsertIdentityRetrievalStrategy();
         }
     }
 }

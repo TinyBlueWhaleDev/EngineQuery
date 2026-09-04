@@ -32,8 +32,12 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
                     : null,
 
                 LateralJoinStrategy = profile is ILateralJoinStrategyProvider lateralJoinStrategyProvider
-                ? lateralJoinStrategyProvider.CreateLateralJoinStrategy()
-                : null
+                    ? lateralJoinStrategyProvider.CreateLateralJoinStrategy()
+                    : null,
+
+                InsertIdentityRetrievalStrategy = profile is IInsertIdentityRetrievalStrategyProvider insertIdentityRetrievalStrategyProvider
+                    ? insertIdentityRetrievalStrategyProvider.CreateInsertIdentityRetrievalStrategy()
+                    : null
             };
         }
     }

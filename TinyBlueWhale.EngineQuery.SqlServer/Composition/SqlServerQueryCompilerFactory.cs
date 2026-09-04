@@ -29,7 +29,7 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Composition
                 databaseDialect,
                 new QueryScriptBuilderOptions
                 {
-                    InsertClauseBuilderFactory = () => new SqlServerInsertClauseBuilder(),
+                    InsertIdentityRetrievalStrategy = featureComposition.InsertIdentityRetrievalStrategy,
                     PaginationStrategy = featureComposition.PaginationStrategy,
                     CteStrategy = featureComposition.CteStrategy,
                     LateralJoinStrategy = featureComposition.LateralJoinStrategy

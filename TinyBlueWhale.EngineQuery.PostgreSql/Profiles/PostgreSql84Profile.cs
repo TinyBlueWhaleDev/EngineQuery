@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.PostgreSql.Clauses.Strategies.InsertIdentityRetrieval;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
@@ -24,7 +25,8 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Profiles
         IExceptFeature,
         ILimitOffsetPaginationFeature,
         IPaginationStrategyProvider,
-        ICTEStrategyProvider
+        ICTEStrategyProvider,
+        IInsertIdentityRetrievalStrategyProvider
     {
         /// <inheritdoc />
         public override DatabaseProviderVersion Version { get; } = DatabaseProviderVersion.Create(8, 4);
@@ -32,6 +34,11 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Profiles
         public ICTEStrategy CreateCteStrategy()
         {
             return new CteStrategy();
+        }
+
+        public IInsertIdentityRetrievalStrategy CreateInsertIdentityRetrievalStrategy()
+        {
+            return new PostgreSql84InsertIdentityRetrievalStrategy();
         }
 
         public IPaginationStrategy CreatePaginationStrategy()
