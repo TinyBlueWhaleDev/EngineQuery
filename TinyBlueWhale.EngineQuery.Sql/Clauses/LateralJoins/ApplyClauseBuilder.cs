@@ -1,9 +1,10 @@
-using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
-namespace TinyBlueWhale.EngineQuery.Sql.Clauses
+namespace TinyBlueWhale.EngineQuery.Sql.Clauses.LateralJoins
 {
     /// <summary>
     /// Builds SQL APPLY or provider-equivalent lateral join clauses.
@@ -17,9 +18,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// <param name="subqueryCompiler">
     /// Subquery compiler used to compile APPLY subqueries.
     /// </param>
-    public class ApplyClauseBuilder(SubqueryCompiler subqueryCompiler) : IOptionalSqlClauseBuilder
+    /// <param name="lateralJoinStrategy">
+    /// Lateral join strategy used to build APPLY clauses.
+    /// </param>
+    public class ApplyClauseBuilder(SubqueryCompiler subqueryCompiler,
+        ILateralJoinStrategy lateralJoinStrategy) : IOptionalSqlClauseBuilder
     {
         private readonly SubqueryCompiler _subqueryCompiler = subqueryCompiler ?? throw new ArgumentNullException(nameof(subqueryCompiler));
+        private readonly ILateralJoinStrategy _lateralJoinStrategy = lateralJoinStrategy ?? throw new ArgumentNullException(nameof(lateralJoinStrategy));
 
         /// <summary>
         /// Determines whether APPLY clauses should be built.
@@ -68,44 +74,26 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         }
 
         /// <summary>
-        /// Resolves the SQL keyword used for APPLY joins.
-        /// </summary>
-        /// <param name="applyType">
-        /// APPLY join type to resolve.
-        /// </param>
-        /// <returns>
-        /// SQL APPLY keyword.
-        /// </returns>
-        protected virtual string ResolveApplyKeyword(QueryApplyType applyType)
-        {
-            return applyType switch
-            {
-                QueryApplyType.Cross => "CROSS APPLY",
-                QueryApplyType.Outer => "OUTER APPLY",
-                _ => throw new NotSupportedException($"APPLY type '{applyType}' is not supported.")
-            };
-        }
-
-        /// <summary>
-        /// Builds an APPLY clause for the current provider dialect.
+        /// Builds an APPLY or provider-equivalent lateral join clause.
         /// </summary>
         /// <param name="applyDefinition">
         /// APPLY definition metadata.
         /// </param>
         /// <param name="commandText">
-        /// SQL command text used by the APPLY source.
+        /// Compiled lateral subquery command text.
         /// </param>
         /// <param name="context">
         /// Current query compilation context.
         /// </param>
         /// <returns>
-        /// Generated APPLY clause SQL.
+        /// Generated lateral join clause SQL.
         /// </returns>
-        protected virtual string BuildApplyClause(QueryApplyDefinition applyDefinition, string commandText, QueryCompilationContext context)
+        private string BuildApplyClause(QueryApplyDefinition applyDefinition, string commandText, QueryCompilationContext context)
         {
-            var applyKeyword = ResolveApplyKeyword(applyDefinition.ApplyType);
+            var joinKeyword = _lateralJoinStrategy.GetJoinKeyword(applyDefinition.ApplyType);
+            var joinSuffix = _lateralJoinStrategy.GetJoinSuffix();
 
-            return $"{applyKeyword} ({commandText}) AS {context.DatabaseDialect.EscapeIdentifier(applyDefinition.Alias)}";
+            return $"{joinKeyword} ({commandText}) AS {context.DatabaseDialect.EscapeIdentifier(applyDefinition.Alias)}{joinSuffix}";
         }
     }
 }

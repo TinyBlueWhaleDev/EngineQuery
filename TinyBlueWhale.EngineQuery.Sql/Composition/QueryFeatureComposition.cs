@@ -29,5 +29,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
         /// does not expose common table expression support.
         /// </remarks>
         public ICTEStrategy? CteStrategy { get; init; }
+
+        /// <summary>
+        /// Gets or initializes the lateral join strategy associated with the provider profile.
+        /// </summary>
+        /// <remarks>
+        /// A <see langword="null"/> value indicates that the configured provider profile
+        /// does not expose lateral join support.
+        /// </remarks>
+        public ILateralJoinStrategy? LateralJoinStrategy { get; init; }
     }
 }

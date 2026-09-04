@@ -336,14 +336,14 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder CrossApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder);
+        internal TBuilder ApplyCrossApply<TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
+        {
+            throw new NotSupportedException("CROSS APPLY or LATERAL is not supported by the current query builder.");
+        }
 
         /// <summary>
         /// Adds an OUTER APPLY or provider-equivalent LEFT LATERAL subquery join to the current query.
         /// </summary>
-        /// <typeparam name="TOuter">
-        /// Outer entity type available in the current query scope.
-        /// </typeparam>
         /// <typeparam name="TApply">
         /// Root entity type used by the APPLY subquery.
         /// </typeparam>
@@ -356,7 +356,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder OuterApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder);
+        internal TBuilder ApplyOuterApply<TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
+        {
+            throw new NotSupportedException("OUTER APPLY or LEFT LATERAL is not supported by the current query builder.");
+        }
 
 
         /// <summary>

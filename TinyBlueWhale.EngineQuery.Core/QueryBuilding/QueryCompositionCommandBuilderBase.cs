@@ -323,23 +323,20 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Adds a CROSS APPLY or provider-equivalent LATERAL subquery join to the current query.
         /// </summary>
-        public TBuilder CrossApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyCrossApply<TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
         {
-            Components.ApplyClauseBuilder.Add<TOuter, TApply>(QueryApplyType.Cross, alias, applyBuilder);
-
+            Components.ApplyClauseBuilder.Add<T, TApply>(QueryApplyType.Cross, alias, applyBuilder);
             return Current;
         }
 
         /// <summary>
         /// Adds an OUTER APPLY or provider-equivalent LEFT LATERAL subquery join to the current query.
         /// </summary>
-        public TBuilder OuterApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
+        TBuilder IQueryCompositionCommandBuilder<T, TBuilder, TProfile>.ApplyOuterApply<TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
         {
-            Components.ApplyClauseBuilder.Add<TOuter, TApply>(QueryApplyType.Outer, alias, applyBuilder);
-
+            Components.ApplyClauseBuilder.Add<T, TApply>(QueryApplyType.Outer, alias, applyBuilder);
             return Current;
         }
-
         #endregion
 
         #region Where Overloads

@@ -6,13 +6,13 @@ using Microsoft.CodeAnalysis.Text;
 namespace TinyBlueWhale.EngineQuery.Generators
 {
     /// <summary>
-    /// Generates strongly typed EngineQuery root feature extensions, query engine
+    /// Generates strongly typed EngineQuery feature extensions, query engine
     /// surfaces, implementations and dependency injection registrations from
     /// concrete database provider profiles.
     /// </summary>
     /// <remarks>
     /// Provider profiles act as the single source of truth for provider version and
-    /// feature availability. Root feature surfaces declare their requirements through
+    /// feature availability. Feature surfaces declare their requirements through
     /// generic profile constraints and are discovered structurally without requiring
     /// feature-specific knowledge inside the generator.
     /// </remarks>
@@ -24,6 +24,9 @@ namespace TinyBlueWhale.EngineQuery.Generators
 
         private const string QueryBuilderInterfaceMetadataName =
             "TinyBlueWhale.EngineQuery.Abstractions.Interfaces.IQueryBuilder`1";
+
+        private const string QueryCommandBuilderInterfaceMetadataName =
+            "TinyBlueWhale.EngineQuery.Abstractions.Interfaces.IQueryCommandBuilder`2";
 
         private const string QueryEngineInterfaceMetadataName =
             "TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces.IQueryEngine`1";
@@ -56,7 +59,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
                         return;
 
                     GenerateQueryEngineSurfaces(productionContext, model);
-
                     GenerateDependencyInjectionRegistration(productionContext, model);
                 });
         }
@@ -64,15 +66,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Builds the complete source generation model associated with the current compilation.
         /// </summary>
-        /// <param name="compilation">
-        /// Compilation being processed by the source generator.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Token used to cancel model construction.
-        /// </param>
-        /// <returns>
-        /// Generation model containing every discovered provider profile and compatible root feature surface.
-        /// </returns>
         private static GenerationModel BuildGenerationModel(Compilation compilation, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -83,11 +76,9 @@ namespace TinyBlueWhale.EngineQuery.Generators
                 return new GenerationModel(ImmutableArray<ProfileSurfaceModel>.Empty, null, false);
 
             var profiles = DiscoverProfiles(compilation, profileContract, cancellationToken);
-
-            var surfaceDefinitions = DiscoverRootFeatureSurfaces(compilation, profileContract, cancellationToken);
-
-            var profileModels = BuildProfileSurfaceModels(compilation, profiles, surfaceDefinitions);
-
+            var rootSurfaceDefinitions = DiscoverRootFeatureSurfaces(compilation, profileContract, cancellationToken);
+            var compositionSurfaceDefinitions = DiscoverCompositionFeatureSurfaces(compilation, profileContract, cancellationToken);
+            var profileModels = BuildProfileSurfaceModels(compilation, profiles, rootSurfaceDefinitions, compositionSurfaceDefinitions, profileContract);
             var supportsQueryEngineGeneration = compilation.GetTypeByMetadataName(QueryEngineInterfaceMetadataName) is not null;
 
             return new GenerationModel(profileModels, profileContract, supportsQueryEngineGeneration);
@@ -97,18 +88,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// Discovers concrete database provider profiles available through the current
         /// compilation and referenced EngineQuery assemblies.
         /// </summary>
-        /// <param name="compilation">
-        /// Compilation being processed by the source generator.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to identify compatible types.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Token used to cancel profile discovery.
-        /// </param>
-        /// <returns>
-        /// Immutable collection containing every discovered concrete provider profile.
-        /// </returns>
         private static ImmutableArray<INamedTypeSymbol> DiscoverProfiles(Compilation compilation, INamedTypeSymbol profileContract, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -137,18 +116,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// Traverses the specified namespace recursively and collects concrete classes
         /// implementing the database provider profile contract.
         /// </summary>
-        /// <param name="namespaceSymbol">
-        /// Namespace currently being inspected.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile interface used to identify compatible types.
-        /// </param>
-        /// <param name="profiles">
-        /// Collection receiving discovered provider profiles.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Token used to cancel namespace traversal.
-        /// </param>
         private static void CollectProfiles(INamespaceSymbol namespaceSymbol, INamedTypeSymbol profileContract, ImmutableArray<INamedTypeSymbol>.Builder profiles, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -170,18 +137,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Traverses nested types and collects concrete database provider profiles.
         /// </summary>
-        /// <param name="containingType">
-        /// Type whose nested types are being inspected.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile interface used to identify compatible types.
-        /// </param>
-        /// <param name="profiles">
-        /// Collection receiving discovered provider profiles.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Token used to cancel nested type traversal.
-        /// </param>
         private static void CollectNestedProfiles(INamedTypeSymbol containingType, INamedTypeSymbol profileContract, ImmutableArray<INamedTypeSymbol>.Builder profiles, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -200,16 +155,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Determines whether the specified type represents a concrete database provider profile.
         /// </summary>
-        /// <param name="type">
-        /// Type being inspected.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile interface used to identify compatible types.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when the specified type is a concrete provider profile;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
         private static bool IsConcreteProfile(INamedTypeSymbol type, INamedTypeSymbol profileContract)
         {
             if (type.TypeKind != TypeKind.Class || type.IsAbstract)
@@ -219,21 +164,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Discovers generic root query feature surfaces available through the current
-        /// compilation and referenced EngineQuery assemblies.
+        /// Discovers generic root query feature surfaces.
         /// </summary>
-        /// <param name="compilation">
-        /// Compilation being processed by the source generator.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to identify feature constraints.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Token used to cancel root feature surface discovery.
-        /// </param>
-        /// <returns>
-        /// Immutable collection containing every discovered root feature surface definition.
-        /// </returns>
         private static ImmutableArray<INamedTypeSymbol> DiscoverRootFeatureSurfaces(Compilation compilation, INamedTypeSymbol profileContract, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -264,23 +196,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Traverses the specified namespace recursively and collects root query feature surfaces.
+        /// Traverses namespaces recursively and collects root feature surfaces.
         /// </summary>
-        /// <param name="namespaceSymbol">
-        /// Namespace currently being inspected.
-        /// </param>
-        /// <param name="queryBuilderContract">
-        /// Root query builder contract.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract.
-        /// </param>
-        /// <param name="surfaces">
-        /// Collection receiving discovered root feature surfaces.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Token used to cancel namespace traversal.
-        /// </param>
         private static void CollectRootFeatureSurfaces(INamespaceSymbol namespaceSymbol, INamedTypeSymbol queryBuilderContract, INamedTypeSymbol profileContract, ImmutableArray<INamedTypeSymbol>.Builder surfaces, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -300,23 +217,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Traverses nested types and collects root query feature surfaces.
+        /// Traverses nested types and collects root feature surfaces.
         /// </summary>
-        /// <param name="containingType">
-        /// Type whose nested types are being inspected.
-        /// </param>
-        /// <param name="queryBuilderContract">
-        /// Root query builder contract.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract.
-        /// </param>
-        /// <param name="surfaces">
-        /// Collection receiving discovered root feature surfaces.
-        /// </param>
-        /// <param name="cancellationToken">
-        /// Token used to cancel nested type traversal.
-        /// </param>
         private static void CollectNestedRootFeatureSurfaces(INamedTypeSymbol containingType, INamedTypeSymbol queryBuilderContract, INamedTypeSymbol profileContract, ImmutableArray<INamedTypeSymbol>.Builder surfaces, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -333,21 +235,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Determines whether the specified type represents a generic root query feature surface.
+        /// Determines whether the specified interface represents a root query feature surface.
         /// </summary>
-        /// <param name="type">
-        /// Type being inspected.
-        /// </param>
-        /// <param name="queryBuilderContract">
-        /// Root query builder contract.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when the type represents a root feature surface;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
         private static bool IsRootFeatureSurface(INamedTypeSymbol type, INamedTypeSymbol queryBuilderContract, INamedTypeSymbol profileContract)
         {
             if (type.TypeKind != TypeKind.Interface || !type.IsGenericType || type.Arity != 1)
@@ -358,108 +247,157 @@ namespace TinyBlueWhale.EngineQuery.Generators
 
             var implementsQueryBuilder = type.AllInterfaces.Any(implementedInterface => SymbolEqualityComparer.Default.Equals(implementedInterface.OriginalDefinition, queryBuilderContract.OriginalDefinition));
 
-            if (!implementsQueryBuilder)
-                return false;
-
-            return HasFeatureConstraint(type.OriginalDefinition, profileContract);
+            return implementsQueryBuilder && GetProfileTypeParameterIndex(type.OriginalDefinition, profileContract) >= 0;
         }
 
         /// <summary>
-        /// Determines whether the specified constructed interface represents a root query feature surface.
+        /// Determines whether the specified constructed interface represents a root feature surface.
         /// </summary>
-        /// <param name="surface">
-        /// Constructed interface being inspected.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to identify feature constraints.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when the interface represents a root query feature surface;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
         private static bool IsConstructedRootFeatureSurface(INamedTypeSymbol surface, INamedTypeSymbol profileContract)
         {
-            if (surface.TypeKind != TypeKind.Interface || !surface.IsGenericType || surface.Arity != 1)
-                return false;
-
-            return HasFeatureConstraint(surface.OriginalDefinition, profileContract);
+            return surface.TypeKind == TypeKind.Interface &&
+                   surface.IsGenericType &&
+                   surface.Arity == 1 &&
+                   GetProfileTypeParameterIndex(surface.OriginalDefinition, profileContract) >= 0;
         }
 
         /// <summary>
-        /// Determines whether a generic root surface declares the provider profile contract
-        /// together with at least one additional feature constraint.
+        /// Discovers generic query composition feature surfaces.
         /// </summary>
-        /// <param name="surfaceDefinition">
-        /// Generic root surface definition being inspected.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to identify feature constraints.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when the surface declares a feature constraint;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
-        private static bool HasFeatureConstraint(INamedTypeSymbol surfaceDefinition, INamedTypeSymbol profileContract)
+        private static ImmutableArray<INamedTypeSymbol> DiscoverCompositionFeatureSurfaces(Compilation compilation, INamedTypeSymbol profileContract, CancellationToken cancellationToken)
         {
-            if (surfaceDefinition.TypeParameters.Length != 1)
-                return false;
+            cancellationToken.ThrowIfCancellationRequested();
 
-            var typeParameter = surfaceDefinition.TypeParameters[0];
+            var queryCommandBuilderContract = compilation.GetTypeByMetadataName(QueryCommandBuilderInterfaceMetadataName);
 
-            var hasProfileConstraint = typeParameter.ConstraintTypes.Any(constraint => SymbolEqualityComparer.Default.Equals(constraint.OriginalDefinition, profileContract.OriginalDefinition));
+            if (queryCommandBuilderContract is null)
+                return ImmutableArray<INamedTypeSymbol>.Empty;
 
-            if (!hasProfileConstraint)
-                return false;
+            var surfaces = ImmutableArray.CreateBuilder<INamedTypeSymbol>();
 
-            return typeParameter.ConstraintTypes.Any(constraint => !SymbolEqualityComparer.Default.Equals(constraint.OriginalDefinition, profileContract.OriginalDefinition));
+            CollectCompositionFeatureSurfaces(compilation.Assembly.GlobalNamespace, queryCommandBuilderContract, profileContract, surfaces, cancellationToken);
+
+            foreach (var assembly in compilation.SourceModule.ReferencedAssemblySymbols)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!assembly.Name.StartsWith("TinyBlueWhale.EngineQuery", StringComparison.Ordinal))
+                    continue;
+
+                CollectCompositionFeatureSurfaces(assembly.GlobalNamespace, queryCommandBuilderContract, profileContract, surfaces, cancellationToken);
+            }
+
+            return surfaces
+                .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
+                .OrderBy(static surface => surface.ToDisplayString(), StringComparer.Ordinal)
+                .ToImmutableArray();
         }
 
         /// <summary>
-        /// Builds provider profile surface models using the root feature surfaces
-        /// compatible with each discovered provider profile.
+        /// Traverses namespaces recursively and collects composition feature surfaces.
         /// </summary>
-        /// <param name="compilation">
-        /// Compilation being processed by the source generator.
-        /// </param>
-        /// <param name="profiles">
-        /// Concrete provider profiles discovered by the generator.
-        /// </param>
-        /// <param name="surfaceDefinitions">
-        /// Generic root feature surface definitions discovered by the generator.
-        /// </param>
-        /// <returns>
-        /// Immutable collection containing the resolved surface model for every profile.
-        /// </returns>
-        private static ImmutableArray<ProfileSurfaceModel> BuildProfileSurfaceModels(Compilation compilation, ImmutableArray<INamedTypeSymbol> profiles, ImmutableArray<INamedTypeSymbol> surfaceDefinitions)
+        private static void CollectCompositionFeatureSurfaces(INamespaceSymbol namespaceSymbol, INamedTypeSymbol queryCommandBuilderContract, INamedTypeSymbol profileContract, ImmutableArray<INamedTypeSymbol>.Builder surfaces, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            foreach (var type in namespaceSymbol.GetTypeMembers())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (IsCompositionFeatureSurface(type, queryCommandBuilderContract, profileContract))
+                    surfaces.Add(type);
+
+                CollectNestedCompositionFeatureSurfaces(type, queryCommandBuilderContract, profileContract, surfaces, cancellationToken);
+            }
+
+            foreach (var nestedNamespace in namespaceSymbol.GetNamespaceMembers())
+                CollectCompositionFeatureSurfaces(nestedNamespace, queryCommandBuilderContract, profileContract, surfaces, cancellationToken);
+        }
+
+        /// <summary>
+        /// Traverses nested types and collects composition feature surfaces.
+        /// </summary>
+        private static void CollectNestedCompositionFeatureSurfaces(INamedTypeSymbol containingType, INamedTypeSymbol queryCommandBuilderContract, INamedTypeSymbol profileContract, ImmutableArray<INamedTypeSymbol>.Builder surfaces, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            foreach (var nestedType in containingType.GetTypeMembers())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (IsCompositionFeatureSurface(nestedType, queryCommandBuilderContract, profileContract))
+                    surfaces.Add(nestedType);
+
+                CollectNestedCompositionFeatureSurfaces(nestedType, queryCommandBuilderContract, profileContract, surfaces, cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the specified interface represents a composition feature surface.
+        /// </summary>
+        private static bool IsCompositionFeatureSurface(INamedTypeSymbol type, INamedTypeSymbol queryCommandBuilderContract, INamedTypeSymbol profileContract)
+        {
+            if (type.TypeKind != TypeKind.Interface || !type.IsGenericType)
+                return false;
+
+            if (SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, queryCommandBuilderContract.OriginalDefinition))
+                return false;
+
+            var implementsQueryCommandBuilder = type.AllInterfaces.Any(implementedInterface => SymbolEqualityComparer.Default.Equals(implementedInterface.OriginalDefinition, queryCommandBuilderContract.OriginalDefinition));
+
+            return implementsQueryCommandBuilder && GetProfileTypeParameterIndex(type.OriginalDefinition, profileContract) >= 0;
+        }
+
+        /// <summary>
+        /// Gets the index of the provider profile type parameter declared by a feature surface.
+        /// </summary>
+        private static int GetProfileTypeParameterIndex(INamedTypeSymbol surfaceDefinition, INamedTypeSymbol profileContract)
+        {
+            for (var index = 0; index < surfaceDefinition.TypeParameters.Length; index++)
+            {
+                var typeParameter = surfaceDefinition.TypeParameters[index];
+
+                var hasProfileConstraint = typeParameter.ConstraintTypes.Any(constraint =>
+                    SymbolEqualityComparer.Default.Equals(constraint.OriginalDefinition, profileContract.OriginalDefinition));
+
+                if (!hasProfileConstraint)
+                    continue;
+
+                var hasFeatureConstraint = typeParameter.ConstraintTypes.Any(constraint =>
+                    !SymbolEqualityComparer.Default.Equals(constraint.OriginalDefinition, profileContract.OriginalDefinition));
+
+                if (hasFeatureConstraint)
+                    return index;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Builds provider profile models using compatible root and composition surfaces.
+        /// </summary>
+        private static ImmutableArray<ProfileSurfaceModel> BuildProfileSurfaceModels(Compilation compilation, ImmutableArray<INamedTypeSymbol> profiles, ImmutableArray<INamedTypeSymbol> rootSurfaceDefinitions, ImmutableArray<INamedTypeSymbol> compositionSurfaceDefinitions, INamedTypeSymbol profileContract)
         {
             return profiles
                 .Select(profile => new ProfileSurfaceModel(
                     profile,
-                    ResolveProfileSurfaces(profile, surfaceDefinitions),
+                    ResolveRootProfileSurfaces(profile, rootSurfaceDefinitions, profileContract),
+                    ResolveCompositionProfileSurfaces(profile, compositionSurfaceDefinitions, profileContract),
                     SymbolEqualityComparer.Default.Equals(profile.ContainingAssembly, compilation.Assembly)))
                 .OrderBy(static model => model.Profile.ToDisplayString(), StringComparer.Ordinal)
                 .ToImmutableArray();
         }
 
         /// <summary>
-        /// Resolves the root query feature surfaces compatible with the specified provider profile.
+        /// Resolves root feature surfaces compatible with the specified provider profile.
         /// </summary>
-        /// <param name="profile">
-        /// Provider profile being resolved.
-        /// </param>
-        /// <param name="surfaceDefinitions">
-        /// Generic root feature surface definitions available to the compilation.
-        /// </param>
-        /// <returns>
-        /// Root feature surfaces compatible with the provider profile.
-        /// </returns>
-        private static IReadOnlyList<INamedTypeSymbol> ResolveProfileSurfaces(INamedTypeSymbol profile, ImmutableArray<INamedTypeSymbol> surfaceDefinitions)
+        private static IReadOnlyList<INamedTypeSymbol> ResolveRootProfileSurfaces(INamedTypeSymbol profile, ImmutableArray<INamedTypeSymbol> surfaceDefinitions, INamedTypeSymbol profileContract)
         {
             var compatibleSurfaces = new List<INamedTypeSymbol>();
 
             foreach (var surfaceDefinition in surfaceDefinitions)
             {
-                if (!SatisfiesSurfaceConstraints(profile, surfaceDefinition))
+                if (!SatisfiesSurfaceConstraints(profile, surfaceDefinition, profileContract))
                     continue;
 
                 compatibleSurfaces.Add(surfaceDefinition.Construct(profile));
@@ -469,25 +407,32 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Determines whether the specified provider profile satisfies the generic
-        /// constraints declared by a root query feature surface.
+        /// Resolves composition feature surface definitions compatible with the specified profile.
         /// </summary>
-        /// <param name="profile">
-        /// Provider profile being evaluated.
-        /// </param>
-        /// <param name="surfaceDefinition">
-        /// Generic root feature surface definition.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when every declared surface constraint is satisfied;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
-        private static bool SatisfiesSurfaceConstraints(INamedTypeSymbol profile, INamedTypeSymbol surfaceDefinition)
+        private static IReadOnlyList<INamedTypeSymbol> ResolveCompositionProfileSurfaces(INamedTypeSymbol profile, ImmutableArray<INamedTypeSymbol> surfaceDefinitions, INamedTypeSymbol profileContract)
         {
-            if (surfaceDefinition.TypeParameters.Length != 1)
+            return surfaceDefinitions
+                .Where(surface => SatisfiesSurfaceConstraints(profile, surface, profileContract))
+                .Where(candidate => !surfaceDefinitions.Any(other =>
+                    !SymbolEqualityComparer.Default.Equals(candidate, other) &&
+                    SatisfiesSurfaceConstraints(profile, other, profileContract) &&
+                    other.AllInterfaces.Any(inherited => SymbolEqualityComparer.Default.Equals(inherited.OriginalDefinition, candidate.OriginalDefinition))))
+                .OrderBy(static surface => surface.ToDisplayString(), StringComparer.Ordinal)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Determines whether the specified provider profile satisfies the profile
+        /// type parameter constraints declared by a feature surface.
+        /// </summary>
+        private static bool SatisfiesSurfaceConstraints(INamedTypeSymbol profile, INamedTypeSymbol surfaceDefinition, INamedTypeSymbol profileContract)
+        {
+            var profileParameterIndex = GetProfileTypeParameterIndex(surfaceDefinition, profileContract);
+
+            if (profileParameterIndex < 0)
                 return false;
 
-            var typeParameter = surfaceDefinition.TypeParameters[0];
+            var typeParameter = surfaceDefinition.TypeParameters[profileParameterIndex];
 
             if (typeParameter.HasReferenceTypeConstraint && profile.IsValueType)
                 return false;
@@ -504,13 +449,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Determines whether the specified provider profile exposes a public parameterless constructor.
         /// </summary>
-        /// <param name="profile">
-        /// Provider profile being inspected.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when the profile exposes a public parameterless constructor;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
         private static bool HasPublicParameterlessConstructor(INamedTypeSymbol profile)
         {
             return profile.InstanceConstructors.Any(constructor => constructor.Parameters.Length == 0 && constructor.DeclaredAccessibility == Accessibility.Public);
@@ -519,16 +457,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Determines whether a provider profile satisfies the specified type constraint.
         /// </summary>
-        /// <param name="profile">
-        /// Provider profile being evaluated.
-        /// </param>
-        /// <param name="constraint">
-        /// Constraint type that must be satisfied.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when the profile satisfies the constraint;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
         private static bool SatisfiesTypeConstraint(INamedTypeSymbol profile, ITypeSymbol constraint)
         {
             if (SymbolEqualityComparer.Default.Equals(profile, constraint))
@@ -551,14 +479,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Removes root feature surfaces already inherited by another compatible surface.
+        /// Removes surfaces already inherited by another compatible surface.
         /// </summary>
-        /// <param name="surfaces">
-        /// Compatible root feature surfaces being reduced.
-        /// </param>
-        /// <returns>
-        /// Minimal root feature surface set required by the generated engine.
-        /// </returns>
         private static IReadOnlyList<INamedTypeSymbol> RemoveInheritedSurfaces(IReadOnlyList<INamedTypeSymbol> surfaces)
         {
             return surfaces
@@ -571,14 +493,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Generates manual root query builder extensions for locally declared provider profiles.
+        /// Generates manual root and composition feature extensions for locally declared profiles.
         /// </summary>
-        /// <param name="context">
-        /// Source production context used to add generated sources.
-        /// </param>
-        /// <param name="model">
-        /// Complete generator model associated with the current compilation.
-        /// </param>
         private static void GenerateManualQueryBuilderExtensions(SourceProductionContext context, GenerationModel model)
         {
             if (model.ProfileContract is null)
@@ -588,7 +504,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
 
-                if (profileModel.Surfaces.Count == 0)
+                if (profileModel.RootSurfaces.Count == 0 && profileModel.CompositionSurfaces.Count == 0)
                     continue;
 
                 var source = GenerateManualQueryBuilderExtensions(profileModel, model.ProfileContract);
@@ -598,25 +514,14 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Generates the manual root query builder extensions associated with the specified profile.
+        /// Generates manual root and composition query feature extensions for the specified profile.
         /// </summary>
-        /// <param name="model">
-        /// Provider profile surface model used to generate the extensions.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to delimit feature surface inheritance.
-        /// </param>
-        /// <returns>
-        /// Generated source containing root query builder extensions.
-        /// </returns>
         private static string GenerateManualQueryBuilderExtensions(ProfileSurfaceModel model, INamedTypeSymbol profileContract)
         {
             var profileType = model.Profile.ToDisplayString(GeneratedTypeDisplayFormat);
-
             var extensionClassName = GetExtensionClassName(model.Profile);
-
-            var methods = GetManualSurfaceMethods(model.Surfaces, profileContract);
-
+            var rootMethods = GetManualSurfaceMethods(model.RootSurfaces, profileContract);
+            var compositionMethods = GetCompositionSurfaceMethods(model.CompositionSurfaces, profileContract);
             var source = new StringBuilder();
 
             source.AppendLine("// <auto-generated />");
@@ -625,18 +530,30 @@ namespace TinyBlueWhale.EngineQuery.Generators
             source.AppendLine($"namespace {GeneratedExtensionsNamespace}");
             source.AppendLine("{");
             source.AppendLine("    /// <summary>");
-            source.AppendLine("    /// Provides generated root query feature extensions for");
+            source.AppendLine("    /// Provides generated query feature extensions for");
             source.AppendLine($"    /// <see cref=\"{profileType}\"/>.");
             source.AppendLine("    /// </summary>");
             source.AppendLine($"    public static class {extensionClassName}");
             source.AppendLine("    {");
 
-            for (var index = 0; index < methods.Count; index++)
-            {
-                AppendManualExtension(source, model, methods[index]);
+            var hasPreviousMethod = false;
 
-                if (index < methods.Count - 1)
+            foreach (var method in rootMethods)
+            {
+                if (hasPreviousMethod)
                     source.AppendLine();
+
+                AppendManualExtension(source, model, method);
+                hasPreviousMethod = true;
+            }
+
+            foreach (var surfaceMethod in compositionMethods)
+            {
+                if (hasPreviousMethod)
+                    source.AppendLine();
+
+                AppendCompositionExtension(source, model, surfaceMethod, profileContract);
+                hasPreviousMethod = true;
             }
 
             source.AppendLine("    }");
@@ -648,19 +565,9 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Appends a generated manual root query feature extension.
         /// </summary>
-        /// <param name="source">
-        /// Source builder receiving generated code.
-        /// </param>
-        /// <param name="model">
-        /// Provider profile surface model associated with the generated extension.
-        /// </param>
-        /// <param name="method">
-        /// Root feature surface method being exposed as an extension.
-        /// </param>
         private static void AppendManualExtension(StringBuilder source, ProfileSurfaceModel model, IMethodSymbol method)
         {
             var profileType = model.Profile.ToDisplayString(GeneratedTypeDisplayFormat);
-
             var genericParameters = BuildGenericParameterList(method);
 
             var returnType = IsRootSurfaceReturn(method.ReturnType, model)
@@ -672,7 +579,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
             parameterDeclarations.Insert(0, $"this global::TinyBlueWhale.EngineQuery.Abstractions.Interfaces.IQueryBuilder<{profileType}> queryBuilder");
 
             var parameters = string.Join(", ", parameterDeclarations);
-
             var arguments = string.Join(", ", method.Parameters.Select(BuildArgument));
 
             source.AppendLine("        /// <summary>");
@@ -716,17 +622,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Gets the root feature methods exposed by the resolved surface set for manual consumption.
+        /// Gets root feature methods exposed by the resolved root surface set.
         /// </summary>
-        /// <param name="surfaces">
-        /// Resolved root feature surfaces associated with a provider profile.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to delimit feature surface inheritance.
-        /// </param>
-        /// <returns>
-        /// De-duplicated method collection used to generate manual extensions.
-        /// </returns>
         private static IReadOnlyList<IMethodSymbol> GetManualSurfaceMethods(IReadOnlyList<INamedTypeSymbol> surfaces, INamedTypeSymbol profileContract)
         {
             var methods = new List<IMethodSymbol>();
@@ -744,17 +641,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Adds methods declared by the specified surface and inherited root feature surfaces.
+        /// Adds methods declared by a root surface and inherited root feature surfaces.
         /// </summary>
-        /// <param name="surface">
-        /// Root feature surface being inspected.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to delimit feature surface inheritance.
-        /// </param>
-        /// <param name="methods">
-        /// Collection receiving discovered methods.
-        /// </param>
         private static void AddSurfaceMethodsForManual(INamedTypeSymbol surface, INamedTypeSymbol profileContract, ICollection<IMethodSymbol> methods)
         {
             foreach (var method in GetDeclaredSurfaceMethods(surface))
@@ -770,15 +658,157 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Generates the query engine surface and concrete wrapper associated with
-        /// every discovered database provider profile.
+        /// Gets composition feature methods exposed by compatible composition surfaces.
         /// </summary>
-        /// <param name="context">
-        /// Source production context used to add generated sources.
-        /// </param>
-        /// <param name="model">
-        /// Complete generator model associated with the dependency injection compilation.
-        /// </param>
+        private static IReadOnlyList<SurfaceMethodModel> GetCompositionSurfaceMethods(IReadOnlyList<INamedTypeSymbol> surfaces, INamedTypeSymbol profileContract)
+        {
+            var methods = new List<SurfaceMethodModel>();
+
+            foreach (var surface in surfaces)
+                AddCompositionSurfaceMethods(surface, profileContract, methods);
+
+            return methods
+                .GroupBy(BuildCompositionMethodIdentity, StringComparer.Ordinal)
+                .Select(static group => group.First())
+                .OrderBy(static model => model.Method.Name, StringComparer.Ordinal)
+                .ThenBy(static model => model.Method.Arity)
+                .ThenBy(static model => model.Method.Parameters.Length)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Adds methods declared by a composition surface and inherited feature surfaces.
+        /// </summary>
+        private static void AddCompositionSurfaceMethods(INamedTypeSymbol surface, INamedTypeSymbol profileContract, ICollection<SurfaceMethodModel> methods)
+        {
+            foreach (var method in GetDeclaredSurfaceMethods(surface))
+                methods.Add(new SurfaceMethodModel(surface, method));
+
+            foreach (var inheritedSurface in surface.Interfaces)
+            {
+                if (GetProfileTypeParameterIndex(inheritedSurface.OriginalDefinition, profileContract) < 0)
+                    continue;
+
+                AddCompositionSurfaceMethods(inheritedSurface.OriginalDefinition, profileContract, methods);
+            }
+        }
+
+        /// <summary>
+        /// Appends a generated profile-closed composition feature extension.
+        /// </summary>
+        private static void AppendCompositionExtension(StringBuilder source, ProfileSurfaceModel model, SurfaceMethodModel surfaceMethod, INamedTypeSymbol profileContract)
+        {
+            var surface = surfaceMethod.Surface.OriginalDefinition;
+            var method = surfaceMethod.Method;
+            var profileParameterIndex = GetProfileTypeParameterIndex(surface, profileContract);
+
+            if (profileParameterIndex < 0)
+                return;
+
+            var profileParameter = surface.TypeParameters[profileParameterIndex];
+            var promotedSurfaceParameters = surface.TypeParameters.Where((_, index) => index != profileParameterIndex).ToList();
+            var substitutions = new Dictionary<ITypeParameterSymbol, string>(SymbolEqualityComparer.Default);
+            var profileType = model.Profile.ToDisplayString(GeneratedTypeDisplayFormat);
+
+            substitutions[profileParameter] = profileType;
+
+            foreach (var typeParameter in promotedSurfaceParameters)
+                substitutions[typeParameter] = typeParameter.Name;
+
+            foreach (var typeParameter in method.TypeParameters)
+                substitutions[typeParameter] = typeParameter.Name;
+
+            var genericTypeParameters = promotedSurfaceParameters
+                .Select(static parameter => parameter.Name)
+                .Concat(method.TypeParameters.Select(static parameter => parameter.Name))
+                .ToList();
+
+            var genericParameters = genericTypeParameters.Count == 0
+                ? string.Empty
+                : $"<{string.Join(", ", genericTypeParameters)}>";
+
+            var queryCommandBuilder = FindQueryCommandBuilderSurface(surface);
+
+            if (queryCommandBuilder is null)
+                return;
+
+            var receiverType = RenderType(queryCommandBuilder, substitutions);
+            var returnType = RenderType(method.ReturnType, substitutions);
+            var parameterDeclarations = method.Parameters.Select(parameter => BuildParameterDeclaration(parameter, substitutions)).ToList();
+
+            parameterDeclarations.Insert(0, $"this {receiverType} queryBuilder");
+
+            var parameters = string.Join(", ", parameterDeclarations);
+            var arguments = string.Join(", ", method.Parameters.Select(BuildArgument));
+            var hookName = $"Apply{method.Name}";
+            var hookGenericParameters = method.TypeParameters.Length == 0
+                ? string.Empty
+                : $"<{string.Join(", ", method.TypeParameters.Select(static parameter => parameter.Name))}>";
+
+            source.AppendLine("        /// <summary>");
+            source.AppendLine($"        /// Provides the generated {method.Name} composition feature operation.");
+            source.AppendLine("        /// </summary>");
+
+            foreach (var typeParameter in promotedSurfaceParameters)
+            {
+                source.AppendLine($"        /// <typeparam name=\"{typeParameter.Name}\">");
+                source.AppendLine("        /// Generic type parameter associated with the current query composition.");
+                source.AppendLine("        /// </typeparam>");
+            }
+
+            foreach (var typeParameter in method.TypeParameters)
+            {
+                source.AppendLine($"        /// <typeparam name=\"{typeParameter.Name}\">");
+                source.AppendLine("        /// Generic type parameter associated with the feature operation.");
+                source.AppendLine("        /// </typeparam>");
+            }
+
+            source.AppendLine("        /// <param name=\"queryBuilder\">");
+            source.AppendLine("        /// Current query command builder instance.");
+            source.AppendLine("        /// </param>");
+
+            foreach (var parameter in method.Parameters)
+            {
+                source.AppendLine($"        /// <param name=\"{parameter.Name}\">");
+                source.AppendLine("        /// Feature operation argument.");
+                source.AppendLine("        /// </param>");
+            }
+
+            source.AppendLine("        /// <returns>");
+            source.AppendLine("        /// Result produced by the composition feature operation.");
+            source.AppendLine("        /// </returns>");
+            source.AppendLine($"        public static {returnType} {method.Name}{genericParameters}({parameters})");
+
+            AppendGenericConstraints(source, promotedSurfaceParameters, substitutions, "            ");
+            AppendGenericConstraints(source, method.TypeParameters, substitutions, "            ");
+
+            source.AppendLine("        {");
+            source.AppendLine("            global::System.ArgumentNullException.ThrowIfNull(queryBuilder);");
+
+            foreach (var parameter in method.Parameters.Where(static parameter => parameter.Type.TypeKind == TypeKind.Delegate))
+                source.AppendLine($"            global::System.ArgumentNullException.ThrowIfNull({EscapeIdentifier(parameter.Name)});");
+
+            if (method.ReturnsVoid)
+                source.AppendLine($"            queryBuilder.{hookName}{hookGenericParameters}({arguments});");
+            else
+                source.AppendLine($"            return queryBuilder.{hookName}{hookGenericParameters}({arguments});");
+
+            source.AppendLine("        }");
+        }
+
+        /// <summary>
+        /// Finds the IQueryCommandBuilder contract inherited by a composition surface.
+        /// </summary>
+        private static INamedTypeSymbol? FindQueryCommandBuilderSurface(INamedTypeSymbol surface)
+        {
+            return surface.AllInterfaces.FirstOrDefault(implementedInterface =>
+                implementedInterface.OriginalDefinition.ToDisplayString() ==
+                "TinyBlueWhale.EngineQuery.Abstractions.Interfaces.IQueryCommandBuilder<T, TProfile>");
+        }
+
+        /// <summary>
+        /// Generates query engine surfaces for every discovered profile.
+        /// </summary>
         private static void GenerateQueryEngineSurfaces(SourceProductionContext context, GenerationModel model)
         {
             if (model.ProfileContract is null)
@@ -795,27 +825,13 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Generates the query engine surface and implementation associated with
-        /// the specified database provider profile.
+        /// Generates the query engine surface and implementation associated with a profile.
         /// </summary>
-        /// <param name="model">
-        /// Provider profile surface model used to generate the engine.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to delimit feature surface inheritance.
-        /// </param>
-        /// <returns>
-        /// Generated C# source containing the strongly typed query engine interface
-        /// and concrete implementation.
-        /// </returns>
         private static string GenerateQueryEngineSurface(ProfileSurfaceModel model, INamedTypeSymbol profileContract)
         {
             var profileType = model.Profile.ToDisplayString(GeneratedTypeDisplayFormat);
-
             var engineName = GetEngineName(model.Profile);
-
             var engineInterfaceName = $"I{engineName}";
-
             var source = new StringBuilder();
 
             source.AppendLine("// <auto-generated />");
@@ -824,7 +840,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
             source.AppendLine($"namespace {GeneratedNamespace}");
             source.AppendLine("{");
 
-            AppendEngineInterface(source, profileType, engineInterfaceName, model.Surfaces);
+            AppendEngineInterface(source, profileType, engineInterfaceName, model.RootSurfaces);
 
             source.AppendLine();
 
@@ -838,18 +854,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Appends the generated public query engine interface associated with a provider profile.
         /// </summary>
-        /// <param name="source">
-        /// Source builder receiving generated code.
-        /// </param>
-        /// <param name="profileType">
-        /// Fully qualified provider profile type.
-        /// </param>
-        /// <param name="engineInterfaceName">
-        /// Generated query engine interface name.
-        /// </param>
-        /// <param name="featureSurfaces">
-        /// Resolved root feature surfaces associated with the provider profile.
-        /// </param>
         private static void AppendEngineInterface(StringBuilder source, string profileType, string engineInterfaceName, IReadOnlyList<INamedTypeSymbol> featureSurfaces)
         {
             var surfaces = new List<string>
@@ -883,31 +887,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Appends the generated query engine implementation associated with a provider profile.
         /// </summary>
-        /// <param name="source">
-        /// Source builder receiving generated code.
-        /// </param>
-        /// <param name="model">
-        /// Provider profile surface model used to generate the implementation.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to delimit feature surface inheritance.
-        /// </param>
-        /// <param name="profileType">
-        /// Fully qualified provider profile type.
-        /// </param>
-        /// <param name="engineName">
-        /// Generated concrete query engine name.
-        /// </param>
-        /// <param name="engineInterfaceName">
-        /// Generated query engine interface name.
-        /// </param>
-        private static void AppendEngineImplementation(
-            StringBuilder source,
-            ProfileSurfaceModel model,
-            INamedTypeSymbol profileContract,
-            string profileType,
-            string engineName,
-            string engineInterfaceName)
+        private static void AppendEngineImplementation(StringBuilder source, ProfileSurfaceModel model, INamedTypeSymbol profileContract, string profileType, string engineName, string engineInterfaceName)
         {
             source.AppendLine("    /// <summary>");
             source.AppendLine("    /// Provides the generated query engine implementation associated with");
@@ -918,7 +898,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
             source.AppendLine($"        {engineInterfaceName}");
             source.AppendLine("    {");
 
-            var surfaceMethods = GetDependencyInjectionSurfaceMethods(model.Surfaces, profileContract);
+            var surfaceMethods = GetDependencyInjectionSurfaceMethods(model.RootSurfaces, profileContract);
 
             for (var index = 0; index < surfaceMethods.Count; index++)
             {
@@ -932,18 +912,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Gets every interface method that must be explicitly implemented by the generated
-        /// query engine, including inherited root feature surface contracts.
+        /// Gets root surface methods requiring explicit DI forwarding implementations.
         /// </summary>
-        /// <param name="surfaces">
-        /// Resolved root feature surfaces associated with a provider profile.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to delimit feature surface inheritance.
-        /// </param>
-        /// <returns>
-        /// Surface method models requiring explicit forwarding implementations.
-        /// </returns>
         private static IReadOnlyList<SurfaceMethodModel> GetDependencyInjectionSurfaceMethods(IReadOnlyList<INamedTypeSymbol> surfaces, INamedTypeSymbol profileContract)
         {
             var methods = new List<SurfaceMethodModel>();
@@ -962,17 +932,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Adds methods declared by the specified root feature surface and inherited root feature contracts.
+        /// Adds methods declared by a root feature surface and inherited root contracts.
         /// </summary>
-        /// <param name="surface">
-        /// Root feature surface being inspected.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used to delimit feature surface inheritance.
-        /// </param>
-        /// <param name="methods">
-        /// Collection receiving interface method models.
-        /// </param>
         private static void AddDependencyInjectionSurfaceMethods(INamedTypeSymbol surface, INamedTypeSymbol profileContract, ICollection<SurfaceMethodModel> methods)
         {
             foreach (var method in GetDeclaredSurfaceMethods(surface))
@@ -988,31 +949,16 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Appends an explicit root feature surface implementation to a generated query engine.
+        /// Appends an explicit root feature implementation to a generated query engine.
         /// </summary>
-        /// <param name="source">
-        /// Source builder receiving generated code.
-        /// </param>
-        /// <param name="model">
-        /// Provider profile surface model associated with the generated engine.
-        /// </param>
-        /// <param name="surfaceMethod">
-        /// Surface method being implemented.
-        /// </param>
         private static void AppendDependencyInjectionSurfaceMethod(StringBuilder source, ProfileSurfaceModel model, SurfaceMethodModel surfaceMethod)
         {
             var surfaceType = surfaceMethod.Surface.ToDisplayString(GeneratedTypeDisplayFormat);
-
             var method = surfaceMethod.Method;
-
             var returnType = method.ReturnType.ToDisplayString(GeneratedTypeDisplayFormat);
-
             var genericParameters = BuildGenericParameterList(method);
-
             var parameters = string.Join(", ", method.Parameters.Select(BuildParameterDeclaration));
-
             var arguments = string.Join(", ", method.Parameters.Select(BuildArgument));
-
             var extensionType = $"global::{GeneratedExtensionsNamespace}.{GetExtensionClassName(model.Profile)}";
 
             source.AppendLine("        /// <inheritdoc />");
@@ -1040,14 +986,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Gets ordinary instance methods declared directly by the specified feature surface.
+        /// Gets ordinary instance methods declared directly by a feature surface.
         /// </summary>
-        /// <param name="surface">
-        /// Feature surface being inspected.
-        /// </param>
-        /// <returns>
-        /// Methods declared directly by the surface.
-        /// </returns>
         private static IReadOnlyList<IMethodSymbol> GetDeclaredSurfaceMethods(INamedTypeSymbol surface)
         {
             return surface
@@ -1061,25 +1001,14 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Determines whether the specified return type represents one of the root
-        /// feature surfaces resolved for the provider profile.
+        /// Determines whether the specified return type represents a resolved root surface.
         /// </summary>
-        /// <param name="returnType">
-        /// Method return type being inspected.
-        /// </param>
-        /// <param name="model">
-        /// Provider profile surface model associated with the method.
-        /// </param>
-        /// <returns>
-        /// <see langword="true"/> when the return type represents a root feature surface;
-        /// otherwise, <see langword="false"/>.
-        /// </returns>
         private static bool IsRootSurfaceReturn(ITypeSymbol returnType, ProfileSurfaceModel model)
         {
             if (returnType is not INamedTypeSymbol namedReturnType)
                 return false;
 
-            foreach (var surface in model.Surfaces)
+            foreach (var surface in model.RootSurfaces)
             {
                 if (SymbolEqualityComparer.Default.Equals(surface, namedReturnType))
                     return true;
@@ -1092,28 +1021,24 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Builds an identity used to de-duplicate manual extension methods.
+        /// Builds an identity used to de-duplicate manual root extension methods.
         /// </summary>
-        /// <param name="method">
-        /// Method whose identity is being generated.
-        /// </param>
-        /// <returns>
-        /// Stable method identity.
-        /// </returns>
         private static string BuildManualMethodIdentity(IMethodSymbol method)
         {
             return $"{method.Name}`{method.Arity}({string.Join(",", method.Parameters.Select(parameter => $"{parameter.RefKind}:{parameter.Type.ToDisplayString(GeneratedTypeDisplayFormat)}"))})";
         }
 
         /// <summary>
-        /// Builds an identity used to de-duplicate dependency injection surface implementations.
+        /// Builds an identity used to de-duplicate composition extension methods.
         /// </summary>
-        /// <param name="model">
-        /// Surface method model whose identity is being generated.
-        /// </param>
-        /// <returns>
-        /// Stable surface method identity.
-        /// </returns>
+        private static string BuildCompositionMethodIdentity(SurfaceMethodModel model)
+        {
+            return $"{model.Surface.OriginalDefinition.ToDisplayString(GeneratedTypeDisplayFormat)}::{BuildManualMethodIdentity(model.Method)}";
+        }
+
+        /// <summary>
+        /// Builds an identity used to de-duplicate DI surface implementations.
+        /// </summary>
         private static string BuildDependencyInjectionMethodIdentity(SurfaceMethodModel model)
         {
             return $"{model.Surface.ToDisplayString(GeneratedTypeDisplayFormat)}::{BuildManualMethodIdentity(model.Method)}";
@@ -1122,12 +1047,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Builds the generic parameter list associated with the specified method.
         /// </summary>
-        /// <param name="method">
-        /// Method whose generic parameters are being rendered.
-        /// </param>
-        /// <returns>
-        /// Generic parameter list or an empty string when the method is not generic.
-        /// </returns>
         private static string BuildGenericParameterList(IMethodSymbol method)
         {
             if (method.TypeParameters.Length == 0)
@@ -1137,17 +1056,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Appends generic type parameter constraints declared by the specified method.
+        /// Appends generic constraints declared by the specified method.
         /// </summary>
-        /// <param name="source">
-        /// Source builder receiving generated constraints.
-        /// </param>
-        /// <param name="method">
-        /// Method whose generic constraints are being rendered.
-        /// </param>
-        /// <param name="indentation">
-        /// Indentation applied to generated constraint clauses.
-        /// </param>
         private static void AppendGenericConstraints(StringBuilder source, IMethodSymbol method, string indentation)
         {
             foreach (var typeParameter in method.TypeParameters)
@@ -1166,14 +1076,28 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Builds the generic constraints associated with the specified type parameter.
+        /// Appends generic constraints using the specified type substitutions.
         /// </summary>
-        /// <param name="typeParameter">
-        /// Generic type parameter being inspected.
-        /// </param>
-        /// <returns>
-        /// Collection containing rendered generic constraints.
-        /// </returns>
+        private static void AppendGenericConstraints(StringBuilder source, IEnumerable<ITypeParameterSymbol> typeParameters, IReadOnlyDictionary<ITypeParameterSymbol, string> substitutions, string indentation)
+        {
+            foreach (var typeParameter in typeParameters)
+            {
+                var constraints = BuildGenericConstraints(typeParameter, substitutions);
+
+                if (constraints.Count == 0)
+                    continue;
+
+                source.Append(indentation);
+                source.Append("where ");
+                source.Append(typeParameter.Name);
+                source.Append(" : ");
+                source.AppendLine(string.Join(", ", constraints));
+            }
+        }
+
+        /// <summary>
+        /// Builds generic constraints associated with a type parameter.
+        /// </summary>
         private static IReadOnlyList<string> BuildGenericConstraints(ITypeParameterSymbol typeParameter)
         {
             var constraints = new List<string>();
@@ -1196,48 +1120,101 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
+        /// Builds generic constraints associated with a type parameter using substitutions.
+        /// </summary>
+        private static IReadOnlyList<string> BuildGenericConstraints(ITypeParameterSymbol typeParameter, IReadOnlyDictionary<ITypeParameterSymbol, string> substitutions)
+        {
+            var constraints = new List<string>();
+
+            if (typeParameter.HasUnmanagedTypeConstraint)
+                constraints.Add("unmanaged");
+            else if (typeParameter.HasValueTypeConstraint)
+                constraints.Add("struct");
+            else if (typeParameter.HasReferenceTypeConstraint)
+                constraints.Add(typeParameter.ReferenceTypeConstraintNullableAnnotation == NullableAnnotation.Annotated ? "class?" : "class");
+            else if (typeParameter.HasNotNullConstraint)
+                constraints.Add("notnull");
+
+            constraints.AddRange(typeParameter.ConstraintTypes.Select(constraint => RenderType(constraint, substitutions)));
+
+            if (typeParameter.HasConstructorConstraint)
+                constraints.Add("new()");
+
+            return constraints;
+        }
+
+        /// <summary>
         /// Builds the source representation of a generated method parameter.
         /// </summary>
-        /// <param name="parameter">
-        /// Parameter being rendered.
-        /// </param>
-        /// <returns>
-        /// C# parameter declaration.
-        /// </returns>
         private static string BuildParameterDeclaration(IParameterSymbol parameter)
         {
             var modifier = GetRefModifier(parameter.RefKind);
-
             var type = parameter.Type.ToDisplayString(GeneratedTypeDisplayFormat);
-
             var defaultValue = BuildDefaultValue(parameter);
 
             return $"{modifier}{type} {EscapeIdentifier(parameter.Name)}{defaultValue}";
         }
 
         /// <summary>
+        /// Builds a parameter declaration using generic type substitutions.
+        /// </summary>
+        private static string BuildParameterDeclaration(IParameterSymbol parameter, IReadOnlyDictionary<ITypeParameterSymbol, string> substitutions)
+        {
+            var modifier = GetRefModifier(parameter.RefKind);
+            var type = RenderType(parameter.Type, substitutions);
+            var defaultValue = BuildDefaultValue(parameter);
+
+            return $"{modifier}{type} {EscapeIdentifier(parameter.Name)}{defaultValue}";
+        }
+
+        /// <summary>
+        /// Renders a type while replacing selected generic type parameters.
+        /// </summary>
+        private static string RenderType(ITypeSymbol type, IReadOnlyDictionary<ITypeParameterSymbol, string> substitutions)
+        {
+            var parts = type.ToDisplayParts(GeneratedTypeDisplayFormat);
+            var source = new StringBuilder();
+
+            foreach (var part in parts)
+            {
+                if (part.Symbol is ITypeParameterSymbol typeParameter && TryGetTypeSubstitution(typeParameter, substitutions, out var substitution))
+                    source.Append(substitution);
+                else
+                    source.Append(part.ToString());
+            }
+
+            return source.ToString();
+        }
+
+        /// <summary>
+        /// Attempts to resolve a generic type parameter substitution.
+        /// </summary>
+        private static bool TryGetTypeSubstitution(ITypeParameterSymbol typeParameter, IReadOnlyDictionary<ITypeParameterSymbol, string> substitutions, out string substitution)
+        {
+            foreach (var pair in substitutions)
+            {
+                if (!SymbolEqualityComparer.Default.Equals(pair.Key, typeParameter))
+                    continue;
+
+                substitution = pair.Value;
+                return true;
+            }
+
+            substitution = string.Empty;
+            return false;
+        }
+
+        /// <summary>
         /// Builds the forwarding invocation argument associated with a method parameter.
         /// </summary>
-        /// <param name="parameter">
-        /// Parameter being forwarded.
-        /// </param>
-        /// <returns>
-        /// C# invocation argument.
-        /// </returns>
         private static string BuildArgument(IParameterSymbol parameter)
         {
             return $"{GetRefModifier(parameter.RefKind)}{EscapeIdentifier(parameter.Name)}";
         }
 
         /// <summary>
-        /// Builds the suffix used to append forwarded arguments after the root query builder argument.
+        /// Builds the suffix used to append forwarded arguments after the root builder argument.
         /// </summary>
-        /// <param name="arguments">
-        /// Rendered forwarded arguments.
-        /// </param>
-        /// <returns>
-        /// Empty string when no arguments exist; otherwise a comma-prefixed argument list.
-        /// </returns>
         private static string BuildForwardedArgumentSuffix(string arguments)
         {
             return string.IsNullOrWhiteSpace(arguments) ? string.Empty : $", {arguments}";
@@ -1246,12 +1223,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Gets the C# parameter modifier associated with the specified reference kind.
         /// </summary>
-        /// <param name="refKind">
-        /// Parameter reference kind.
-        /// </param>
-        /// <returns>
-        /// C# reference modifier or an empty string.
-        /// </returns>
         private static string GetRefModifier(RefKind refKind)
         {
             return refKind switch
@@ -1266,12 +1237,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Builds the default value declaration associated with an optional parameter.
         /// </summary>
-        /// <param name="parameter">
-        /// Parameter being inspected.
-        /// </param>
-        /// <returns>
-        /// Default value declaration or an empty string when no explicit default exists.
-        /// </returns>
         private static string BuildDefaultValue(IParameterSymbol parameter)
         {
             if (!parameter.HasExplicitDefaultValue)
@@ -1295,12 +1260,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Escapes a C# identifier when it conflicts with a language keyword.
         /// </summary>
-        /// <param name="identifier">
-        /// Identifier being escaped.
-        /// </param>
-        /// <returns>
-        /// Escaped C# identifier.
-        /// </returns>
         private static string EscapeIdentifier(string identifier)
         {
             return Microsoft.CodeAnalysis.CSharp.SyntaxFacts.GetKeywordKind(identifier) != Microsoft.CodeAnalysis.CSharp.SyntaxKind.None
@@ -1311,12 +1270,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Escapes a string value for inclusion in generated C# source.
         /// </summary>
-        /// <param name="value">
-        /// String value being escaped.
-        /// </param>
-        /// <returns>
-        /// Escaped string value.
-        /// </returns>
         private static string EscapeString(string value)
         {
             return value
@@ -1330,12 +1283,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Escapes a character value for inclusion in generated C# source.
         /// </summary>
-        /// <param name="value">
-        /// Character value being escaped.
-        /// </param>
-        /// <returns>
-        /// Escaped character value.
-        /// </returns>
         private static string EscapeChar(char value)
         {
             return value switch
@@ -1352,12 +1299,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Generates dependency injection registration for all discovered provider profile factories.
         /// </summary>
-        /// <param name="context">
-        /// Source production context used to add generated source.
-        /// </param>
-        /// <param name="model">
-        /// Complete generator model associated with the dependency injection compilation.
-        /// </param>
         private static void GenerateDependencyInjectionRegistration(SourceProductionContext context, GenerationModel model)
         {
             var source = new StringBuilder();
@@ -1392,26 +1333,15 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Appends the dependency injection registrations associated with a provider profile.
+        /// Appends dependency injection registrations associated with a provider profile.
         /// </summary>
-        /// <param name="source">
-        /// Source builder receiving generated registration code.
-        /// </param>
-        /// <param name="profile">
-        /// Provider profile whose query engine factory and direct engine surface are being registered.
-        /// </param>
         private static void AppendFactoryRegistration(StringBuilder source, INamedTypeSymbol profile)
         {
             var profileType = profile.ToDisplayString(GeneratedTypeDisplayFormat);
-
             var engineName = GetEngineName(profile);
-
             var engineInterfaceName = $"global::{GeneratedNamespace}.I{engineName}";
-
             var engineImplementationName = $"global::{GeneratedNamespace}.{engineName}";
-
             var factoryInterface = $"global::TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces.IQueryEngineFactory<{profileType}, {engineInterfaceName}>";
-
             var factoryImplementation = $"global::TinyBlueWhale.EngineQuery.DependencyInjection.Factories.QueryEngineFactory<{profileType}, {engineInterfaceName}>";
 
             source.AppendLine();
@@ -1421,29 +1351,16 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Gets the generated query engine name associated with the specified provider profile.
+        /// Gets the generated query engine name associated with the specified profile.
         /// </summary>
-        /// <param name="profile">
-        /// Provider profile whose engine name is being generated.
-        /// </param>
-        /// <returns>
-        /// Generated query engine name without the profile suffix.
-        /// </returns>
         private static string GetEngineName(INamedTypeSymbol profile)
         {
             return $"{GetProfileBaseName(profile)}QueryEngine";
         }
 
         /// <summary>
-        /// Gets the generated root query builder extension class name associated with
-        /// the specified provider profile.
+        /// Gets the generated query builder extension class name associated with the specified profile.
         /// </summary>
-        /// <param name="profile">
-        /// Provider profile whose extension class name is being generated.
-        /// </param>
-        /// <returns>
-        /// Generated extension class name.
-        /// </returns>
         private static string GetExtensionClassName(INamedTypeSymbol profile)
         {
             return $"{GetProfileBaseName(profile)}QueryBuilderExtensions";
@@ -1452,12 +1369,6 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Gets the provider profile name without the conventional Profile suffix.
         /// </summary>
-        /// <param name="profile">
-        /// Provider profile whose base name is being generated.
-        /// </param>
-        /// <returns>
-        /// Provider profile base name.
-        /// </returns>
         private static string GetProfileBaseName(INamedTypeSymbol profile)
         {
             const string profileSuffix = "Profile";
@@ -1473,21 +1384,8 @@ namespace TinyBlueWhale.EngineQuery.Generators
         /// <summary>
         /// Represents the complete generation state associated with a compilation.
         /// </summary>
-        /// <remarks>
-        /// Initializes a new generation model.
-        /// </remarks>
-        /// <param name="profiles">
-        /// Provider profile surface models discovered by the generator.
-        /// </param>
-        /// <param name="profileContract">
-        /// Database provider profile contract used during structural feature discovery.
-        /// </param>
-        /// <param name="supportsQueryEngineGeneration">
-        /// Indicates whether the current compilation contains dependency injection query engine contracts.
-        /// </param>
-        private sealed class GenerationModel(ImmutableArray<QueryEngineSurfaceGenerator.ProfileSurfaceModel> profiles, INamedTypeSymbol? profileContract, bool supportsQueryEngineGeneration)
+        private sealed class GenerationModel(ImmutableArray<ProfileSurfaceModel> profiles, INamedTypeSymbol? profileContract, bool supportsQueryEngineGeneration)
         {
-
             /// <summary>
             /// Gets the discovered provider profile surface models.
             /// </summary>
@@ -1505,62 +1403,43 @@ namespace TinyBlueWhale.EngineQuery.Generators
         }
 
         /// <summary>
-        /// Represents a provider profile together with the root query feature surfaces
-        /// compatible with the profile.
+        /// Represents a provider profile together with compatible root and composition feature surfaces.
         /// </summary>
-        /// <remarks>
-        /// Initializes a new provider profile surface model.
-        /// </remarks>
-        /// <param name="profile">
-        /// Database provider profile represented by the model.
-        /// </param>
-        /// <param name="surfaces">
-        /// Root query feature surfaces compatible with the profile.
-        /// </param>
-        /// <param name="isLocal">
-        /// Indicates whether the profile is declared by the current compilation.
-        /// </param>
-        private sealed class ProfileSurfaceModel(INamedTypeSymbol profile, IReadOnlyList<INamedTypeSymbol> surfaces, bool isLocal)
+        private sealed class ProfileSurfaceModel(INamedTypeSymbol profile, IReadOnlyList<INamedTypeSymbol> rootSurfaces, IReadOnlyList<INamedTypeSymbol> compositionSurfaces, bool isLocal)
         {
-
             /// <summary>
             /// Gets the database provider profile represented by the model.
             /// </summary>
             public INamedTypeSymbol Profile { get; } = profile ?? throw new ArgumentNullException(nameof(profile));
 
             /// <summary>
-            /// Gets the root query feature surfaces compatible with the profile.
+            /// Gets root query feature surfaces compatible with the profile.
             /// </summary>
-            public IReadOnlyList<INamedTypeSymbol> Surfaces { get; } = surfaces ?? throw new ArgumentNullException(nameof(surfaces));
+            public IReadOnlyList<INamedTypeSymbol> RootSurfaces { get; } = rootSurfaces ?? throw new ArgumentNullException(nameof(rootSurfaces));
 
             /// <summary>
-            /// Gets whether the provider profile is declared by the current compilation.
+            /// Gets composition query feature surfaces compatible with the profile.
+            /// </summary>
+            public IReadOnlyList<INamedTypeSymbol> CompositionSurfaces { get; } = compositionSurfaces ?? throw new ArgumentNullException(nameof(compositionSurfaces));
+
+            /// <summary>
+            /// Gets whether the profile is declared by the current compilation.
             /// </summary>
             public bool IsLocal { get; } = isLocal;
         }
 
         /// <summary>
-        /// Represents a method declared by a specific root feature surface.
+        /// Represents a method declared by a specific feature surface.
         /// </summary>
-        /// <remarks>
-        /// Initializes a new surface method model.
-        /// </remarks>
-        /// <param name="surface">
-        /// Root feature surface declaring the method.
-        /// </param>
-        /// <param name="method">
-        /// Method declared by the root feature surface.
-        /// </param>
         private sealed class SurfaceMethodModel(INamedTypeSymbol surface, IMethodSymbol method)
         {
-
             /// <summary>
-            /// Gets the root feature surface declaring the method.
+            /// Gets the feature surface declaring the method.
             /// </summary>
             public INamedTypeSymbol Surface { get; } = surface ?? throw new ArgumentNullException(nameof(surface));
 
             /// <summary>
-            /// Gets the method declared by the root feature surface.
+            /// Gets the method declared by the feature surface.
             /// </summary>
             public IMethodSymbol Method { get; } = method ?? throw new ArgumentNullException(nameof(method));
         }

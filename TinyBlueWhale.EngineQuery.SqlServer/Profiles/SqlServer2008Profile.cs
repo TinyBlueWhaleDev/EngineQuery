@@ -1,5 +1,6 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.LateralJoins;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 using TinyBlueWhale.EngineQuery.Sql.Profiles;
 using TinyBlueWhale.EngineQuery.SqlServer.Clauses.Strategies.Cte;
@@ -22,7 +23,8 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Profiles
         ILateralJoinFeature,
         IIntersectFeature,
         IExceptFeature,
-        ICTEStrategyProvider
+        ICTEStrategyProvider,
+        ILateralJoinStrategyProvider
     {
         /// <inheritdoc />
         public override DatabaseProviderVersion Version { get; } = DatabaseProviderVersion.Create(10, 0);
@@ -30,6 +32,11 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Profiles
         public ICTEStrategy CreateCteStrategy()
         {
             return new SqlServer2008CteStrategy();
+        }
+
+        public ILateralJoinStrategy CreateLateralJoinStrategy()
+        {
+            return new LateralJoinStrategy();
         }
     }
 }

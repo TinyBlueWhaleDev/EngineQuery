@@ -1,4 +1,5 @@
 ﻿using TinyBlueWhale.EngineQuery.Sql.Clauses;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.LateralJoins;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
@@ -33,6 +34,15 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
         public ICTEStrategy? CteStrategy { get; init; }
 
         /// <summary>
+        /// Gets or initializes the lateral join strategy associated with the provider profile.
+        /// </summary>
+        /// <remarks>
+        /// A <see langword="null"/> value indicates that the configured provider profile
+        /// does not expose lateral join support.
+        /// </remarks>
+        public ILateralJoinStrategy? LateralJoinStrategy { get; init; }
+
+        /// <summary>
         /// Gets or initializes the optional factory used to create the INSERT clause builder.
         /// </summary>
         /// <remarks>
@@ -40,13 +50,5 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
         /// <see cref="InsertClauseBuilder"/> is used.
         /// </remarks>
         public Func<InsertClauseBuilder>? InsertClauseBuilderFactory { get; init; }
-
-        /// <summary>
-        /// Gets or initializes the optional factory used to create the APPLY clause builder.
-        /// </summary>
-        /// <remarks>
-        /// When this value is <see langword="null"/>, the default <see cref="ApplyClauseBuilder"/> is used.
-        /// </remarks>
-        public Func<SubqueryCompiler, ApplyClauseBuilder>? ApplyClauseBuilderFactory { get; init; }
     }
 }

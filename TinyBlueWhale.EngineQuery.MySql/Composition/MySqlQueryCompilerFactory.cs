@@ -37,11 +37,10 @@ namespace TinyBlueWhale.EngineQuery.MySql.Composition
                 databaseDialect,
                 new QueryScriptBuilderOptions
                 {
-                    ApplyClauseBuilderFactory = subqueryCompiler =>
-                        new MySqlApplyClauseBuilder(subqueryCompiler),
                     InsertClauseBuilderFactory = () => new MySqlInsertClauseBuilder(),
                     PaginationStrategy = featureComposition.PaginationStrategy,
-                    CteStrategy = featureComposition.CteStrategy
+                    CteStrategy = featureComposition.CteStrategy,
+                    LateralJoinStrategy = featureComposition.LateralJoinStrategy
                 });
         }
     }

@@ -1,4 +1,5 @@
-﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.SetOperations;
+﻿using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Joins;
+using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.SetOperations;
 using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFunctions;
 
 //BasicSelectQueryValidator.Run();
@@ -27,8 +28,6 @@ using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFu
 //UnionQueryValidator.Run();
 //UnionAllQueryValidator.Run();
 //DistinctQueryValidator.Run();
-//IntersectExceptQueryValidator.Run();
-//ApplyLateralJoinQueryValidator.Run();
 //AdvancedWindowFunctionQueryValidator.Run();
 //ProviderCapabilityQueryValidator.Run();
 //DependencyInjectionQueryValidator.Run();
@@ -64,6 +63,12 @@ using TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.WindowFu
 
 #region SetOperations
 
-IntersectExceptQueryValidator.Run();
+//IntersectExceptQueryValidator.Run();
+
+#endregion
+
+#region Joins
+
+ApplyLateralJoinQueryValidator.Run();
 
 #endregion

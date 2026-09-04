@@ -31,7 +31,8 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Composition
                 {
                     InsertClauseBuilderFactory = () => new SqlServerInsertClauseBuilder(),
                     PaginationStrategy = featureComposition.PaginationStrategy,
-                    CteStrategy = featureComposition.CteStrategy
+                    CteStrategy = featureComposition.CteStrategy,
+                    LateralJoinStrategy = featureComposition.LateralJoinStrategy
                 });
         }
     }

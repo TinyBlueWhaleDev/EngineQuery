@@ -29,7 +29,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
 
                 CteStrategy = profile is ICTEStrategyProvider cteStrategyProvider
                     ? cteStrategyProvider.CreateCteStrategy()
-                    : null
+                    : null,
+
+                LateralJoinStrategy = profile is ILateralJoinStrategyProvider lateralJoinStrategyProvider
+                ? lateralJoinStrategyProvider.CreateLateralJoinStrategy()
+                : null
             };
         }
     }

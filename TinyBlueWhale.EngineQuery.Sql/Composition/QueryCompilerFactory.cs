@@ -2,6 +2,7 @@
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Clauses;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.LateralJoins;
 using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
@@ -61,9 +62,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
             var fromClauseBuilder = new FromClauseBuilder(subqueryCompiler);
             var joinClauseBuilder = new JoinClauseBuilder();
 
-            var applyClauseBuilder = options.ApplyClauseBuilderFactory?.Invoke(subqueryCompiler)
-                ?? new ApplyClauseBuilder(subqueryCompiler);
-
             var whereClauseBuilder = new WhereClauseBuilder(
                 columnReferenceBuilder,
                 subqueryCompiler);
@@ -83,7 +81,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
             var bodyClauseBuilders = new List<IOptionalSqlClauseBuilder>
             {
                 joinClauseBuilder,
-                applyClauseBuilder,
                 whereClauseBuilder,
                 groupByClauseBuilder,
                 havingClauseBuilder,
@@ -91,9 +88,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
             };
 
             if (options.PaginationStrategy is not null)
-            {
                 bodyClauseBuilders.Add(new PaginationClauseBuilder(options.PaginationStrategy));
-            }
+
+            if (options.LateralJoinStrategy is not null)
+                bodyClauseBuilders.Add(new ApplyClauseBuilder(subqueryCompiler, options.LateralJoinStrategy));
 
 
             scriptBuilder = new QueryScriptBuilder(

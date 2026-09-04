@@ -1,4 +1,5 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies
@@ -69,6 +70,46 @@ namespace TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies
         /// Common table expression strategy used during SQL compilation.
         /// </returns>
         ICTEStrategy CreateCteStrategy();
+    }
+
+    #endregion
+
+    #region Lateral Joins
+
+    /// <summary>
+    /// Defines provider-specific SQL rendering behavior for lateral join operations.
+    /// </summary>
+    public interface ILateralJoinStrategy
+    {
+        /// <summary>
+        /// Gets the SQL join keyword associated with the specified APPLY operation.
+        /// </summary>
+        /// <param name="applyType">
+        /// APPLY operation type.
+        /// </param>
+        /// <returns>
+        /// Provider-specific SQL join keyword.
+        /// </returns>
+        string GetJoinKeyword(QueryApplyType applyType);
+
+        /// <summary>
+        /// Gets the SQL suffix appended after the lateral join expression.
+        /// </summary>
+        /// <returns>
+        /// Provider-specific SQL suffix.
+        /// </returns>
+        string GetJoinSuffix();
+    }
+
+    /// <summary>
+    /// Defines a provider capable of supplying the lateral join rendering strategy.
+    /// </summary>
+    public interface ILateralJoinStrategyProvider
+    {
+        /// <summary>
+        /// Gets the lateral join rendering strategy.
+        /// </summary>
+        ILateralJoinStrategy CreateLateralJoinStrategy();
     }
 
     #endregion
