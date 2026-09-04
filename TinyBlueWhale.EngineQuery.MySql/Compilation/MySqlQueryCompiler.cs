@@ -1,8 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
-using TinyBlueWhale.EngineQuery.MySql.Capabilities;
 using TinyBlueWhale.EngineQuery.MySql.Composition;
 using TinyBlueWhale.EngineQuery.MySql.Dialects;
 using TinyBlueWhale.EngineQuery.MySql.Profiles;
@@ -31,11 +29,9 @@ namespace TinyBlueWhale.EngineQuery.MySql.Compilation
         /// </param>
         private MySqlQueryCompiler(
             ISqlDatabaseDialect databaseDialect,
-            IDatabaseProviderCapabilities providerCapabilities,
             QueryFeatureComposition featureComposition)
             : base(
                 databaseDialect,
-                providerCapabilities,
                 MySqlQueryCompilerFactory.CreateScriptBuilder(
                     databaseDialect,
                     featureComposition))
@@ -105,9 +101,6 @@ namespace TinyBlueWhale.EngineQuery.MySql.Compilation
                 var databaseDialect =
                     new MySqlDatabaseDialect();
 
-                var providerCapabilities =
-                    new MySqlProviderCapabilities(
-                        profile.Version);
 
                 var featureComposition =
                     QueryFeatureCompositionFactory.Create(
@@ -115,7 +108,6 @@ namespace TinyBlueWhale.EngineQuery.MySql.Compilation
 
                 return new MySqlQueryCompiler(
                     databaseDialect,
-                    providerCapabilities,
                     featureComposition);
             }
         }

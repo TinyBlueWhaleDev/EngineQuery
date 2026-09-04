@@ -1,10 +1,8 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Composition;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Composition;
 using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 using TinyBlueWhale.EngineQuery.SqlServer.Profiles;
@@ -44,11 +42,9 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
         /// </param>
         private SqlServerQueryCompiler(
             ISqlDatabaseDialect databaseDialect,
-            IDatabaseProviderCapabilities providerCapabilities,
             QueryFeatureComposition featureComposition)
             : base(
                 databaseDialect,
-                providerCapabilities,
                 SqlServerQueryCompilerFactory.CreateScriptBuilder(
                     databaseDialect,
                     featureComposition))
@@ -96,7 +92,6 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
 
                 var queryCompiler = new SqlServerQueryCompiler(
                     new SqlServerDatabaseDialect(),
-                    new SqlServerProviderCapabilities(profile.Version),
                     QueryFeatureCompositionFactory.Create(profile));
 
                 return new QueryBuilder<TProfile>(
@@ -120,13 +115,10 @@ namespace TinyBlueWhale.EngineQuery.SqlServer.Compilation
 
                 var databaseDialect = new SqlServerDatabaseDialect();
 
-                var providerCapabilities = new SqlServerProviderCapabilities(profile.Version);
-
                 var featureComposition = QueryFeatureCompositionFactory.Create(profile);
 
                 return new SqlServerQueryCompiler(
                     databaseDialect,
-                    providerCapabilities,
                     featureComposition);
             }
         }

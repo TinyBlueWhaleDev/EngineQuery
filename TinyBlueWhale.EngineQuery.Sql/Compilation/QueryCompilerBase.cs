@@ -5,7 +5,6 @@ using TinyBlueWhale.EngineQuery.Core.Parameters;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Formatting;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
-using TinyBlueWhale.EngineQuery.Sql.Validation;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 {
@@ -33,14 +32,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// Thrown when <paramref name="databaseDialect"/>, <paramref name="providerCapabilities"/> or
     /// <paramref name="queryScriptBuilder"/> is <see langword="null"/>.
     /// </exception>
-    public abstract class QueryCompilerBase(ISqlDatabaseDialect databaseDialect, IDatabaseProviderCapabilities providerCapabilities, IQueryScriptBuilder queryScriptBuilder) : IQueryCompiler
+    public abstract class QueryCompilerBase(ISqlDatabaseDialect databaseDialect, IQueryScriptBuilder queryScriptBuilder) : IQueryCompiler
     {
         /// <summary>
         /// SQL database dialect used to escape identifiers and build provider-specific SQL fragments.
         /// </summary>
         protected readonly ISqlDatabaseDialect _databaseDialect = databaseDialect ?? throw new ArgumentNullException(nameof(databaseDialect));
 
-        private readonly QueryCapabilityValidator _capabilityValidator = new QueryCapabilityValidator(providerCapabilities ?? throw new ArgumentNullException(nameof(providerCapabilities)));
         private readonly IQueryScriptBuilder _queryScriptBuilder = queryScriptBuilder ?? throw new ArgumentNullException(nameof(queryScriptBuilder));
 
         /// <summary>
@@ -58,8 +56,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         public GeneratedSqlQuery Compile(CompiledQueryDefinition queryDefinition)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
-
-            _capabilityValidator.Validate(queryDefinition);
 
             var context = new QueryCompilationContext(_databaseDialect, new QueryParameterCollection());
 

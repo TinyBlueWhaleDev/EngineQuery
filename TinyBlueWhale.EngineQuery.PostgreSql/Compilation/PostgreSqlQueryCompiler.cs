@@ -1,8 +1,6 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
-using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
 using TinyBlueWhale.EngineQuery.PostgreSql.Composition;
 using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
 using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
@@ -31,11 +29,9 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
         /// </param>
         private PostgreSqlQueryCompiler(
             ISqlDatabaseDialect databaseDialect,
-            IDatabaseProviderCapabilities providerCapabilities,
             QueryFeatureComposition featureComposition)
             : base(
                 databaseDialect,
-                providerCapabilities,
                 PostgreSqlQueryCompilerFactory.CreateScriptBuilder(
                     databaseDialect,
                     featureComposition))
@@ -106,17 +102,12 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
                 var databaseDialect =
                     new PostgreSqlDatabaseDialect();
 
-                var providerCapabilities =
-                    new PostgreSqlProviderCapabilities(
-                        profile.Version);
-
                 var featureComposition =
                     QueryFeatureCompositionFactory.Create(
                         profile);
 
                 return new PostgreSqlQueryCompiler(
                     databaseDialect,
-                    providerCapabilities,
                     featureComposition);
             }
         }
