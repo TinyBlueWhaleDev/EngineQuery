@@ -957,7 +957,7 @@ namespace TinyBlueWhale.EngineQuery.Generators
             var method = surfaceMethod.Method;
             var returnType = method.ReturnType.ToDisplayString(GeneratedTypeDisplayFormat);
             var genericParameters = BuildGenericParameterList(method);
-            var parameters = string.Join(", ", method.Parameters.Select(BuildParameterDeclaration));
+            var parameters = string.Join(", ", method.Parameters.Select(BuildRequiredParameterDeclaration));
             var arguments = string.Join(", ", method.Parameters.Select(BuildArgument));
             var extensionType = $"global::{GeneratedExtensionsNamespace}.{GetExtensionClassName(model.Profile)}";
 
@@ -1141,6 +1141,17 @@ namespace TinyBlueWhale.EngineQuery.Generators
                 constraints.Add("new()");
 
             return constraints;
+        }
+
+        /// <summary>
+        /// Builds the source representation of a generated required method parameter.
+        /// </summary>
+        private static string BuildRequiredParameterDeclaration(IParameterSymbol parameter)
+        {
+            var modifier = GetRefModifier(parameter.RefKind);
+            var type = parameter.Type.ToDisplayString(GeneratedTypeDisplayFormat);
+
+            return $"{modifier}{type} {EscapeIdentifier(parameter.Name)}";
         }
 
         /// <summary>
