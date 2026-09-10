@@ -1,6 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Filtering;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
@@ -14,9 +15,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// <remarks>
     /// This builder supports predicate expressions, scalar function filters, computed expression filters,
     /// EXISTS conditions and IN subquery conditions.
-    /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="WhereClauseBuilder"/> class.
     /// </remarks>
     /// <param name="columnReferenceBuilder">
     /// SQL column reference builder used to resolve column references.
@@ -38,6 +36,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// <see langword="true"/> when filter definitions are configured; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> is null.
+        /// </exception>
         public bool CanBuild(CompiledQueryDefinition queryDefinition)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -62,6 +63,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// SQL WHERE clause.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> or
+        /// <paramref name="context"/> is null.
+        /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -94,20 +99,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return "WHERE " + string.Join(" AND ", conditions);
         }
 
-        /// <summary>
-        /// Compiles predicate WHERE definitions and groups consecutive
-        /// logical OR operations.
-        /// </summary>
-        /// <param name="queryDefinition">
-        /// Query definition containing predicate metadata.
-        /// </param>
-        /// <param name="context">
-        /// Current SQL compilation context.
-        /// </param>
-        /// <returns>
-        /// SQL predicate conditions ready to be connected by root-level
-        /// logical AND operations.
-        /// </returns>
+        // Compiles predicate WHERE definitions and groups consecutive logical OR operations.
         private static List<string> BuildPredicateConditions(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             var compiledConditions = queryDefinition.WhereDefinitions.Select(
@@ -116,8 +108,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
                     var parser = new QueryWhereClauseExpressionParser(
                         context.DatabaseDialect,
                         context.Parameters,
-                        whereDefinition.Source.ColumnMappings ?? queryDefinition.ColumnMappings,
-                        whereDefinition.Source.TableAlias ?? queryDefinition.TableAlias);
+                        whereDefinition.Source.ColumnMappings,
+                        whereDefinition.Source.TableAlias);
 
                     var sqlCondition = parser.ParseToSqlCondition(whereDefinition.PredicateExpression.Body);
 
@@ -127,17 +119,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return GroupOrConditions(compiledConditions);
         }
 
-        /// <summary>
-        /// Groups linear OR predicate sequences while preserving SQL
-        /// operator precedence.
-        /// </summary>
-        /// <param name="conditions">
-        /// Compiled predicates in their original query construction order.
-        /// </param>
-        /// <returns>
-        /// Root predicate segments that can safely be joined using
-        /// logical AND operations.
-        /// </returns>
+        // Groups linear OR predicate sequences while preserving SQL operator precedence.
         private static List<string> GroupOrConditions(IReadOnlyList<CompiledPredicateCondition> conditions)
         {
             if (conditions.Count == 0)
@@ -173,18 +155,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return groupedConditions;
         }
 
-        /// <summary>
-        /// Builds a scalar SQL function WHERE condition.
-        /// </summary>
-        /// <param name="functionDefinition">
-        /// Scalar function filter definition.
-        /// </param>
-        /// <param name="context">
-        /// Current SQL compilation context.
-        /// </param>
-        /// <returns>
-        /// Compiled scalar function condition.
-        /// </returns>
+        // Builds a scalar SQL function WHERE condition.
         private string BuildWhereScalarFunctionCondition(QueryWhereScalarFunctionDefinition functionDefinition,
             QueryCompilationContext context)
         {
@@ -199,18 +170,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return $"{functionName}({columnReference}) " + $"{comparisonOperator} {parameterName}";
         }
 
-        /// <summary>
-        /// Builds a computed expression WHERE condition.
-        /// </summary>
-        /// <param name="computedDefinition">
-        /// Computed expression filter definition.
-        /// </param>
-        /// <param name="context">
-        /// Current SQL compilation context.
-        /// </param>
-        /// <returns>
-        /// Compiled computed expression condition.
-        /// </returns>
+        // Builds a computed expression WHERE condition.
         private static string BuildWhereComputedExpressionCondition(QueryWhereComputedExpressionDefinition computedDefinition,
             QueryCompilationContext context)
         {
@@ -230,18 +190,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return parser.Parse(computedDefinition.Expression.Body);
         }
 
-        /// <summary>
-        /// Builds an EXISTS or NOT EXISTS WHERE condition.
-        /// </summary>
-        /// <param name="existsDefinition">
-        /// EXISTS filter definition.
-        /// </param>
-        /// <param name="context">
-        /// Current SQL compilation context.
-        /// </param>
-        /// <returns>
-        /// Compiled EXISTS condition.
-        /// </returns>
+        // Builds an EXISTS or NOT EXISTS WHERE condition.
         private string BuildExistsCondition(QueryExistsDefinition existsDefinition, QueryCompilationContext context)
         {
             var commandText = _subqueryCompiler.CompileAndReindex(existsDefinition.Subquery, context);
@@ -253,18 +202,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return $"{existsKeyword} ({commandText})";
         }
 
-        /// <summary>
-        /// Builds an IN subquery WHERE condition.
-        /// </summary>
-        /// <param name="inDefinition">
-        /// IN subquery filter definition.
-        /// </param>
-        /// <param name="context">
-        /// Current SQL compilation context.
-        /// </param>
-        /// <returns>
-        /// Compiled IN subquery condition.
-        /// </returns>
+        // Builds an IN subquery WHERE condition.
         private string BuildInSubqueryCondition(QueryInSubqueryDefinition inDefinition, QueryCompilationContext context)
         {
             var propertyName = ExpressionColumnSelector.ExtractSinglePropertyName(inDefinition.OuterSelector);
@@ -276,18 +214,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return $"{outerColumnReference} IN ({commandText})";
         }
 
-        /// <summary>
-        /// Builds an IN or NOT IN collection WHERE condition.
-        /// </summary>
-        /// <param name="collectionDefinition">
-        /// Collection filter definition.
-        /// </param>
-        /// <param name="context">
-        /// Current SQL compilation context.
-        /// </param>
-        /// <returns>
-        /// Compiled collection condition.
-        /// </returns>
+        // Builds an IN or NOT IN collection WHERE condition.
         private string BuildCollectionCondition(QueryWhereCollectionDefinition collectionDefinition, QueryCompilationContext context)
         {
             var propertyName = ExpressionColumnSelector

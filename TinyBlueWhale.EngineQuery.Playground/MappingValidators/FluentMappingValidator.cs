@@ -1,12 +1,29 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.Metadata.Fluent;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Fluent;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
 namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
 {
+    /// <summary>
+    /// Validates fluent metadata resolution.
+    ///
+    /// Expected metadata resolution:
+    /// FluentAuditRecord -> system_logs
+    /// AuditId           -> log_id
+    /// Description       -> message_text
+    /// CreatedOn         -> created_at
+    /// Active            -> is_active
+    ///
+    /// Expected SQL:
+    /// SELECT [log_id], [message_text], [created_at], [is_active]
+    /// FROM [system_logs]
+    /// WHERE ([is_active] = @p0)
+    /// ORDER BY [created_at] DESC
+    ///
+    /// Expected parameters:
+    /// @p0 = True
+    /// </summary>
     public static class FluentMappingValidator
     {
         public static void Run()
@@ -20,9 +37,7 @@ namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
                 .Property(x => x.CreatedOn).HasColumnName("created_at")
                 .Property(x => x.Active).HasColumnName("is_active");
 
-            var queryBuilder = new QueryBuilder(
-                new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new SqlServer.Capabilities.SqlServerProviderCapabilities()),
-                new FluentEntityMetadataResolver(registry));
+            var queryBuilder = SqlServerQueryCompiler.Factory.Create(new FluentEntityMetadataResolver(registry));
 
             var sql = queryBuilder
                 .From<FluentAuditRecord>()

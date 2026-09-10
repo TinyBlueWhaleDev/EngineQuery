@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
 
@@ -14,13 +14,18 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Resolvers
     public sealed class ConventionEntityMetadataResolver : IEntityMetadataResolver
     {
         /// <summary>
-        /// Resolves metadata associated with the specified entity type using naming conventions.
+        /// Resolves metadata associated with the specified entity type
+        /// using CLR naming conventions.
         /// </summary>
         /// <typeparam name="TEntity">
         /// Entity type associated with the metadata.
         /// </typeparam>
-        /// <returns>
+        /// <param name="metadata">
         /// Resolved entity metadata.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> because convention-based resolution
+        /// always produces metadata.
         /// </returns>
         public bool TryResolve<TEntity>(out EntityMetadata? metadata)
         {

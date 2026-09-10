@@ -1,5 +1,6 @@
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
 
@@ -18,12 +19,26 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         /// <summary>
         /// Gets the configured metadata strategy.
         /// </summary>
-        public required MetadataStrategy MetadataStrategy { get; init; }
+        public required MetadataStrategy? MetadataStrategy { get; init; }
+
+        /// <summary>
+        /// Gets the provider profile contract associated with the registration.
+        /// </summary>
+        /// <remarks>
+        /// The contract identifies the provider family supported by the registration
+        /// and is used to resolve compatible provider profiles.
+        /// </remarks>
+        public required Type ProfileContract { get; init; }
 
         /// <summary>
         /// Gets the query compiler factory.
         /// </summary>
-        public required Func<IServiceProvider, IQueryCompiler> BuildCompiler { get; init; }
+        /// <remarks>
+        /// The selected database provider profile is supplied to the factory so
+        /// provider-specific compilation behavior can be configured before
+        /// the compiler is created.
+        /// </remarks>
+        public required Func<IServiceProvider, IDatabaseProviderProfile, IQueryCompiler> BuildCompiler { get; init; }
 
         /// <summary>
         /// Gets the metadata resolver factory.
@@ -31,19 +46,47 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         public required Func<IServiceProvider, IEntityMetadataResolver> BuildMetadataResolver { get; init; }
 
         /// <summary>
-        /// Creates a query compiler.
+        /// Creates a query compiler using the specified database provider profile.
         /// </summary>
-        public IQueryCompiler CreateCompiler(IServiceProvider serviceProvider)
+        /// <param name="serviceProvider">
+        /// Service provider used to resolve compiler dependencies.
+        /// </param>
+        /// <param name="profile">
+        /// Database provider profile used to configure version-specific compiler behavior.
+        /// </param>
+        /// <returns>
+        /// Configured query compiler.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="serviceProvider"/> or
+        /// <paramref name="profile"/> is null.
+        /// </exception>
+        public IQueryCompiler CreateCompiler(IServiceProvider serviceProvider, IDatabaseProviderProfile profile)
         {
-            return BuildCompiler(serviceProvider);
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+            ArgumentNullException.ThrowIfNull(profile);
+
+            return BuildCompiler(serviceProvider, profile);
         }
 
         /// <summary>
-        /// Creates a metadata resolver.
+        /// Creates the metadata resolver associated with the registration.
         /// </summary>
+        /// <param name="serviceProvider">
+        /// Service provider used to resolve metadata dependencies.
+        /// </param>
+        /// <returns>
+        /// Configured entity metadata resolver.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="serviceProvider"/> is null.
+        /// </exception>
         public IEntityMetadataResolver CreateMetadataResolver(IServiceProvider serviceProvider)
         {
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+
             return BuildMetadataResolver(serviceProvider);
         }
     }
 }
+

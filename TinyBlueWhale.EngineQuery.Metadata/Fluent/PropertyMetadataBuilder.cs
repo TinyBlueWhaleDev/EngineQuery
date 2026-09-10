@@ -21,6 +21,12 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <param name="propertyName">
         /// CLR property name being configured.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="entityBuilder"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="propertyName"/> is null or whitespace.
+        /// </exception>
         public PropertyMetadataBuilder(EntityMetadataBuilder<TEntity> entityBuilder, string propertyName)
         {
             ArgumentNullException.ThrowIfNull(entityBuilder);
@@ -39,6 +45,9 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <returns>
         /// Parent entity metadata builder instance.
         /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="columnName"/> is null or whitespace.
+        /// </exception>
         public EntityMetadataBuilder<TEntity> HasColumnName(string columnName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(columnName);

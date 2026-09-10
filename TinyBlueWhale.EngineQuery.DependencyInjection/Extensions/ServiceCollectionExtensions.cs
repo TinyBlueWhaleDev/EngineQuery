@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Configuration;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Factories;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions
 {
@@ -10,17 +7,36 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions
     /// <summary>
     /// Provides EngineQuery dependency injection registration extensions.
     /// </summary>
-    public static class ServiceCollectionExtensions
+    public static partial class ServiceCollectionExtensions
     {
         /// <summary>
-        /// Registers EngineQuery services.
+        /// Registers EngineQuery services, database providers and generated query engine factories.
         /// </summary>
-        public static IServiceCollection AddEngineQuery(this IServiceCollection services, Action<EngineQueryOptions> configureOptions)
+        /// <param name="services">
+        /// Service collection where EngineQuery dependencies are registered.
+        /// </param>
+        /// <param name="configureOptions">
+        /// Action used to configure EngineQuery providers and metadata strategies.
+        /// </param>
+        /// <returns>
+        /// Current service collection.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="services"/> or
+        /// <paramref name="configureOptions"/> is null.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when no EngineQuery provider is configured.
+        /// </exception>
+        public static IServiceCollection AddEngineQuery(
+            this IServiceCollection services,
+            Action<EngineQueryOptions> configureOptions)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(configureOptions);
 
             var options = new EngineQueryOptions();
+
             configureOptions(options);
 
             if (options.Registrations.Count == 0)
@@ -29,26 +45,22 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Extensions
             foreach (var registration in options.Registrations)
             {
                 ArgumentNullException.ThrowIfNull(registration);
+
                 services.AddSingleton(registration);
             }
 
-            services.AddSingleton<IQueryEngineFactory, QueryEngineFactory>();
-
-            if (options.Registrations.Count == 1)
-            {
-                var provider = options.Registrations[0].Provider;
-
-                services.AddTransient<IQueryEngine>(serviceProvider =>
-                {
-                    var factory = serviceProvider.GetRequiredService<IQueryEngineFactory>();
-                    return factory.Create(provider);
-                });
-
-                services.AddTransient<IQueryBuilder>(serviceProvider =>
-                    serviceProvider.GetRequiredService<IQueryEngine>());
-            }
+            RegisterGeneratedQueryEngineFactories(services);
 
             return services;
         }
+
+        /// <summary>
+        /// Registers strongly typed query engine factories and generated engine surfaces
+        /// discovered from database provider profiles.
+        /// </summary>
+        /// <param name="services">
+        /// Service collection where generated EngineQuery services are registered.
+        /// </param>
+        static partial void RegisterGeneratedQueryEngineFactories(IServiceCollection services);
     }
 }

@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Helpers
 {
@@ -19,6 +19,12 @@ namespace TinyBlueWhale.EngineQuery.Sql.Helpers
         /// <returns>
         /// Selected property name.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="expression"/> is null.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when <paramref name="expression"/> does not select a supported property.
+        /// </exception>
         public static string ExtractSinglePropertyName(LambdaExpression expression)
         {
             ArgumentNullException.ThrowIfNull(expression);

@@ -1,7 +1,8 @@
-using TinyBlueWhale.EngineQuery.Core.Helpers;
+﻿using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Grouping;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Projection;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
-using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Clauses
@@ -10,8 +11,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// Builds SQL GROUP BY clauses from query grouping definitions.
     /// </summary>
     /// <remarks>
-    /// This builder emits grouping columns using either source-specific column mappings or the
-    /// root query column mapping helper when no source alias is available.
+    /// This builder emits grouping columns using the query source captured by each
+    /// grouping definition.
     /// </remarks>
     public sealed class GroupByClauseBuilder : IOptionalSqlClauseBuilder
     {
@@ -24,6 +25,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// <see langword="true"/> when grouping definitions are configured; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> is null.
+        /// </exception>
         public bool CanBuild(CompiledQueryDefinition queryDefinition)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -43,6 +47,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// SQL GROUP BY clause.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> or
+        /// <paramref name="context"/> is null.
+        /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -50,45 +58,28 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
             var groupByClauses = queryDefinition.GroupByDefinitions
                 .SelectMany(groupByDefinition =>
-                    BuildGroupByColumnReferences(queryDefinition, context, groupByDefinition));
+                    BuildGroupByColumnReferences(context, groupByDefinition));
 
             return "GROUP BY " + string.Join(", ", groupByClauses);
         }
 
-        private static IEnumerable<string> BuildGroupByColumnReferences(
-            CompiledQueryDefinition queryDefinition,
-            QueryCompilationContext context,
-            QueryGroupByDefinition groupByDefinition)
+        // Builds the column references associated with a grouping definition.
+        private static IEnumerable<string> BuildGroupByColumnReferences(QueryCompilationContext context, QueryGroupByDefinition groupByDefinition)
         {
             foreach (var groupByColumn in groupByDefinition.Columns)
             {
                 yield return BuildGroupByColumnReference(
-                    queryDefinition,
                     context,
                     groupByDefinition,
                     groupByColumn);
             }
         }
 
-        private static string BuildGroupByColumnReference(
-            CompiledQueryDefinition queryDefinition,
-            QueryCompilationContext context,
-            QueryGroupByDefinition groupByDefinition,
-            QueryColumnDefinition groupByColumn)
+        // Builds a column reference using the source captured by the grouping definition.
+        private static string BuildGroupByColumnReference(QueryCompilationContext context, QueryGroupByDefinition groupByDefinition, QueryColumnDefinition groupByColumn)
         {
-            if (!string.IsNullOrWhiteSpace(groupByDefinition.Source.TableAlias))
-            {
-                var columnName = SqlColumnReferenceBuilder.ResolveMappedColumnName(
-                    groupByDefinition.Source.ColumnMappings,
-                    groupByColumn.PropertyName);
-
-                return context.DatabaseDialect.BuildQualifiedIdentifier(
-                    groupByDefinition.Source.TableAlias,
-                    columnName);
-            }
-
             return QueryColumnMappingHelper.ResolveColumnReference(
-                queryDefinition,
+                groupByDefinition.Source,
                 context.DatabaseDialect,
                 groupByColumn.PropertyName);
         }

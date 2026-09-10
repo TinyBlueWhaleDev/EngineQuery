@@ -30,6 +30,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context
                 && _aliases.Contains(alias);
         }
 
+        /// <summary>
+        /// Gets the number of aliases registered in the current query scope.
+        /// </summary>
         public int Count => _aliases.Count;
     }
 }

@@ -1,0 +1,75 @@
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.Playground.Models;
+using TinyBlueWhale.EngineQuery.Playground.Shared;
+
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Subqueries
+{
+
+    /// <summary>
+    /// Validates independent EXISTS subquery generation and nested query scope
+    /// resolution across supported database providers.
+    ///
+    /// SQL Server:
+    /// SELECT [u].[user_id] AS [UserId], [u].[email]
+    /// FROM [users] AS [u]
+    /// WHERE EXISTS (SELECT 1
+    /// FROM [orders] AS [o]
+    /// WHERE ([o].[total] &gt; @p0))
+    ///
+    /// PostgreSQL:
+    /// SELECT "u"."user_id" AS "UserId", "u"."email"
+    /// FROM "users" AS "u"
+    /// WHERE EXISTS (SELECT 1
+    /// FROM "orders" AS "o"
+    /// WHERE ("o"."total" &gt; @p0))
+    ///
+    /// MySQL:
+    /// SELECT `u`.`user_id` AS `UserId`, `u`.`email`
+    /// FROM `users` AS `u`
+    /// WHERE EXISTS (SELECT 1
+    /// FROM `orders` AS `o`
+    /// WHERE (`o`.`total` &gt; @p0))
+    ///
+    /// Expected parameters:
+    /// @p0 = 100
+    /// </summary>
+    public static class ExistsQueryValidator
+    {        
+        public static void Run()
+        {
+            var metadataResolver = ProviderMetadataFactory.CreateJoinMetadataResolver();
+
+            ProviderQueryPrinter.Print(
+                "SQL Server EXISTS",
+                BuildQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
+
+            ProviderQueryPrinter.Print(
+                "PostgreSQL EXISTS",
+                BuildQuery(ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
+
+            ProviderQueryPrinter.Print(
+                "MySQL EXISTS",
+                BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
+        }
+
+        // Builds a query with an EXISTS subquery.
+        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
+        {
+            return queryBuilder
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(u => new
+                {
+                    UserId = u.Id,
+                    u.Email
+                })
+                .WhereExists<JoinOrder>(
+                    subquery => subquery
+                        .From<JoinOrder>(alias: "o")
+                        .Where<JoinOrder>(o => o.Total > 100))
+                .Build();
+        }
+    }
+}

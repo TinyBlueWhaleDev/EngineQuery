@@ -1,11 +1,14 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Commands;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
@@ -16,55 +19,79 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     /// <typeparam name="T">
     /// Entity type associated with the target INSERT table.
     /// </typeparam>
+    /// <typeparam name="TProfile">
+    /// Database provider profile associated with the INSERT command.
+    /// </typeparam>
     /// <remarks>
     /// This builder does not execute database commands.
     /// It only captures INSERT command intent and delegates SQL generation to the query compiler.
     /// </remarks>
-    public sealed class InsertCommandBuilder<T> : QueryCompositionCommandBuilderBase<T, IInsertSelectCommandBuilder<T>>,
-        IInsertCommandBuilder<T>,
-        IInsertValuesCommandBuilder<T>,
-        IInsertSelectCommandBuilder<T>
+    public sealed class InsertCommandBuilder<T, TProfile> :
+        QueryCompositionCommandBuilderBase<T, IInsertSelectCommandBuilder<T, TProfile>, TProfile>,
+        IInsertCommandBuilder<T, TProfile>,
+        IInsertValuesCommandBuilder<T, TProfile>,
+        IInsertSelectCommandBuilder<T, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
         private readonly IQueryCompiler _queryCompiler;
         private readonly CompiledQueryDefinition _queryDefinition;
-        private readonly IEntityMetadataResolver? _metadataResolver;
+        private readonly IEntityMetadataResolver _metadataResolver;
         private readonly QueryCommandBuilderContext _context;
-        private readonly QueryCommandBuilderComponents _components;
+        private readonly TProfile _profile;
+        private readonly QueryCommandBuilderComponents<TProfile> _components;
 
-        private protected override QueryCommandBuilderComponents Components => _components;
-        protected override IInsertSelectCommandBuilder<T> Current => this;
+        private protected override QueryCommandBuilderComponents<TProfile> Components => _components;
 
-
+        protected override IInsertSelectCommandBuilder<T, TProfile> Current => this;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="InsertCommandBuilder{T}"/> class.
+        /// Initializes a new instance of the <see cref="InsertCommandBuilder{T, TProfile}"/> class.
         /// </summary>
         /// <param name="queryCompiler">
         /// Query compiler used to generate provider-specific command output.
         /// </param>
+        /// <param name="metadataResolver">
+        /// Entity metadata resolver used for metadata-driven query composition.
+        /// </param>
+        /// <param name="profile">
+        /// Database provider profile associated with the INSERT command.
+        /// </param>
         /// <param name="tableName">
         /// Database table name associated with the INSERT command.
-        /// </param>    
+        /// </param>
+        /// <param name="schemaName">
+        /// Optional database schema name associated with the target INSERT table.
+        /// </param>
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
         /// </param>
-        /// <param name="metadataResolver">
-        /// Optional entity metadata resolver used for metadata-driven query composition.
-        /// </param>
-        internal InsertCommandBuilder(IQueryCompiler queryCompiler, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
+        internal InsertCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, TProfile profile, string tableName, string? schemaName = null, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
+            ArgumentNullException.ThrowIfNull(metadataResolver);
+            ArgumentNullException.ThrowIfNull(profile);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+
+            if (schemaName is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(schemaName);
+
+            var rootSource = new QuerySourceDefinition
+            {
+                EntityType = typeof(T),
+                SchemaName = schemaName,
+                TableName = tableName,
+                TableAlias = null,
+                ColumnMappings = columnMappings ?? new Dictionary<string, string>()
+            };
 
             _queryCompiler = queryCompiler;
             _metadataResolver = metadataResolver;
+            _profile = profile;
 
             _queryDefinition = new CompiledQueryDefinition
             {
                 CommandType = QueryCommandType.Insert,
-                TableName = tableName,
-                ColumnMappings = columnMappings ?? new Dictionary<string, string>(),
-                EntityType = typeof(T),
+                RootSource = rootSource,
                 InsertDefinition = new QueryInsertDefinition()
             };
 
@@ -76,7 +103,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 AliasRegistry = new QueryAliasRegistry()
             };
 
-            _components = QueryCommandBuilderComponentFactory.Create(_context);
+            _components = QueryCommandBuilderComponentFactory.Create(_context, _profile);
         }
 
         /// <summary>
@@ -97,14 +124,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when INSERT value assignments were already configured or when a selected target column was already added.
         /// </exception>
-        public IInsertCommandBuilder<T> Columns(Expression<Func<T, object>> selector)
+        public IInsertCommandBuilder<T, TProfile> Columns(Expression<Func<T, object>> selector)
         {
             ArgumentNullException.ThrowIfNull(selector);
 
             if (_queryDefinition.InsertDefinition!.ValueDefinitions.Count > 0)
                 throw new InvalidOperationException("INSERT SELECT columns cannot be combined with INSERT value assignments.");
 
-            foreach (var propertyName in ResolvePropertyNames(selector))
+            var propertyNames = PropertyExpressionHelper.ResolvePropertyNames(selector, nameof(selector), "The INSERT columns selector must reference direct entity properties.");
+
+            foreach (var propertyName in propertyNames)
             {
                 var columnName = ResolveColumnName(propertyName);
 
@@ -120,8 +149,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
 
             return this;
         }
-
-
         /// <summary>
         /// Adds a value assignment for the selected entity property.
         /// </summary>
@@ -135,7 +162,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// Value assigned to the selected property.
         /// </param>
         /// <returns>
-        /// Current INSERT command builder instance.
+        /// Current INSERT VALUES command builder instance.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="selector"/> is null.
@@ -144,9 +171,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// Thrown when the selector does not reference a direct entity property.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the selected property was already assigned.
+        /// Thrown when the selected property was already assigned,
+        /// an INSERT SELECT source was already configured or
+        /// explicit INSERT SELECT target columns were already configured.
         /// </exception>
-        public IInsertValuesCommandBuilder<T> Set<TProperty>(Expression<Func<T, TProperty>> selector, TProperty value)
+        public IInsertValuesCommandBuilder<T, TProfile> Set<TProperty>(Expression<Func<T, TProperty>> selector, TProperty value)
         {
             ArgumentNullException.ThrowIfNull(selector);
 
@@ -156,7 +185,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             if (_queryDefinition.InsertDefinition.ColumnDefinitions.Count > 0)
                 throw new InvalidOperationException("INSERT value assignments cannot be combined with explicitly configured INSERT SELECT columns.");
 
-            var propertyName = ResolvePropertyName(selector);
+            var propertyName = PropertyExpressionHelper.ResolvePropertyName(selector, nameof(selector), "The INSERT selector must reference a direct entity property.");
             var columnName = ResolveColumnName(propertyName);
 
             if (_queryDefinition.InsertDefinition.ValueDefinitions.Any(definition => definition.ColumnName.Equals(columnName, StringComparison.Ordinal)))
@@ -173,12 +202,17 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         /// <summary>
-        /// Configures provider-specific retrieval of the identity generated by the INSERT command.
+        /// Configures provider-specific scalar retrieval of the identity generated by the INSERT command.
         /// </summary>
         /// <returns>
         /// Current INSERT VALUES command builder instance.
         /// </returns>
-        IInsertValuesCommandBuilder<T> IInsertValuesCommandBuilder<T>.ReturnIdentity()
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when no INSERT value assignment exists,
+        /// an INSERT SELECT source is configured or
+        /// identity retrieval was already configured.
+        /// </exception>
+        IInsertValuesCommandBuilder<T, TProfile> IInsertValuesCommandBuilder<T, TProfile>.ApplyReturnIdentity()
         {
             ConfigureIdentityRetrieval(columnName: null);
 
@@ -197,11 +231,26 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Current INSERT VALUES command builder instance.
         /// </returns>
-        IInsertValuesCommandBuilder<T> IInsertValuesCommandBuilder<T>.ReturnIdentity<TProperty>(Expression<Func<T, TProperty>> identitySelector)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="identitySelector"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the identity selector does not reference a direct entity property.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when no INSERT value assignment exists,
+        /// an INSERT SELECT source is configured or
+        /// identity retrieval was already configured.
+        /// </exception>
+        IInsertValuesCommandBuilder<T, TProfile> IInsertValuesCommandBuilder<T, TProfile>.ApplyReturnIdentity<TProperty>(Expression<Func<T, TProperty>> identitySelector)
         {
             ArgumentNullException.ThrowIfNull(identitySelector);
 
-            var propertyName = ResolvePropertyName(identitySelector);
+            var propertyName = PropertyExpressionHelper.ResolvePropertyName(
+                identitySelector,
+                nameof(identitySelector),
+                "The INSERT identity selector must reference a direct entity property.");
+
             var columnName = ResolveColumnName(propertyName);
 
             ConfigureIdentityRetrieval(columnName);
@@ -228,9 +277,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// Thrown when <paramref name="tableName"/> or <paramref name="alias"/> contains an invalid value.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the INSERT command already contains value assignments or when the source entity is already registered.
+        /// Thrown when the INSERT command already contains value assignments or when an INSERT SELECT source is already configured.
         /// </exception>
-        public IInsertSelectCommandBuilder<T> From<TSource>(string tableName, string? alias = null)
+        public IInsertSelectCommandBuilder<T, TProfile> From<TSource>(string tableName, string? alias = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
@@ -238,12 +287,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
             EnsureInsertSelectMode();
-
-            var columnMappings = typeof(TSource)
-                .GetProperties()
-                .ToDictionary(property => property.Name, property => property.Name);
-
-            RegisterSource<TSource>(tableName, alias, columnMappings);
+            RegisterSourceFromMetadata<TSource>(tableName, alias);
 
             return this;
         }
@@ -264,24 +308,15 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// Thrown when <paramref name="alias"/> contains an invalid value.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when metadata cannot be resolved, when INSERT value assignments already exist or when the source entity is already registered.
+        /// Thrown when metadata cannot be resolved, when INSERT value assignments already exist or when an INSERT SELECT source is already configured.
         /// </exception>
-        public IInsertSelectCommandBuilder<T> From<TSource>(string? alias = null)
+        public IInsertSelectCommandBuilder<T, TProfile> From<TSource>(string? alias = null)
         {
             if (alias is not null)
                 ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
             EnsureInsertSelectMode();
-
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<TSource>(out var metadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(TSource).Name}' could not be resolved.");
-
-            var columnMappings = metadata!.Properties.ToDictionary(property => property.Key, property => property.Value.ColumnName);
-
-            RegisterSource<TSource>(metadata.TableName, alias, columnMappings);
+            RegisterSourceFromMetadata<TSource>(alias: alias);
 
             return this;
         }
@@ -384,85 +419,32 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 throw new InvalidOperationException("An INSERT SELECT source cannot be combined with INSERT value assignments.");
         }
 
-
-
-        // Registers the root query source associated with the current INSERT SELECT command.
-        private void RegisterSource<TSource>(string tableName, string? alias, IReadOnlyDictionary<string, string> columnMappings)
+        // Registers the query source associated with the current INSERT SELECT command.
+        private void RegisterSource<TSource>(string tableName, string? schemaName, string? alias, IReadOnlyDictionary<string, string> columnMappings)
         {
             if (_queryDefinition.InsertDefinition!.SourceDefinition is not null)
                 throw new InvalidOperationException("The INSERT SELECT source is already configured.");
 
-            if (_queryDefinition.SourceDefinitions.ContainsKey(typeof(TSource)))
-                throw new InvalidOperationException($"Entity type '{typeof(TSource).Name}' is already registered in the current INSERT SELECT query scope.");
-
-            var resolvedAlias = string.IsNullOrWhiteSpace(alias)
-                ? QueryAliasGeneratorHelper.Generate(_queryDefinition.SourceDefinitions.Count)
-                : alias;
-
             var sourceDefinition = new QuerySourceDefinition
             {
                 EntityType = typeof(TSource),
+                SchemaName = schemaName,
                 TableName = tableName,
-                TableAlias = resolvedAlias,
+                TableAlias = alias,
                 ColumnMappings = columnMappings
             };
 
             _queryDefinition.InsertDefinition.SourceDefinition = sourceDefinition;
-            _queryDefinition.SourceDefinitions[typeof(TSource)] = sourceDefinition;
-            _queryDefinition.EntityType = typeof(TSource);
+            _queryDefinition.Sources.Add(sourceDefinition);
 
-            _context.AliasRegistry.Register(resolvedAlias);
+            if (!string.IsNullOrWhiteSpace(alias))
+                _context.AliasRegistry.Register(alias);
         }
 
         // Resolves the mapped database column associated with an INSERT target property.
         private string ResolveColumnName(string propertyName)
         {
-            return _queryDefinition.ColumnMappings.TryGetValue(propertyName, out var mappedColumnName)
-                ? mappedColumnName
-                : propertyName;
-        }
-
-        // Resolves the selected entity property name from an INSERT value assignment expression.
-        private static string ResolvePropertyName<TProperty>(Expression<Func<T, TProperty>> selector)
-        {
-            Expression expression = selector.Body;
-
-            if (expression is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
-                expression = unaryExpression.Operand;
-
-            if (expression is not MemberExpression memberExpression || memberExpression.Expression is not ParameterExpression)
-                throw new ArgumentException("The INSERT selector must reference a direct entity property.", nameof(selector));
-
-            return memberExpression.Member.Name;
-        }
-
-        // Resolves the selected entity property names from an INSERT target column expression.
-        private static List<string> ResolvePropertyNames(Expression<Func<T, object>> selector)
-        {
-            Expression expression = selector.Body;
-
-            if (expression is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
-                expression = unaryExpression.Operand;
-
-            if (expression is MemberExpression memberExpression)
-                return [ResolvePropertyName(memberExpression, nameof(selector))];
-
-            if (expression is NewExpression newExpression)
-                return newExpression.Arguments.Select(argument => ResolvePropertyName(argument, nameof(selector))).ToList();
-
-            throw new ArgumentException("The INSERT columns selector must reference one or more direct entity properties.", nameof(selector));
-        }
-
-        // Resolves a direct entity property name from an INSERT target column expression.
-        private static string ResolvePropertyName(Expression expression, string parameterName)
-        {
-            if (expression is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
-                expression = unaryExpression.Operand;
-
-            if (expression is not MemberExpression memberExpression || memberExpression.Expression is not ParameterExpression)
-                throw new ArgumentException("The INSERT columns selector must reference direct entity properties.", parameterName);
-
-            return memberExpression.Member.Name;
+            return QueryColumnMappingHelper.ResolveColumnName(_queryDefinition.RootSource, propertyName);
         }
 
         // Configures identity retrieval for a direct INSERT VALUES command.
@@ -483,6 +465,19 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             {
                 ColumnName = columnName
             };
+        }
+
+        // Resolves entity metadata and registers the source associated with the current INSERT SELECT command.
+        private void RegisterSourceFromMetadata<TSource>(string? tableName = null, string? alias = null)
+        {
+            var metadata = EntityMetadataHelper.Resolve<TSource>(_metadataResolver);
+            var columnMappings = EntityMetadataHelper.CreateColumnMappings(metadata);
+
+            RegisterSource<TSource>(
+                tableName ?? metadata.TableName,
+                metadata.SchemaName,
+                alias,
+                columnMappings);
         }
     }
 }

@@ -1,29 +1,110 @@
-﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.PostgreSql.Composition;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
+using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
+using TinyBlueWhale.EngineQuery.PostgreSql.Profiles;
+using TinyBlueWhale.EngineQuery.PostgreSql.Profiles.Interfaces;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Composition;
 
 namespace TinyBlueWhale.EngineQuery.PostgreSql.Compilation
 {
     /// <summary>
-    /// Compiles query definitions into PostgreSQL command text.
+    /// Compiles EngineQuery definitions using PostgreSQL-specific SQL behavior.
     /// </summary>
-    /// <remarks>
-    /// This compiler uses PostgreSQL-specific APPLY behavior while reusing the default SQL builder pipeline.
-    /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="PostgreSqlQueryCompiler"/> class.
-    /// </remarks>
-    /// <param name="databaseDialect">
-    /// PostgreSQL database dialect.
-    /// </param>
-    /// <param name="providerCapabilities">
-    /// PostgreSQL provider capabilities.
-    /// </param>
-    public sealed class PostgreSqlQueryCompiler(
-        ISqlDatabaseDialect databaseDialect,
-        IDatabaseProviderCapabilities providerCapabilities) : QueryCompilerBase(
-            databaseDialect,
-            providerCapabilities,
-            PostgreSqlQueryCompilerFactory.CreateScriptBuilder(databaseDialect));
+    public sealed class PostgreSqlQueryCompiler : QueryCompilerBase
+    {
+        /// <summary>
+        /// Initializes a new PostgreSQL query compiler.
+        /// </summary>
+        /// <param name="databaseDialect">
+        /// PostgreSQL database dialect.
+        /// </param>
+        /// <param name="featureComposition">
+        /// SQL feature composition resolved from the selected provider profile.
+        /// </param>
+        private PostgreSqlQueryCompiler(
+            ISqlDatabaseDialect databaseDialect,
+            QueryFeatureComposition featureComposition)
+            : base(
+                databaseDialect,
+                QueryCompilerFactory.CreateScriptBuilder(
+                    databaseDialect,
+                    featureComposition))
+        {
+        }
+
+        /// <summary>
+        /// Provides PostgreSQL query builder creation operations.
+        /// </summary>
+        public static class Factory
+        {
+            /// <summary>
+            /// Creates a query builder using the default PostgreSQL profile.
+            /// </summary>
+            /// <param name="metadataResolver">
+            /// Metadata resolver used to resolve entity and property mappings.
+            /// </param>
+            /// <returns>
+            /// Query builder configured with the default PostgreSQL profile.
+            /// </returns>
+            public static QueryBuilder<PostgreSqlDefaultProfile> Create(IEntityMetadataResolver metadataResolver)
+            {
+                return Create<PostgreSqlDefaultProfile>(metadataResolver);
+            }
+
+            /// <summary>
+            /// Creates a query builder using the specified PostgreSQL profile.
+            /// </summary>
+            /// <typeparam name="TProfile">
+            /// PostgreSQL provider profile used to determine version-specific query features.
+            /// </typeparam>
+            /// <param name="metadataResolver">
+            /// Metadata resolver used to resolve entity and property mappings.
+            /// </param>
+            /// <returns>
+            /// Query builder configured with the specified PostgreSQL profile.
+            /// </returns>
+            public static QueryBuilder<TProfile> Create<TProfile>(IEntityMetadataResolver metadataResolver)
+                where TProfile : IPostgreSqlProfile, new()
+            {
+                ArgumentNullException.ThrowIfNull(metadataResolver);
+
+                var profile = new TProfile();
+
+                return new QueryBuilder<TProfile>(
+                    CreateCompiler(profile),
+                    metadataResolver,
+                    profile);
+            }
+
+            /// <summary>
+            /// Creates a PostgreSQL query compiler using the specified provider profile.
+            /// </summary>
+            /// <param name="profile">
+            /// PostgreSQL provider profile used to configure the compiler.
+            /// </param>
+            /// <returns>
+            /// Configured PostgreSQL query compiler.
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown when <paramref name="profile"/> is null.
+            /// </exception>
+            internal static PostgreSqlQueryCompiler CreateCompiler(IPostgreSqlProfile profile)
+            {
+                ArgumentNullException.ThrowIfNull(profile);
+
+                var databaseDialect =
+                    new PostgreSqlDatabaseDialect();
+
+                var featureComposition =
+                    QueryFeatureCompositionFactory.Create(
+                        profile);
+
+                return new PostgreSqlQueryCompiler(
+                    databaseDialect,
+                    featureComposition);
+            }
+        }
+    }
 }

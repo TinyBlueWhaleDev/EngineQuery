@@ -1,17 +1,36 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
 namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
 {
+    /// <summary>
+    /// Validates explicit table selection with convention-based column resolution.
+    ///
+    /// Expected metadata resolution:
+    /// ExplicitLogEntry           -> system_logs
+    /// LogIdentifier             -> LogIdentifier
+    /// MessageContent            -> MessageContent
+    /// RegisteredAt              -> RegisteredAt
+    /// Enabled                   -> Enabled
+    ///
+    /// Expected projection alias:
+    /// LogIdentifier             -> testId
+    ///
+    /// Expected SQL:
+    /// SELECT [LogIdentifier] AS [testId], [MessageContent], [RegisteredAt], [Enabled]
+    /// FROM [system_logs]
+    /// WHERE ([Enabled] = @p0)
+    /// ORDER BY [RegisteredAt] DESC
+    ///
+    /// Expected parameters:
+    /// @p0 = True
+    /// </summary>
     public static class ExplicitMappingValidator
     {
         public static void Run()
         {
-            var queryBuilder = new QueryBuilder(
-                new SqlServerQueryCompiler(
-                    new SqlServerDatabaseDialect(), new SqlServer.Capabilities.SqlServerProviderCapabilities()));
+            var queryBuilder = SqlServerQueryCompiler.Factory.Create(new ConventionEntityMetadataResolver());
 
             var sql = queryBuilder
                 .From<ExplicitLogEntry>("system_logs")

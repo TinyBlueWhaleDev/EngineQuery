@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
 {
@@ -12,18 +12,26 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
     public sealed class PostgreSqlDatabaseDialect : ISqlDatabaseDialect
     {
         /// <summary>
-        /// Escapes a SQL identifier using PostgreSql bracket syntax.
+        /// Escapes a SQL identifier using PostgreSQL double quote syntax.
         /// </summary>
         /// <param name="identifier">
         /// Identifier to escape.
         /// </param>
         /// <returns>
-        /// Escaped PostgreSql identifier.
+        /// Escaped PostgreSQL identifier.
         /// </returns>
-        public string EscapeIdentifier(string identifier) => $"\"{identifier}\"";
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="identifier"/> is null, empty or consists only of white-space characters.
+        /// </exception>
+        public string EscapeIdentifier(string identifier)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
+
+            return $"\"{identifier.Replace("\"", "\"\"")}\"";
+        }
 
         /// <summary>
-        /// Builds a PostgreSql pagination clause using LIMIT/OFFSET syntax.
+        /// Builds a PostgreSQL pagination clause using LIMIT/OFFSET syntax.
         /// </summary>
         /// <param name="skip">
         /// Number of rows to skip.
@@ -32,7 +40,7 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
         /// Maximum number of rows to return.
         /// </param>
         /// <returns>
-        /// PostgreSql pagination clause.
+        /// PostgreSQL pagination clause.
         /// </returns>
         public string BuildPaginationClause(int? skip, int? take)
         {
@@ -60,6 +68,10 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
         /// <returns>
         /// PostgreSQL qualified identifier.
         /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="qualifier"/> or <paramref name="identifier"/>
+        /// is null, empty or consists only of white-space characters.
+        /// </exception>
         public string BuildQualifiedIdentifier(string qualifier, string identifier)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(qualifier);
@@ -69,20 +81,22 @@ namespace TinyBlueWhale.EngineQuery.PostgreSql.Dialects
         }
 
         /// <summary>
-        /// Resolves the provider-specific scalar function name.
+        /// Resolves the PostgreSQL scalar function name.
         /// </summary>
         /// <param name="functionName">
         /// Canonical scalar function name.
         /// </param>
         /// <returns>
-        /// Provider-specific scalar function name.
+        /// PostgreSQL scalar function name.
         /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="functionName"/> is null, empty or consists only of white-space characters.
+        /// </exception>
         public string ResolveScalarFunctionName(string functionName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(functionName);
 
             return functionName;
         }
-
     }
 }

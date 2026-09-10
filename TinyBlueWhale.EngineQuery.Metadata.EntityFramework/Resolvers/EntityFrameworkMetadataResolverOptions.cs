@@ -10,12 +10,7 @@
         /// Gets or sets a value indicating whether shadow properties should be included.
         /// </summary>
         public bool IncludeShadowProperties { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether ignored properties should be skipped.
-        /// </summary>
-        public bool SkipIgnoredProperties { get; set; } = true;
-
+        
         /// <summary>
         /// Gets the default resolver options.
         /// </summary>

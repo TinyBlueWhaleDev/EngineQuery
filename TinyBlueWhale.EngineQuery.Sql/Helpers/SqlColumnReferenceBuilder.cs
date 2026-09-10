@@ -1,5 +1,5 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Helpers
 {
@@ -10,14 +10,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Helpers
     /// This helper centralizes column mapping resolution, identifier escaping and table alias handling
     /// to avoid duplicated column reference logic across SQL clause builders.
     /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="SqlColumnReferenceBuilder"/> class.
-    /// </remarks>
     /// <param name="databaseDialect">
     /// SQL database dialect used to escape identifiers and build qualified column references.
     /// </param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="databaseDialect"/> is <see langword="null"/>.
+    /// Thrown when <paramref name="databaseDialect"/> is null.
     /// </exception>
     public sealed class SqlColumnReferenceBuilder(ISqlDatabaseDialect databaseDialect)
     {
@@ -36,7 +33,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Helpers
         /// SQL column reference, escaped and qualified when a table alias is available.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="source"/> is <see langword="null"/>.
+        /// Thrown when <paramref name="source"/> is null.
         /// </exception>
         public string Build(QuerySourceDefinition source, string propertyName)
         {

@@ -21,26 +21,34 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework
         /// EngineQuery metadata options.
         /// </param>
         /// <returns>
-        /// Current metadata options.
+        /// Current metadata options instance.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="metadata"/> is null.
+        /// </exception>
         public static EngineQueryMetadataOptions UseEntityFrameworkMetadata<TDbContext>(
             this EngineQueryMetadataOptions metadata)
             where TDbContext : DbContext
         {
             ArgumentNullException.ThrowIfNull(metadata);
 
-            return metadata.UseMetadata(
-                EntityFrameworkMetadataStrategies.EntityFramework,
-                serviceProvider =>
+            metadata.AddRegistration(new EngineQueryMetadataRegistration
+            {
+                Strategy = EntityFrameworkMetadataStrategies.EntityFramework,
+                BuildMetadataResolver = serviceProvider =>
                 {
                     var dbContext = serviceProvider.GetRequiredService<TDbContext>();
 
                     return new EntityFrameworkMetadataResolver(dbContext.Model);
-                });
+                }
+            });
+
+            return metadata;
         }
 
         /// <summary>
-        /// Registers Entity Framework metadata using the specified database context and resolver options.
+        /// Registers Entity Framework metadata using the specified database context
+        /// and resolver options.
         /// </summary>
         /// <typeparam name="TDbContext">
         /// Entity Framework database context type.
@@ -52,8 +60,12 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework
         /// Entity Framework metadata resolver options.
         /// </param>
         /// <returns>
-        /// Current metadata options.
+        /// Current metadata options instance.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="metadata"/> or
+        /// <paramref name="options"/> is null.
+        /// </exception>
         public static EngineQueryMetadataOptions UseEntityFrameworkMetadata<TDbContext>(
             this EngineQueryMetadataOptions metadata,
             EntityFrameworkMetadataResolverOptions options)
@@ -62,16 +74,19 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework
             ArgumentNullException.ThrowIfNull(metadata);
             ArgumentNullException.ThrowIfNull(options);
 
-            return metadata.UseMetadata(
-                EntityFrameworkMetadataStrategies.EntityFramework,
-                serviceProvider =>
+            metadata.AddRegistration(new EngineQueryMetadataRegistration
+            {
+                Strategy = EntityFrameworkMetadataStrategies.EntityFramework,
+                BuildMetadataResolver = serviceProvider =>
                 {
                     var dbContext = serviceProvider.GetRequiredService<TDbContext>();
 
-                    return new EntityFrameworkMetadataResolver(
-                        dbContext.Model,
-                        options);
-                });
+                    return new EntityFrameworkMetadataResolver(dbContext.Model, options);
+                }
+            });
+
+            return metadata;
+
         }
     }
 }

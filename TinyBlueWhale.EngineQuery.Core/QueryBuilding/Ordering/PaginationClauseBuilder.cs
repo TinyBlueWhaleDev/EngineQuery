@@ -13,6 +13,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Ordering
         /// <summary>
         /// Sets the number of rows to skip.
         /// </summary>
+        /// <param name="count">
+        /// Number of rows skipped before returning query results.
+        /// </param>
         public void SetSkip(int count)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(count);
@@ -26,6 +29,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Ordering
         /// <summary>
         /// Sets the number of rows to take.
         /// </summary>
+        /// <param name="count">
+        /// Maximum number of rows returned by the query.
+        /// </param>
         public void SetTake(int count)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);

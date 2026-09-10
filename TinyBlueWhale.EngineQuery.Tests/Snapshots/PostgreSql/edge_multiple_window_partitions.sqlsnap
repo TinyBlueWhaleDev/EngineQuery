@@ -1,6 +1,0 @@
-SELECT "o"."order_id" AS "OrderId", "o"."user_id" AS "UserId", "o"."total" AS "Total", ROW_NUMBER() OVER (PARTITION BY "o"."user_id"
-ORDER BY "o"."total" DESC) AS "UserRowNumber", NTILE(@p0) OVER (ORDER BY "o"."total" DESC) AS "GlobalQuartile"
-FROM "orders" AS "o"
-
--- Parameters
-@p0 = 4

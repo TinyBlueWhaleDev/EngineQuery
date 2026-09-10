@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Projection;
 
 namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
 {
@@ -27,9 +27,10 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
         /// <exception cref="NotSupportedException">
         /// Thrown when the projection expression is not supported.
         /// </exception>
-        public static IReadOnlyList<QuerySelectColumnDefinition> ExtractSelectedProperties<T>(
-            Expression<Func<T, object>> selector)
+        public static IReadOnlyList<QuerySelectColumnDefinition> ExtractSelectedProperties<T>(Expression<Func<T, object>> selector)
         {
+            ArgumentNullException.ThrowIfNull(selector);
+
             return selector.Body switch
             {
                 NewExpression newExpression => ExtractFromNewExpression(newExpression),
@@ -55,6 +56,8 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
         // Extracts selected properties and aliases from anonymous object projections.
         private static IReadOnlyList<QuerySelectColumnDefinition> ExtractFromNewExpression(NewExpression newExpression)
         {
+            ArgumentNullException.ThrowIfNull(newExpression);
+
             return [.. newExpression.Arguments
                 .Select((argument, index) =>
                     CreateSelectColumnDefinition(

@@ -32,6 +32,9 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <param name="metadata">
         /// Entity metadata to register.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="metadata"/> is null.
+        /// </exception>
         public void Register<TEntity>(EntityMetadata metadata)
         {
             ArgumentNullException.ThrowIfNull(metadata);
@@ -51,8 +54,13 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <returns>
         /// True when metadata exists; otherwise, false.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="entityType"/> is null.
+        /// </exception>
         public bool TryGet(Type entityType, out EntityMetadata? metadata)
         {
+            ArgumentNullException.ThrowIfNull(entityType);
+
             return _metadataByEntityType.TryGetValue(entityType, out metadata);
         }
     }

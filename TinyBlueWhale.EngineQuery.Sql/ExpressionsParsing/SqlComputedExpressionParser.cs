@@ -10,6 +10,25 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
     /// <summary>
     /// Parses computed expression trees into SQL expressions.
     /// </summary>
+    /// <param name="databaseDialect">
+    /// SQL database dialect used to render identifiers and provider-specific SQL syntax.
+    /// </param>
+    /// <param name="sqlParameters">
+    /// SQL parameter collection used to register constant and captured values.
+    /// </param>
+    /// <param name="columnMappings">
+    /// Optional column mappings used to resolve CLR property names to physical column names.
+    /// </param>
+    /// <param name="sourceAlias">
+    /// Optional source alias used to qualify column references.
+    /// </param>
+    /// <param name="expressionScope">
+    /// Optional expression scope used to resolve parameter-bound query sources.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="databaseDialect"/> or
+    /// <paramref name="sqlParameters"/> is null.
+    /// </exception>
     public sealed class SqlComputedExpressionParser(ISqlDatabaseDialect databaseDialect,
         QueryParameterCollection sqlParameters,
         IReadOnlyDictionary<string, string>? columnMappings,
@@ -25,6 +44,18 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         /// <summary>
         /// Parses the specified expression into a SQL computed expression.
         /// </summary>
+        /// <param name="expression">
+        /// Expression to parse.
+        /// </param>
+        /// <returns>
+        /// SQL expression generated from the expression tree.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="expression"/> is null.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the expression contains an unsupported expression type or operator.
+        /// </exception>
         public string Parse(Expression expression)
         {
             ArgumentNullException.ThrowIfNull(expression);
@@ -110,6 +141,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
                 ExpressionType.Subtract => "-",
                 ExpressionType.Multiply => "*",
                 ExpressionType.Divide => "/",
+                ExpressionType.Modulo => "%",
                 ExpressionType.Equal => "=",
                 ExpressionType.NotEqual => "<>",
                 ExpressionType.GreaterThan => ">",
@@ -151,8 +183,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         /// The unwrapped operand expression when the expression is a conversion;
         /// otherwise, the original expression.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="expression"/> is null.
+        /// </exception>
         public static Expression UnwrapConvertExpression(Expression expression)
         {
+            ArgumentNullException.ThrowIfNull(expression);
+
             return expression is UnaryExpression unaryExpression &&
                    unaryExpression.NodeType == ExpressionType.Convert
                 ? unaryExpression.Operand

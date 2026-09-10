@@ -1,6 +1,7 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Clauses;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Compilation
@@ -12,9 +13,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// This builder coordinates required clauses, optional clauses, set operations and common table
     /// expressions while keeping each clause implementation isolated in its own component.
     /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="QueryScriptBuilder"/> class.
-    /// </remarks>
     /// <param name="selectClauseBuilder">
     /// SQL SELECT clause builder.
     /// </param>
@@ -24,10 +22,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// <param name="insertClauseBuilder">
     /// SQL INSERT clause builder.
     /// </param>
-    /// /// <param name="updateClauseBuilder">
+    /// <param name="updateClauseBuilder">
     /// SQL UPDATE clause builder.
     /// </param>
-    /// /// <param name="deleteClauseBuilder">
+    /// <param name="deleteClauseBuilder">
     /// SQL DELETE clause builder.
     /// </param>
     /// <param name="whereClauseBuilder">
@@ -40,10 +38,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// SQL set operation clause builder.
     /// </param>
     /// <param name="cteClauseBuilder">
-    /// SQL common table expression clause builder.
+    /// SQL common table expression clause builder when supported by the provider profile.
     /// </param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when any required dependency is <see langword="null"/>.
+    /// Thrown when any required dependency is null.
     /// </exception>
     public sealed class QueryScriptBuilder(
         IRequiredSqlClauseBuilder selectClauseBuilder,
@@ -54,7 +52,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         IOptionalSqlClauseBuilder whereClauseBuilder,
         IReadOnlyList<IOptionalSqlClauseBuilder> bodyClauseBuilders,
         SetOperationClauseBuilder setOperationClauseBuilder,
-        CteClauseBuilder cteClauseBuilder) : IQueryScriptBuilder
+        CteClauseBuilder? cteClauseBuilder) : IQueryScriptBuilder
     {
         private readonly IRequiredSqlClauseBuilder _selectClauseBuilder = selectClauseBuilder ?? throw new ArgumentNullException(nameof(selectClauseBuilder));
         private readonly IRequiredSqlClauseBuilder _fromClauseBuilder = fromClauseBuilder ?? throw new ArgumentNullException(nameof(fromClauseBuilder));
@@ -64,7 +62,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         private readonly IOptionalSqlClauseBuilder _whereClauseBuilder = whereClauseBuilder ?? throw new ArgumentNullException(nameof(whereClauseBuilder));
         private readonly IReadOnlyList<IOptionalSqlClauseBuilder> _bodyClauseBuilders = bodyClauseBuilders ?? throw new ArgumentNullException(nameof(bodyClauseBuilders));
         private readonly SetOperationClauseBuilder _setOperationClauseBuilder = setOperationClauseBuilder ?? throw new ArgumentNullException(nameof(setOperationClauseBuilder));
-        private readonly CteClauseBuilder _cteClauseBuilder = cteClauseBuilder ?? throw new ArgumentNullException(nameof(cteClauseBuilder));
+        private readonly CteClauseBuilder? _cteClauseBuilder = cteClauseBuilder;
 
         /// <summary>
         /// Builds SQL command text for the specified query definition.
@@ -79,7 +77,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         /// SQL command text.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="queryDefinition"/> or <paramref name="context"/> is <see langword="null"/>.
+        /// Thrown when <paramref name="queryDefinition"/> or
+        /// <paramref name="context"/> is null.
         /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
@@ -138,6 +137,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
 
             if (CteClauseBuilder.CanBuild(queryDefinition))
             {
+                if (_cteClauseBuilder is null)
+                    throw new InvalidOperationException("The current provider profile does not provide a common table expression strategy.");
+
                 commandText = _cteClauseBuilder.Build(queryDefinition, context) +
                               Environment.NewLine +
                               commandText;

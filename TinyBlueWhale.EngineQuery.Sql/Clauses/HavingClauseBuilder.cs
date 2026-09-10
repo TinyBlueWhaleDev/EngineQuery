@@ -1,4 +1,5 @@
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Grouping;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -11,14 +12,11 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// <remarks>
     /// This builder emits aggregate conditions that are applied after GROUP BY processing.
     /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="HavingClauseBuilder"/> class.
-    /// </remarks>
     /// <param name="columnReferenceBuilder">
     /// SQL column reference builder used to resolve aggregate column references.
     /// </param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="columnReferenceBuilder"/> is <see langword="null"/>.
+    /// Thrown when <paramref name="columnReferenceBuilder"/> is null.
     /// </exception>
     public sealed class HavingClauseBuilder(SqlColumnReferenceBuilder columnReferenceBuilder) : IOptionalSqlClauseBuilder
     {
@@ -33,6 +31,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// <see langword="true"/> when aggregate filter definitions are configured; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> is null.
+        /// </exception>
         public bool CanBuild(CompiledQueryDefinition queryDefinition)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -52,6 +53,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// SQL HAVING clause.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> or
+        /// <paramref name="context"/> is null.
+        /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -63,6 +68,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return "HAVING " + string.Join(" AND ", havingConditions);
         }
 
+        // Builds an aggregate HAVING condition.
         private string BuildHavingAggregateCondition(QueryHavingAggregateDefinition havingDefinition, QueryCompilationContext context)
         {
             var columnReference = _columnReferenceBuilder.Build(

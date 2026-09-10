@@ -1,3 +1,4 @@
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Grouping;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Joining;
@@ -13,9 +14,30 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context
     /// </summary>
     internal static class QueryCommandBuilderComponentFactory
     {
-        public static QueryCommandBuilderComponents Create(QueryCommandBuilderContext context)
+        /// <summary>
+        /// Creates the internal builders required to compose a query command.
+        /// </summary>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query.
+        /// </typeparam>
+        /// <param name="context">
+        /// Shared query command construction context.
+        /// </param>
+        /// <param name="profile">
+        /// Database provider profile used by provider-specific builders.
+        /// </param>
+        /// <returns>
+        /// Query command builder components initialized for the specified context and provider profile.
+        /// </returns>
+        public static QueryCommandBuilderComponents<TProfile> Create<TProfile>(QueryCommandBuilderContext context,
+            TProfile profile)
+            where TProfile : IDatabaseProviderProfile
         {
-            return new QueryCommandBuilderComponents
+
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(profile);
+
+            return new QueryCommandBuilderComponents<TProfile>
             {
                 SelectProjectionBuilder = new SelectProjectionBuilder(context),
                 AggregateProjectionBuilder = new AggregateProjectionBuilder(context),
@@ -25,14 +47,14 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context
                 WindowFunctionProjectionBuilder = new WindowFunctionProjectionBuilder(context),
                 WhereClauseBuilder = new WhereClauseBuilder(context),
                 JoinClauseBuilder = new JoinClauseBuilder(context),
-                ApplyClauseBuilder = new ApplyClauseBuilder(context),
+                ApplyClauseBuilder = new ApplyClauseBuilder<TProfile>(context, profile),
                 GroupByClauseBuilder = new GroupByClauseBuilder(context),
                 HavingClauseBuilder = new HavingClauseBuilder(context),
                 OrderByClauseBuilder = new OrderByClauseBuilder(context),
                 PaginationClauseBuilder = new PaginationClauseBuilder(context),
-                ExistsClauseBuilder = new ExistsClauseBuilder(context),
-                InSubqueryClauseBuilder = new InSubqueryClauseBuilder(context),
-                SetOperationClauseBuilder = new SetOperationClauseBuilder(context)
+                ExistsClauseBuilder = new ExistsClauseBuilder<TProfile>(context, profile),
+                InSubqueryClauseBuilder = new InSubqueryClauseBuilder<TProfile>(context, profile),
+                SetOperationClauseBuilder = new SetOperationClauseBuilder<TProfile>(context, profile)
             };
         }
     }

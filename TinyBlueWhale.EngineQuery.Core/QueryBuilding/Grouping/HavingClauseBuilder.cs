@@ -3,7 +3,7 @@ using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Grouping;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Grouping
 {
@@ -20,6 +20,21 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Grouping
         /// <summary>
         /// Adds an aggregate HAVING condition for an entity available in the current query scope.
         /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the aggregate expression.
+        /// </typeparam>
+        /// <param name="function">
+        /// Aggregate function applied to the selected column.
+        /// </param>
+        /// <param name="selector">
+        /// Expression that selects the column used by the aggregate function.
+        /// </param>
+        /// <param name="comparisonOperator">
+        /// Comparison operator applied to the aggregate result.
+        /// </param>
+        /// <param name="value">
+        /// Value compared against the aggregate result.
+        /// </param>
         public void AddAggregate<TEntity>(
             QueryAggregateFunction function,
             Expression<Func<TEntity, object>> selector,
@@ -28,7 +43,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Grouping
         {
             ArgumentNullException.ThrowIfNull(selector);
 
-            var sourceDefinition = _sourceResolver.Resolve<TEntity>();
+            var sourceDefinition = _sourceResolver.Resolve<TEntity>(selector.Parameters[0]);
 
             var propertyName = QueryColumnExpressionExtractor
                 .ExtractColumns(selector)

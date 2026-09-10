@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
@@ -10,9 +10,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// </summary>
     /// <remarks>
     /// This builder appends set operation queries to an already-built base command text.
-    /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="SetOperationClauseBuilder"/> class.
     /// </remarks>
     /// <param name="subqueryCompiler">
     /// Subquery compiler used to compile set operation queries.
@@ -30,6 +27,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// <see langword="true"/> when set operations are configured; otherwise, <see langword="false"/>.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> is null.
+        /// </exception>
         public static bool CanBuild(CompiledQueryDefinition queryDefinition)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -52,6 +52,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// SQL command text with set operations appended.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> or
+        /// <paramref name="context"/> is null.
+        /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context, string commandText)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -76,6 +80,7 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             return builder.ToString();
         }
 
+        // Resolves the SQL keyword associated with the set operation.
         private static string ResolveSetOperationKeyword(QuerySetOperation operation)
         {
             return operation switch

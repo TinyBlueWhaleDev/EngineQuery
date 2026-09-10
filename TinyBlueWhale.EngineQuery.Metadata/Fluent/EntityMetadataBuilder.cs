@@ -14,6 +14,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
     {
         private readonly EntityMetadataRegistry _registry;
         private readonly Dictionary<string, EntityPropertyMetadata> _properties = [];
+        private string? _schemaName;
         private string _tableName = typeof(TEntity).Name;
 
         /// <summary>
@@ -22,6 +23,9 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <param name="registry">
         /// Metadata registry where the configured entity metadata will be stored.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="registry"/> is null.
+        /// </exception>
         public EntityMetadataBuilder(EntityMetadataRegistry registry)
         {
             ArgumentNullException.ThrowIfNull(registry);
@@ -32,19 +36,30 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         }
 
         /// <summary>
-        /// Configures the database table name associated with the entity.
+        /// Configures the database table and optional schema associated with the entity.
         /// </summary>
         /// <param name="tableName">
         /// Database table name.
         /// </param>
+        /// <param name="schemaName">
+        /// Optional database schema name.
+        /// </param>
         /// <returns>
         /// Current entity metadata builder instance.
         /// </returns>
-        public EntityMetadataBuilder<TEntity> ToTable(string tableName)
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="tableName"/> is null or whitespace,
+        /// or when <paramref name="schemaName"/> is provided as whitespace.
+        /// </exception>
+        public EntityMetadataBuilder<TEntity> ToTable(string tableName, string? schemaName = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
+            if (schemaName is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(schemaName);
+
             _tableName = tableName;
+            _schemaName = schemaName;
             Save();
 
             return this;
@@ -62,6 +77,12 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <returns>
         /// Fluent property metadata builder.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="propertySelector"/> is null.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the selector does not represent a supported property access.
+        /// </exception>
         public PropertyMetadataBuilder<TEntity> Property<TProperty>(Expression<Func<TEntity, TProperty>> propertySelector)
         {
             ArgumentNullException.ThrowIfNull(propertySelector);
@@ -80,6 +101,10 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
         /// <param name="columnName">
         /// Database column name.
         /// </param>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="propertyName"/> or
+        /// <paramref name="columnName"/> is null or whitespace.
+        /// </exception>
         internal void SetColumnName(string propertyName, string columnName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(propertyName);
@@ -121,6 +146,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Fluent
                 {
                     EntityType = typeof(TEntity),
                     TableName = _tableName,
+                    SchemaName = _schemaName,
                     Properties = _properties
                         .ToDictionary(
                             pair => pair.Key,

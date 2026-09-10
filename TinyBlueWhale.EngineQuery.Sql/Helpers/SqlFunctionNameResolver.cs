@@ -13,6 +13,21 @@ namespace TinyBlueWhale.EngineQuery.Sql.Helpers
         /// <summary>
         /// Resolves a provider-specific scalar SQL function name.
         /// </summary>
+        /// <param name="function">
+        /// Scalar query function to resolve.
+        /// </param>
+        /// <param name="databaseDialect">
+        /// Database dialect used to resolve provider-specific function naming.
+        /// </param>
+        /// <returns>
+        /// Provider-specific SQL scalar function name.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="databaseDialect"/> is null.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when <paramref name="function"/> is not supported.
+        /// </exception>
         public static string ResolveScalarFunctionName(QueryScalarFunction function, ISqlDatabaseDialect databaseDialect)
         {
             ArgumentNullException.ThrowIfNull(databaseDialect);
@@ -34,6 +49,15 @@ namespace TinyBlueWhale.EngineQuery.Sql.Helpers
         /// <summary>
         /// Resolves a SQL aggregate function name.
         /// </summary>
+        /// <param name="function">
+        /// Aggregate query function to resolve.
+        /// </param>
+        /// <returns>
+        /// SQL aggregate function name.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when <paramref name="function"/> is not supported.
+        /// </exception>
         public static string ResolveAggregateFunctionName(QueryAggregateFunction function)
         {
             return function switch
