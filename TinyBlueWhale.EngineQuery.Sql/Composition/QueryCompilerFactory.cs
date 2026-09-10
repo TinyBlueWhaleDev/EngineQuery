@@ -1,6 +1,9 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Clauses;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Cte;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.LateralJoins;
+using TinyBlueWhale.EngineQuery.Sql.Clauses.Pagination;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -11,32 +14,33 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
     /// Creates query compiler collaborators for manual composition scenarios.
     /// </summary>
     /// <remarks>
-    /// This factory centralizes query script builder wiring and allows providers to override only
-    /// the SQL clause builders that require provider-specific behavior.
+    /// This factory centralizes query script builder wiring and composes provider-specific
+    /// SQL behavior from the strategies associated with the active database provider profile.
     /// </remarks>
     public static class QueryCompilerFactory
     {
         /// <summary>
-        /// Creates a SQL script builder using the specified provider options.
+        /// Creates a query script builder using the specified database dialect and query feature composition.
         /// </summary>
         /// <param name="databaseDialect">
-        /// SQL database dialect used by helper services and compilation context.
+        /// Database dialect used to render provider-specific SQL syntax.
         /// </param>
-        /// <param name="options">
-        /// Provider-specific query script builder options.
+        /// <param name="featureComposition">
+        /// Query feature strategies associated with the active provider profile.
         /// </param>
         /// <returns>
-        /// Configured SQL script builder.
+        /// Configured query script builder.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="databaseDialect"/> or <paramref name="options"/> is <see langword="null"/>.
+        /// Thrown when <paramref name="databaseDialect"/> or
+        /// <paramref name="featureComposition"/> is null.
         /// </exception>
         public static IQueryScriptBuilder CreateScriptBuilder(
             ISqlDatabaseDialect databaseDialect,
-            QueryScriptBuilderOptions options)
+            QueryFeatureComposition featureComposition)
         {
             ArgumentNullException.ThrowIfNull(databaseDialect);
-            ArgumentNullException.ThrowIfNull(options);
+            ArgumentNullException.ThrowIfNull(featureComposition);
 
             var columnReferenceBuilder = new SqlColumnReferenceBuilder(databaseDialect);
             var parameterRewriter = new SqlParameterRewriter();
@@ -51,16 +55,12 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
 
             var selectClauseBuilder = new SelectClauseBuilder(columnReferenceBuilder);
 
-            var insertClauseBuilder = options.InsertClauseBuilderFactory?.Invoke()
-                ?? new InsertClauseBuilder();
+            var insertClauseBuilder = new InsertClauseBuilder(featureComposition.InsertIdentityRetrievalStrategy);
 
             var updateClauseBuilder = new UpdateClauseBuilder();
             var deleteClauseBuilder = new DeleteClauseBuilder();
             var fromClauseBuilder = new FromClauseBuilder(subqueryCompiler);
             var joinClauseBuilder = new JoinClauseBuilder();
-
-            var applyClauseBuilder = options.ApplyClauseBuilderFactory?.Invoke(subqueryCompiler)
-                ?? new ApplyClauseBuilder(subqueryCompiler);
 
             var whereClauseBuilder = new WhereClauseBuilder(
                 columnReferenceBuilder,
@@ -72,11 +72,30 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
                 columnReferenceBuilder);
 
             var orderByClauseBuilder = new OrderByClauseBuilder();
-            var paginationClauseBuilder = new PaginationClauseBuilder();
             var setOperationClauseBuilder = new SetOperationClauseBuilder(subqueryCompiler);
 
-            var cteClauseBuilder = options.CteClauseBuilderFactory?.Invoke(subqueryCompiler)
-                ?? new CteClauseBuilder(subqueryCompiler);
+            var cteClauseBuilder = featureComposition.CteStrategy is not null
+                ? new CteClauseBuilder(subqueryCompiler, featureComposition.CteStrategy)
+                : null;
+
+            var bodyClauseBuilders = new List<IOptionalSqlClauseBuilder>
+            {
+                joinClauseBuilder
+            };
+
+            if (featureComposition.LateralJoinStrategy is not null)
+                bodyClauseBuilders.Add(new ApplyClauseBuilder(subqueryCompiler, featureComposition.LateralJoinStrategy));
+
+            bodyClauseBuilders.AddRange(new IOptionalSqlClauseBuilder[]
+            {
+                whereClauseBuilder,
+                groupByClauseBuilder,
+                havingClauseBuilder,
+                orderByClauseBuilder
+            });
+
+            if (featureComposition.PaginationStrategy is not null)
+                bodyClauseBuilders.Add(new PaginationClauseBuilder(featureComposition.PaginationStrategy));
 
             scriptBuilder = new QueryScriptBuilder(
                 selectClauseBuilder,
@@ -85,21 +104,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Composition
                 updateClauseBuilder,
                 deleteClauseBuilder,
                 whereClauseBuilder,
-                [
-                    joinClauseBuilder,
-                    applyClauseBuilder,
-                    whereClauseBuilder,
-                    groupByClauseBuilder,
-                    havingClauseBuilder,
-                    orderByClauseBuilder,
-                    paginationClauseBuilder
-                ],
+                bodyClauseBuilders,
                 setOperationClauseBuilder,
                 cteClauseBuilder);
 
             return scriptBuilder;
         }
 
+        // Defers query script builder resolution to break the recursive subquery compiler dependency.
         private sealed class DeferredQueryScriptBuilder(Lazy<IQueryScriptBuilder> queryScriptBuilder) : IQueryScriptBuilder
         {
             private readonly Lazy<IQueryScriptBuilder> _queryScriptBuilder = queryScriptBuilder ?? throw new ArgumentNullException(nameof(queryScriptBuilder));

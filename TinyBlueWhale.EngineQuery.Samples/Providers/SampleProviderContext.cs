@@ -1,7 +1,5 @@
 ﻿using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
-using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Samples.EntityFramework;
 
 namespace TinyBlueWhale.EngineQuery.Samples.Providers
@@ -14,7 +12,7 @@ namespace TinyBlueWhale.EngineQuery.Samples.Providers
 
         public required string ConnectionString { get; init; }
 
-        public required Func<IEntityMetadataResolver, QueryBuilder> BuildQueryBuilder { get; init; }
+        //public required Func<IEntityMetadataResolver, QueryBuilder> BuildQueryBuilder { get; init; }
 
         public required Func<DbConnection> OpenConnection { get; init; }
 

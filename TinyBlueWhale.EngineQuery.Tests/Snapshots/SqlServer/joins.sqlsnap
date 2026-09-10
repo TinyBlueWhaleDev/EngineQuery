@@ -1,4 +1,0 @@
-SELECT [u].[user_id] AS [UserId], [u].[email] AS [Email]
-FROM [users] AS [u]
-INNER JOIN [orders] AS [o] ON ([u].[user_id] = [o].[user_id])
-LEFT JOIN [order_items] AS [oi] ON ([o].[order_id] = [oi].[order_id])

@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Projection;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Helpers
 {
@@ -12,8 +12,22 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Helpers
         /// <summary>
         /// Extracts scalar function arguments from an array expression.
         /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the scalar function arguments.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Expression containing the scalar function arguments.
+        /// </param>
+        /// <returns>
+        /// Scalar function argument definitions extracted from the expression.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the expression cannot be represented as supported scalar function arguments.
+        /// </exception>
         public static List<QueryScalarFunctionArgumentDefinition> Extract<TEntity>(Expression<Func<TEntity, object[]>> expression)
         {
+            ArgumentNullException.ThrowIfNull(expression);
+
             return expression.Body switch
             {
                 NewArrayExpression newArrayExpression =>

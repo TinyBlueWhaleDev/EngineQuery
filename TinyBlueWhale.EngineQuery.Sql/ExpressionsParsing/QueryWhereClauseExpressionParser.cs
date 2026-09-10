@@ -12,6 +12,22 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
     /// This parser is responsible for converting supported expression patterns
     /// into provider-specific SQL predicate fragments and query parameters.
     /// </remarks>
+    /// <param name="databaseDialect">
+    /// SQL database dialect used to render provider-specific SQL syntax.
+    /// </param>
+    /// <param name="sqlParameters">
+    /// SQL parameter collection used to register predicate values.
+    /// </param>
+    /// <param name="columnMappings">
+    /// Column mappings used to resolve CLR property names to physical column names.
+    /// </param>
+    /// <param name="tableAlias">
+    /// Optional table alias used to qualify generated column references.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="databaseDialect"/>,
+    /// <paramref name="sqlParameters"/> or <paramref name="columnMappings"/> is null.
+    /// </exception>
     public sealed class QueryWhereClauseExpressionParser(ISqlDatabaseDialect databaseDialect,
         QueryParameterCollection sqlParameters,
         IReadOnlyDictionary<string, string> columnMappings,
@@ -31,6 +47,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing
         /// <returns>
         /// SQL condition fragment generated from the expression.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="expression"/> is null.
+        /// </exception>
         /// <exception cref="NotSupportedException">
         /// Thrown when the expression type is not supported by the parser.
         /// </exception>

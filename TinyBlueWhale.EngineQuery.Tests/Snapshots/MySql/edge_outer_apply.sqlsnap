@@ -1,7 +1,0 @@
-SELECT `u`.`user_id` AS `UserId`, `u`.`email` AS `Email`
-FROM `users` AS `u`
-LEFT JOIN LATERAL (SELECT `latest_order`.`order_id` AS `OrderId`, `latest_order`.`user_id` AS `UserId`, `latest_order`.`total` AS `Total`
-FROM `orders` AS `latest_order`
-WHERE (`latest_order`.`user_id` = `u`.`user_id`)
-ORDER BY `latest_order`.`total` DESC
-LIMIT 1) AS `latest_order` ON TRUE

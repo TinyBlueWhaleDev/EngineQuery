@@ -3,7 +3,8 @@ using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Filtering;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
 {
@@ -48,7 +49,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
         {
             ArgumentNullException.ThrowIfNull(predicate);
 
-            var sourceDefinition = _sourceResolver.Resolve<T>();
+            var sourceDefinition = _sourceResolver.Resolve<T>(predicate.Parameters.Single());
 
             AddInternal(predicate, sourceDefinition, logicalOperator);
         }
@@ -86,7 +87,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
         {
             ArgumentNullException.ThrowIfNull(predicate);
 
-            var sourceDefinition = _sourceResolver.Resolve<TEntity>();
+            var sourceDefinition = _sourceResolver.Resolve<TEntity>(predicate.Parameters.Single());
 
             AddInternal(predicate, sourceDefinition, logicalOperator);
         }
@@ -205,20 +206,19 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
             ArgumentNullException.ThrowIfNull(selector);
             ArgumentNullException.ThrowIfNull(values);
 
-            var materializedValues = new List<object>();
-
-            foreach (var value in values)
-            {
-                if (value is null)
-                    throw new ArgumentException("IN and NOT IN collections cannot contain null values.", nameof(values));
-
-                materializedValues.Add(value);
-            }
+            var materializedValues = values.Cast<object?>().ToList();
 
             if (materializedValues.Count == 0)
-                throw new ArgumentException("IN and NOT IN collections must contain at least one value.", nameof(values));
+                throw new ArgumentException(
+                    "IN and NOT IN collections must contain at least one value.",
+                    nameof(values));
 
-            var sourceDefinition = _sourceResolver.Resolve<TEntity>();
+            if (materializedValues.Any(value => value is null))
+                throw new ArgumentException(
+                    "IN and NOT IN collections cannot contain null values.",
+                    nameof(values));
+
+            var sourceDefinition = _sourceResolver.Resolve<TEntity>(selector.Parameters.Single());
 
             _context.QueryDefinition
                 .WhereCollectionDefinitions
@@ -227,7 +227,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
                     {
                         Selector = selector,
                         Source = sourceDefinition,
-                        Values = materializedValues,
+                        Values = materializedValues!,
                         IsNegated = isNegated
                     });
         }
@@ -250,16 +250,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
         /// <param name="value">
         /// The value compared with the scalar function result.
         /// </param>
-        public void AddFunction<TEntity>(
-            QueryScalarFunction function,
-            Expression<Func<TEntity, object>> selector,
-            QueryComparisonOperator comparisonOperator,
-            object? value)
+        public void AddFunction<TEntity>(QueryScalarFunction function, Expression<Func<TEntity, object>> selector, QueryComparisonOperator comparisonOperator, object? value)
         {
             ArgumentNullException.ThrowIfNull(selector);
 
-            var sourceDefinition =
-                _sourceResolver.Resolve<TEntity>();
+            var sourceDefinition = _sourceResolver.Resolve<TEntity>(selector.Parameters.Single());
 
             var propertyName = QueryColumnExpressionExtractor
                 .ExtractColumns(selector)
@@ -292,7 +287,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
         {
             ArgumentNullException.ThrowIfNull(expression);
 
-            var sourceDefinition = _sourceResolver.Resolve<TEntity>();
+            var sourceDefinition = _sourceResolver.Resolve<TEntity>(expression.Parameters.Single());
 
             _context.QueryDefinition
                 .WhereComputedExpressionDefinitions
@@ -324,11 +319,8 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
         {
             ArgumentNullException.ThrowIfNull(expression);
 
-            var leftSource =
-                _sourceResolver.Resolve<TLeft>();
-
-            var rightSource =
-                _sourceResolver.Resolve<TRight>();
+            var leftSource = _sourceResolver.Resolve<TLeft>(expression.Parameters[0]);
+            var rightSource = _sourceResolver.Resolve<TRight>(expression.Parameters[1]);
 
             _context.QueryDefinition
                 .WhereComputedExpressionDefinitions
@@ -368,7 +360,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering
                     LogicalOperator = logicalOperator
                 });
         }
-
     }
 }
+
 

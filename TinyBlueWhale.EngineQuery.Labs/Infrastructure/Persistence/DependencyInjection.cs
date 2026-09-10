@@ -1,11 +1,10 @@
-using FluentValidation;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
+﻿using FluentValidation;
+using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.DependencyInjection.Extensions;
 using TinyBlueWhale.EngineQuery.Labs.Domain.Enums;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.FluentMappings;
 using TinyBlueWhale.EngineQuery.Labs.Infrastructure.Persistence.SqlServer;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.Interfaces;
-using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.SearchOrdersEngine;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Repositories.SearchOrdersRaw;
 using TinyBlueWhale.EngineQuery.Labs.Labs.Lab001.DynamicQueries.SearchOrders.Validators;
 
@@ -27,7 +26,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssemblyContaining<SearchOrdersRequestValidator>();
 
         services.AddKeyedScoped<ISearchOrdersRepository, SearchOrdersRawRepository>(QueryImplementation.Raw);
-        services.AddKeyedScoped<ISearchOrdersRepository, SearchOrdersEngineRepository>(QueryImplementation.EngineQuery);
+        //services.AddKeyedScoped<ISearchOrdersRepository, SearchOrdersEngineRepository>(QueryImplementation.EngineQuery);
 
         return services;
     }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Resolvers;
+using TinyBlueWhale.EngineQuery.Tests.Models;
 
 namespace TinyBlueWhale.EngineQuery.Tests.EntityFrameworkMetadata
 {
@@ -61,7 +62,8 @@ namespace TinyBlueWhale.EngineQuery.Tests.EntityFrameworkMetadata
             {
                 Assert.That(resolved, Is.True);
                 Assert.That(metadata, Is.Not.Null);
-                Assert.That(metadata!.TableName, Is.EqualTo("security.schema_users"));
+                Assert.That(metadata!.SchemaName, Is.EqualTo("security"));
+                Assert.That(metadata.TableName, Is.EqualTo("schema_users"));
                 Assert.That(metadata.Properties["Id"].ColumnName, Is.EqualTo("schema_user_id"));
                 Assert.That(metadata.Properties["Email"].ColumnName, Is.EqualTo("email"));
             });
@@ -191,39 +193,6 @@ namespace TinyBlueWhale.EngineQuery.Tests.EntityFrameworkMetadata
                     entity.Ignore(x => x.IgnoredValue);
                 });
             }
-        }
-
-        private sealed class EfUser
-        {
-            public int Id { get; set; }
-
-            public string Email { get; set; } = string.Empty;
-
-            public bool IsActive { get; set; }
-        }
-
-        private sealed class EfSchemaUser
-        {
-            public int Id { get; set; }
-
-            public string Email { get; set; } = string.Empty;
-        }
-
-        private sealed class EfUserWithShadowProperty
-        {
-            public int Id { get; set; }
-        }
-
-        private sealed class EfUserWithIgnoredProperty
-        {
-            public int Id { get; set; }
-
-            public string IgnoredValue { get; set; } = string.Empty;
-        }
-
-        private sealed class UnmappedEntity
-        {
-            public int Id { get; set; }
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 {
@@ -9,10 +11,13 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// </summary>
     /// <remarks>
     /// This builder generates parameterized INSERT VALUES statements while delegating
-    /// identifier escaping and parameter allocation to the active compilation context.
+    /// identifier escaping, parameter allocation, and identity retrieval rendering
+    /// to the active compilation context and provider strategy.
     /// </remarks>
-    public class InsertClauseBuilder : IRequiredSqlClauseBuilder
+    public sealed class InsertClauseBuilder(IInsertIdentityRetrievalStrategy? identityRetrievalStrategy) : IRequiredSqlClauseBuilder
     {
+        private readonly IInsertIdentityRetrievalStrategy? _identityRetrievalStrategy = identityRetrievalStrategy;
+
         /// <summary>
         /// Builds the SQL INSERT statement.
         /// </summary>
@@ -29,7 +34,9 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// Thrown when <paramref name="queryDefinition"/> or <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the compiled query definition does not contain INSERT values.
+        /// Thrown when the compiled query definition does not contain INSERT values,
+        /// a valid INSERT target source, or identity retrieval is requested without
+        /// an available provider strategy.
         /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
@@ -51,7 +58,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             if (insertDefinition.IdentityDefinition is null)
                 return commandText;
 
-            return AppendIdentityRetrieval(insertDefinition.IdentityDefinition, commandText, context);
+            if (_identityRetrievalStrategy is null)
+                throw new InvalidOperationException("INSERT identity retrieval is not supported by the current database provider profile.");
+
+            return _identityRetrievalStrategy.AppendIdentityRetrieval(insertDefinition.IdentityDefinition, commandText, context);
         }
 
         /// <summary>
@@ -70,7 +80,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// Thrown when <paramref name="queryDefinition"/> or <paramref name="context"/> is <see langword="null"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the compiled query definition does not contain INSERT target columns.
+        /// Thrown when the compiled query definition does not contain INSERT target columns
+        /// or the root query source does not define a table name.
         /// </exception>
         public string BuildTarget(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
@@ -87,34 +98,19 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
             if (!columns.Any())
                 throw new InvalidOperationException("The INSERT command requires at least one target column.");
 
-            var tableName = context.DatabaseDialect.EscapeIdentifier(queryDefinition.TableName);
+            var targetSource = queryDefinition.RootSource;
+
+            if (string.IsNullOrWhiteSpace(targetSource.TableName))
+                throw new InvalidOperationException("The INSERT target source does not define a table name.");
+
+            var tableName = SqlIdentifierHelper.BuildTableReference(
+                context.DatabaseDialect,
+                targetSource.TableName,
+                targetSource.SchemaName);
+
             var escapedColumns = columns.Select(context.DatabaseDialect.EscapeIdentifier);
 
             return $"INSERT INTO {tableName} ({string.Join(", ", escapedColumns)})";
-        }
-
-        /// <summary>
-        /// Appends provider-specific identity retrieval SQL to the generated INSERT command.
-        /// </summary>
-        /// <param name="identityDefinition">
-        /// Identity retrieval metadata configured by the INSERT VALUES builder.
-        /// </param>
-        /// <param name="commandText">
-        /// Generated INSERT VALUES command text.
-        /// </param>
-        /// <param name="context">
-        /// Current SQL compilation context.
-        /// </param>
-        /// <returns>
-        /// INSERT command text with provider-specific identity retrieval SQL.
-        /// </returns>
-        /// <exception cref="NotSupportedException">
-        /// Thrown when the current provider does not implement identity retrieval.
-        /// </exception>
-        protected virtual string AppendIdentityRetrieval(QueryInsertIdentityDefinition identityDefinition, string commandText, QueryCompilationContext context)
-        {
-            throw new NotSupportedException(
-                "INSERT identity retrieval is not supported by the current database provider.");
         }
     }
 }

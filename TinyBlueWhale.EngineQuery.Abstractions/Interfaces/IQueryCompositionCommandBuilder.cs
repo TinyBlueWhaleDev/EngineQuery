@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
 {
@@ -12,8 +13,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// <typeparam name="TBuilder">
     /// Fluent builder type returned by query composition operations.
     /// </typeparam>
-    public interface IQueryCompositionCommandBuilder<T, TBuilder>
+    public interface IQueryCompositionCommandBuilder<T, TBuilder, TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
+
         /// <summary>
         /// Defines a projection for selecting specific properties from the query source.
         /// </summary>
@@ -38,7 +41,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        public TBuilder Select<TEntity>(Expression<Func<TEntity, object>> selector);
+        TBuilder Select<TEntity>(Expression<Func<TEntity, object>> selector);
 
         /// <summary>
         /// Applies DISTINCT projection semantics to the query.
@@ -46,7 +49,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        public TBuilder Distinct();
+        TBuilder Distinct();
 
         /// <summary>
         /// Adds an aggregate SELECT expression for an entity available in the current query scope.
@@ -171,8 +174,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance for method chaining.
         /// </returns>
-        TBuilder SelectLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1);
-
+        internal TBuilder ApplyLag<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1)
+        {
+            throw new NotSupportedException("LAG window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds a <c>LEAD</c> window function projection to the current query.
         /// </summary>
@@ -196,8 +201,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance for method chaining.
         /// </returns>      
-        TBuilder SelectLead<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1);
-
+        internal TBuilder ApplyLead<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder, int offset = 1)
+        {
+            throw new NotSupportedException("LEAD window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds a FIRST_VALUE window function projection to the current query.
         /// </summary>
@@ -216,8 +223,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyFirstValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("FIRST_VALUE window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds a LAST_VALUE window function projection to the current query.
         /// </summary>
@@ -236,8 +245,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyLastValue<TEntity>(Expression<Func<TEntity, object>> expression, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("LAST_VALUE window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds an NTILE window function projection to the current query.
         /// </summary>
@@ -253,8 +264,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyNtile(int buckets, string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("NTILE window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds an INNER JOIN using resolved metadata for the joined entity.
         /// </summary>
@@ -283,12 +296,12 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <summary>
         /// Adds an INNER JOIN using an explicit joined table name.
         /// </summary>
-        TBuilder InnerJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
+        TBuilder InnerJoinTable<TSource, TJoin>(string tableName, string? schemaName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
 
         /// <summary>
         /// Adds a LEFT JOIN using an explicit joined table name.
         /// </summary>
-        TBuilder LeftJoinTable<TSource, TJoin>(string tableName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
+        TBuilder LeftJoinTable<TSource, TJoin>(string tableName, string? schemaName, string? alias, Expression<Func<TSource, TJoin, bool>> on);
 
         /// <summary>
         /// Adds a CROSS APPLY or provider-equivalent LATERAL subquery join to the current query.
@@ -299,6 +312,9 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <typeparam name="TApply">
         /// Root entity type used by the APPLY subquery.
         /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query composition.
+        /// </typeparam>
         /// <param name="alias">
         /// Alias assigned to the APPLY subquery.
         /// </param>
@@ -308,16 +324,19 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder CrossApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder);
+        internal TBuilder ApplyCrossApply<TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
+        {
+            throw new NotSupportedException("CROSS APPLY or LATERAL is not supported by the current query builder.");
+        }
 
         /// <summary>
         /// Adds an OUTER APPLY or provider-equivalent LEFT LATERAL subquery join to the current query.
         /// </summary>
-        /// <typeparam name="TOuter">
-        /// Outer entity type available in the current query scope.
-        /// </typeparam>
         /// <typeparam name="TApply">
         /// Root entity type used by the APPLY subquery.
+        /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query composition.
         /// </typeparam>
         /// <param name="alias">
         /// Alias assigned to the APPLY subquery.
@@ -328,7 +347,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder OuterApply<TOuter, TApply>(string alias, Func<IQueryCommandBuilder<TApply>, IQueryCommandBuilder<TApply>> applyBuilder);
+        internal TBuilder ApplyOuterApply<TApply>(string alias, Func<IQueryCommandBuilder<TApply, TProfile>, IQueryCommandBuilder<TApply, TProfile>> applyBuilder)
+        {
+            throw new NotSupportedException("OUTER APPLY or LEFT LATERAL is not supported by the current query builder.");
+        }
 
 
         /// <summary>
@@ -598,12 +620,12 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder WhereExists<TSubquery>(Func<IQueryBuilder, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+        TBuilder WhereExists<TSubquery>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder);
 
         /// <summary>
         /// Adds a correlated EXISTS subquery condition using an outer entity available in the current query scope.
         /// </summary>
-        TBuilder WhereExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+        TBuilder WhereExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery, TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder);
 
         /// <summary>
         /// Adds an IN subquery condition for an entity available in the current query scope.
@@ -626,7 +648,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder WhereIn<TOuter, TSubquery>(Expression<Func<TOuter, object>> outerSelector, string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+        TBuilder WhereIn<TOuter, TSubquery>(Expression<Func<TOuter, object>> outerSelector, string? alias, Func<IQueryCommandBuilder<TSubquery, TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder);
 
         /// <summary>
         /// Adds a correlated NOT EXISTS subquery condition using an outer entity available in the current query scope.
@@ -646,7 +668,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder WhereNotExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery>, IQueryCommandBuilder<TSubquery>> subqueryBuilder);
+        TBuilder WhereNotExists<TOuter, TSubquery>(string? alias, Func<IQueryCommandBuilder<TSubquery, TProfile>, IQueryCommandBuilder<TSubquery, TProfile>> subqueryBuilder);
 
         /// <summary>
         /// Adds a UNION query to the current query.
@@ -660,7 +682,7 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder Union<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
+        TBuilder Union<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder);
 
         /// <summary>
         /// Adds a UNION ALL query to the current query.
@@ -674,10 +696,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder UnionAll<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
+        TBuilder UnionAll<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder);
 
         /// <summary>
-        /// Adds an INTERSECT query to the current query.
+        /// Adds an internal INTERSECT query to the current query.
         /// </summary>
         /// <typeparam name="TSet">
         /// Root entity type used by the set operation query.
@@ -688,10 +710,13 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder Intersect<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
+        internal TBuilder ApplyIntersect<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
+        {
+            throw new NotSupportedException("INTERSECT is not supported by the current query builder.");
+        }
 
         /// <summary>
-        /// Adds an EXCEPT query to the current query.
+        /// Adds an internal EXCEPT query to the current query.
         /// </summary>
         /// <typeparam name="TSet">
         /// Root entity type used by the set operation query.
@@ -702,7 +727,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder Except<TSet>(Func<IQueryBuilder, IQueryCommandBuilder<TSet>> setBuilder);
+        internal TBuilder ApplyExcept<TSet>(Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSet, TProfile>> setBuilder)
+        {
+            throw new NotSupportedException("EXCEPT is not supported by the current query builder.");
+        }
 
         /// <summary>
         /// Adds a GROUP BY clause for the root entity.
@@ -749,8 +777,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
-
+        internal TBuilder ApplyRowNumber(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("ROW_NUMBER window function projection is not supported by the current query builder.");
+        }
         /// <summary>
         /// Adds a RANK window function projection to the current query.
         /// </summary>
@@ -763,7 +793,10 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
+        internal TBuilder ApplyRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("RANK window function projection is not supported by the current query builder.");
+        }
 
         /// <summary>
         /// Adds a DENSE_RANK window function projection to the current query.
@@ -777,6 +810,136 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current query command builder instance.
         /// </returns>
-        TBuilder SelectDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder);
+        internal TBuilder ApplyDenseRank(string alias, Func<IWindowFunctionBuilder, IWindowFunctionBuilder> windowBuilder)
+        {
+            throw new NotSupportedException("DENSE_RANK window function projection is not supported by the current query builder.");
+        }
+        /// <summary>
+        /// Adds an ascending ordering expression to the query composition.
+        /// </summary>
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        TBuilder OrderBy(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds an ascending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>
+        /// <param name="keySelector">
+        /// Expression describing the ordered property.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        TBuilder OrderBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
+
+        /// <summary>
+        /// Adds a descending ordering expression to the query.
+        /// </summary>        
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Ordered query command builder instance.
+        /// </returns>
+        TBuilder OrderByDescending(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds a descending ORDER BY clause for an entity already available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression describing the ordered property.
+        /// </param>
+        /// <returns>
+        /// Current query command builder instance.
+        /// </returns>
+        TBuilder OrderByDescending<TEntity>(Expression<Func<TEntity, object>> selector);
+
+        /// <summary>
+        /// Adds an additional ascending ordering expression for the root entity.
+        /// </summary>        
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        TBuilder ThenBy(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds an additional ascending ordering expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>        
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        TBuilder ThenBy<TEntity>(Expression<Func<TEntity, object>> keySelector);
+
+        /// <summary>
+        /// Adds an additional descending ordering expression for the root entity.
+        /// </summary>      
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        TBuilder ThenByDescending(Expression<Func<T, object>> keySelector);
+
+        /// <summary>
+        /// Adds an additional descending ordering expression for an entity available in the current query scope.
+        /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the ordered column.
+        /// </typeparam>       
+        /// <param name="keySelector">
+        /// Expression that selects the property used for ordering.
+        /// </param>
+        /// <returns>
+        /// Current ordered query command builder instance.
+        /// </returns>
+        TBuilder ThenByDescending<TEntity>(Expression<Func<TEntity, object>> keySelector);
+
+        /// <summary>
+        /// Applies the pagination skip value to the current query composition.
+        /// </summary>
+        /// <param name="count">
+        /// Number of rows to skip.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        internal TBuilder ApplySkip(int count)
+        {
+            throw new NotSupportedException("Pagination SKIP is not supported by the current query builder.");
+        }
+
+        /// <summary>
+        /// Applies the pagination take value to the current query composition.
+        /// </summary>
+        /// <param name="count">
+        /// Maximum number of rows to return.
+        /// </param>
+        /// <returns>
+        /// Current query composition builder instance.
+        /// </returns>
+        internal TBuilder ApplyTake(int count)
+        {
+            throw new NotSupportedException("Pagination TAKE is not supported by the current query builder.");
+        }
     }
 }

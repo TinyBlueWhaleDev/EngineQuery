@@ -2,7 +2,7 @@
 using TinyBlueWhale.EngineQuery.Core.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Sources;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Grouping;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Grouping
 {
@@ -18,11 +18,17 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding.Grouping
         /// <summary>
         /// Adds a GROUP BY definition for an entity available in the current query scope.
         /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the grouped columns.
+        /// </typeparam>
+        /// <param name="selector">
+        /// Expression that selects the columns included in the GROUP BY clause.
+        /// </param>
         public void Add<TEntity>(Expression<Func<TEntity, object>> selector)
         {
             ArgumentNullException.ThrowIfNull(selector);
 
-            var sourceDefinition = _sourceResolver.Resolve<TEntity>();
+            var sourceDefinition = _sourceResolver.Resolve<TEntity>(selector.Parameters[0]);
 
             var columns = QueryColumnExpressionExtractor.ExtractColumns(selector);
 

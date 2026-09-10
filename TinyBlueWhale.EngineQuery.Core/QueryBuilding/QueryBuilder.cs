@@ -1,7 +1,11 @@
 ﻿using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Cte;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.SetOperations;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
@@ -13,20 +17,67 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
     /// The query engine acts as the main entry point for composing strongly typed SQL queries.
     /// It does not execute queries or manage database connections.
     /// </remarks>
-    public sealed class QueryBuilder(IQueryCompiler queryCompiler,
-        IEntityMetadataResolver? metadataResolver = null) : IQueryBuilder
+    public sealed class QueryBuilder<TProfile>(IQueryCompiler queryCompiler,
+        IEntityMetadataResolver metadataResolver,
+        TProfile profile) :
+        IQueryBuilder<TProfile>
+        where TProfile : IDatabaseProviderProfile
     {
         private readonly IQueryCompiler _queryCompiler = queryCompiler ?? throw new ArgumentNullException(nameof(queryCompiler));
 
-        private readonly IEntityMetadataResolver? _metadataResolver = metadataResolver;
+        private readonly IEntityMetadataResolver _metadataResolver = metadataResolver ?? throw new ArgumentNullException(nameof(metadataResolver));
+
+        private readonly TProfile _profile = profile ?? throw new ArgumentNullException(nameof(profile));
 
         private readonly List<QueryCteDefinition> _cteDefinitions = [];
+
+        /// <summary>
+        /// Creates a new query builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type used as the source of the query.
+        /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
+        /// </typeparam>
+        /// <returns>
+        /// Fluent query command builder.
+        /// </returns>
+        public IQueryCommandBuilder<T, TProfile> From<T>()
+        {
+            return CreateCommandBuilder<T>();
+        }
+
+        /// <summary>
+        /// Creates a new query builder using resolved entity metadata.
+        /// </summary>
+        /// <typeparam name="T">
+        /// Entity type used as the source of the query.
+        /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
+        /// </typeparam>
+        /// <param name="alias">
+        /// Optional table alias used to qualify generated SQL column references.
+        /// </param>
+        /// <returns>
+        /// Fluent query command builder.
+        /// </returns>
+        public IQueryCommandBuilder<T, TProfile> From<T>(string alias)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+            return CreateCommandBuilder<T>(alias: alias);
+        }
 
         /// <summary>
         /// Creates a new query builder using an explicit table name.
         /// </summary>
         /// <typeparam name="T">
         /// Entity type used as the source of the query.
+        /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
         /// </typeparam>
         /// <param name="tableName">
         /// Database table name associated with the query.
@@ -37,44 +88,12 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Fluent query command builder.
         /// </returns>
-        public IQueryCommandBuilder<T> From<T>(string tableName, string? alias = null)
+        public IQueryCommandBuilder<T, TProfile> From<T>(string tableName, string alias)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
-            if (alias is not null)
-                ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            return new QueryCommandBuilder<T>(_queryCompiler, tableName, alias, metadataResolver: _metadataResolver);
-        }
-
-        /// <summary>
-        /// Creates a new query builder using resolved entity metadata.
-        /// </summary>
-        /// <typeparam name="T">
-        /// Entity type used as the source of the query.
-        /// </typeparam>
-        /// <param name="alias">
-        /// Optional table alias used to qualify generated SQL column references.
-        /// </param>
-        /// <returns>
-        /// Fluent query command builder.
-        /// </returns>
-        public IQueryCommandBuilder<T> From<T>(string? alias = null)
-        {
-            if (alias is not null)
-                ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-
-            if (!_metadataResolver.TryResolve<T>(out var metadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(T).Name}' could not be resolved.");
-
-            var columnMappings = metadata!.Properties
-                .ToDictionary(property => property.Key, property => property.Value.ColumnName);
-
-            return new QueryCommandBuilder<T>(_queryCompiler, metadata!.TableName, alias, columnMappings, metadataResolver: _metadataResolver);
+            return CreateCommandBuilder<T>(tableName, alias);
         }
 
         /// <summary>
@@ -85,6 +104,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </typeparam>
         /// <typeparam name="TSubqueryRoot">
         /// Root entity type used by the derived table subquery.
+        /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
         /// </typeparam>
         /// <param name="alias">
         /// Alias assigned to the derived table.
@@ -104,16 +126,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when the derived table subquery builder returns an unsupported query command builder instance.
         /// </exception>
-        public IQueryCommandBuilder<TDerived> FromSubquery<TDerived, TSubqueryRoot>(string alias, Func<IQueryBuilder, IQueryCommandBuilder<TSubqueryRoot>> subqueryBuilder)
+        public IQueryCommandBuilder<TDerived, TProfile> FromSubquery<TDerived, TSubqueryRoot>(string alias, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> subqueryBuilder)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(alias);
             ArgumentNullException.ThrowIfNull(subqueryBuilder);
 
-            var nestedQueryBuilder = new QueryBuilder(_queryCompiler, _metadataResolver);
+            var nestedQueryBuilder = new QueryBuilder<TProfile>(_queryCompiler, _metadataResolver, _profile);
 
             var nestedCommandBuilder = subqueryBuilder(nestedQueryBuilder);
 
-            if (nestedCommandBuilder is not QueryCommandBuilder<TSubqueryRoot> concreteNestedCommandBuilder)
+            if (nestedCommandBuilder is not QueryCommandBuilder<TSubqueryRoot, TProfile> concreteNestedCommandBuilder)
                 throw new InvalidOperationException("The derived table subquery builder returned an unsupported query command builder instance.");
 
             var subqueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
@@ -129,24 +151,28 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 ColumnMappings = derivedColumnMappings
             };
 
-            return new QueryCommandBuilder<TDerived>(_queryCompiler, derivedSource, _metadataResolver);
+            return new QueryCommandBuilder<TDerived, TProfile>(_queryCompiler, derivedSource, _metadataResolver, _profile);
         }
 
         /// <summary>
         /// Registers a common table expression that can be used as a query source.
         /// </summary>
-        public IQueryBuilder With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder, IQueryCommandBuilder<TSubqueryRoot>> cteBuilder)
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
+        /// </typeparam>
+        IQueryBuilder<TProfile> IQueryBuilder<TProfile>.With<TCte, TSubqueryRoot>(string name, Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TSubqueryRoot, TProfile>> cteBuilder)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentNullException.ThrowIfNull(cteBuilder);
 
-            var nestedQueryBuilder = new QueryBuilder(
+            var nestedQueryBuilder = new QueryBuilder<TProfile>(
                 _queryCompiler,
-                _metadataResolver);
+                _metadataResolver,
+                _profile);
 
             var nestedCommandBuilder = cteBuilder(nestedQueryBuilder);
 
-            if (nestedCommandBuilder is not QueryCommandBuilder<TSubqueryRoot> concreteNestedCommandBuilder)
+            if (nestedCommandBuilder is not QueryCommandBuilder<TSubqueryRoot, TProfile> concreteNestedCommandBuilder)
                 throw new InvalidOperationException("The CTE builder returned an unsupported query command builder instance.");
 
             var cteQueryDefinition = concreteNestedCommandBuilder.BuildDefinition();
@@ -165,7 +191,22 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Creates a query command builder using a common table expression as the root source.
         /// </summary>
-        public IQueryCommandBuilder<TCte> FromCte<TCte>(string name)
+        /// <typeparam name="TCte">
+        /// Entity type associated with the common table expression.
+        /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
+        /// </typeparam>
+        /// <param name="name">
+        /// Name of the common table expression.
+        /// </param>
+        /// <param name="alias">
+        /// Alias for the common table expression.
+        /// </param>
+        /// <returns>
+        /// A query command builder for the specified common table expression.
+        /// </returns>
+        IQueryCommandBuilder<TCte, TProfile> IQueryBuilder<TProfile>.FromCte<TCte>(string name, string? alias)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -175,16 +216,19 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             {
                 EntityType = typeof(TCte),
                 TableName = name,
-                TableAlias = name,
+                TableAlias = alias,
                 ColumnMappings = columnMappings
             };
 
-            var commandBuilder = new QueryCommandBuilder<TCte>(
+            var commandBuilder = new QueryCommandBuilder<TCte, TProfile>(
                 _queryCompiler,
                 cteSource,
-                _metadataResolver);
+                _metadataResolver,
+                _profile);
 
             commandBuilder.RegisterCteDefinitions(_cteDefinitions);
+
+            _cteDefinitions.Clear();
 
             return commandBuilder;
         }
@@ -192,6 +236,9 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <summary>
         /// Registers a recursive common table expression that can be used as a query source.
         /// </summary>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
+        /// </typeparam>
         /// <typeparam name="TCte">
         /// Entity type associated with the recursive common table expression.
         /// </typeparam>
@@ -222,21 +269,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <exception cref="InvalidOperationException">
         /// Thrown when the recursive common table expression builders return unsupported query command builder instances.
         /// </exception>
-        public IQueryBuilder WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
-            Func<IQueryBuilder, IQueryCommandBuilder<TBaseRoot>> baseQueryBuilder,
-            Func<IQueryBuilder, IQueryCommandBuilder<TRecursiveRoot>> recursiveQueryBuilder)
+        IQueryBuilder<TProfile> IQueryBuilder<TProfile>.WithRecursive<TCte, TBaseRoot, TRecursiveRoot>(string name,
+            Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TBaseRoot, TProfile>> baseQueryBuilder,
+            Func<IQueryBuilder<TProfile>, IQueryCommandBuilder<TRecursiveRoot, TProfile>> recursiveQueryBuilder)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentNullException.ThrowIfNull(baseQueryBuilder);
             ArgumentNullException.ThrowIfNull(recursiveQueryBuilder);
 
-            var baseBuilder = new QueryBuilder(
-                _queryCompiler,
-                _metadataResolver);
-
-            var recursiveBuilder = new QueryBuilder(
-                _queryCompiler,
-                _metadataResolver);
+            var baseBuilder = new QueryBuilder<TProfile>(_queryCompiler, _metadataResolver, _profile);
+            var recursiveBuilder = new QueryBuilder<TProfile>(_queryCompiler, _metadataResolver, _profile);
 
             var baseCommandBuilder = baseQueryBuilder(
                 baseBuilder);
@@ -244,17 +286,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             var recursiveCommandBuilder = recursiveQueryBuilder(
                 recursiveBuilder);
 
-            if (baseCommandBuilder is not QueryCommandBuilder<TBaseRoot> concreteBaseBuilder)
-            {
-                throw new InvalidOperationException(
-                    "The recursive CTE base query builder returned an unsupported query command builder instance.");
-            }
+            if (baseCommandBuilder is not QueryCommandBuilder<TBaseRoot, TProfile> concreteBaseBuilder)
+                throw new InvalidOperationException("The recursive CTE base query builder returned an unsupported query command builder instance.");
 
-            if (recursiveCommandBuilder is not QueryCommandBuilder<TRecursiveRoot> concreteRecursiveBuilder)
-            {
-                throw new InvalidOperationException(
-                    "The recursive CTE recursive query builder returned an unsupported query command builder instance.");
-            }
+            if (recursiveCommandBuilder is not QueryCommandBuilder<TRecursiveRoot, TProfile> concreteRecursiveBuilder)
+                throw new InvalidOperationException("The recursive CTE recursive query builder returned an unsupported query command builder instance.");
 
             var baseQueryDefinition = concreteBaseBuilder.BuildDefinition();
 
@@ -282,31 +318,14 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
             return this;
         }
 
-        // Resolves derived table column mappings using metadata when available or property names by convention.
-        private Dictionary<string, string> ResolveDerivedColumnMappings<TDerived>()
-        {
-            if (_metadataResolver is not null && _metadataResolver.TryResolve<TDerived>(out var metadata))
-                return metadata!.Properties.ToDictionary(property => property.Key, property => property.Value.ColumnName);
-
-            return typeof(TDerived).GetProperties().ToDictionary(property => property.Name, property => property.Name);
-        }
-
-        // Creates a query command builder with inherited outer sources.
-        internal QueryCommandBuilder<TEntity> FromWithOuterSources<TEntity>(string? alias, IReadOnlyDictionary<Type, QuerySourceDefinition> outerSources)
-        {
-            var commandBuilder = (QueryCommandBuilder<TEntity>)From<TEntity>(alias);
-
-            commandBuilder.RegisterOuterSources(outerSources);
-
-            return commandBuilder;
-        }
-
-
         /// <summary>
         /// Creates a new INSERT command builder using an explicit table name.
         /// </summary>
         /// <typeparam name="T">
         /// Entity type associated with the target INSERT table.
+        /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
         /// </typeparam>
         /// <param name="tableName">
         /// Database table name associated with the INSERT command.
@@ -314,11 +333,11 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <returns>
         /// Fluent INSERT command builder.
         /// </returns>
-        public IInsertCommandBuilder<T> InsertInto<T>(string tableName)
+        public IInsertCommandBuilder<T, TProfile> InsertInto<T>(string tableName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            return new InsertCommandBuilder<T>(_queryCompiler, tableName, metadataResolver: _metadataResolver);
+            return CreateInsertCommandBuilder<T>(tableName);
         }
         /// <summary>
         /// Creates a new INSERT command builder using resolved entity metadata.
@@ -326,21 +345,15 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <typeparam name="T">
         /// Entity type associated with the target INSERT table.
         /// </typeparam>
+        /// <typeparam name="TProfile">
+        /// Database provider profile associated with the query builder.
+        /// </typeparam>
         /// <returns>
         /// Fluent INSERT command builder.
         /// </returns>
-        public IInsertCommandBuilder<T> InsertInto<T>()
+        public IInsertCommandBuilder<T, TProfile> InsertInto<T>()
         {
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<T>(out var metadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(T).Name}' could not be resolved.");
-
-            var columnMappings = metadata!.Properties
-                .ToDictionary(property => property.Key, property => property.Value.ColumnName);
-
-            return new InsertCommandBuilder<T>(_queryCompiler, metadata.TableName, columnMappings, metadataResolver: _metadataResolver);
+            return CreateInsertCommandBuilder<T>();
         }
 
         /// <summary>
@@ -359,7 +372,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            return new UpdateCommandBuilder<T>(_queryCompiler, tableName, metadataResolver: _metadataResolver);
+            return CreateUpdateCommandBuilder<T>(tableName);
         }
 
         /// <summary>
@@ -373,16 +386,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IUpdateCommandBuilder<T> Update<T>()
         {
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
-
-            if (!_metadataResolver.TryResolve<T>(out var metadata))
-                throw new InvalidOperationException($"Metadata for entity type '{typeof(T).Name}' could not be resolved.");
-
-            var columnMappings = metadata!.Properties
-                .ToDictionary(property => property.Key, property => property.Value.ColumnName);
-
-            return new UpdateCommandBuilder<T>(_queryCompiler, metadata.TableName, columnMappings, _metadataResolver);
+            return CreateUpdateCommandBuilder<T>();
         }
 
         /// <summary>
@@ -401,10 +405,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
 
-            return new DeleteCommandBuilder<T>(
-                _queryCompiler,
-                tableName,
-                metadataResolver: _metadataResolver);
+            return CreateDeleteCommandBuilder<T>(tableName);
         }
 
         /// <summary>
@@ -418,23 +419,96 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// </returns>
         public IDeleteCommandBuilder<T> DeleteFrom<T>()
         {
-            if (_metadataResolver is null)
-                throw new InvalidOperationException("No entity metadata resolver is configured.");
+            return CreateDeleteCommandBuilder<T>();
+        }
 
-            if (!_metadataResolver.TryResolve<T>(out var metadata))
-                throw new InvalidOperationException(
-                    $"Metadata for entity type '{typeof(T).Name}' could not be resolved.");
+        /// <summary>
+        /// Resolves property-to-column mappings for a derived query source.
+        /// </summary>
+        /// <typeparam name="TDerived">
+        /// CLR type representing the derived query projection.
+        /// </typeparam>
+        /// <returns>
+        /// Metadata-based column mappings when available; otherwise,
+        /// property names mapped by convention.
+        /// </returns>
+        private Dictionary<string, string> ResolveDerivedColumnMappings<TDerived>()
+        {
+            if (_metadataResolver.TryResolve<TDerived>(out var metadata))
+                return EntityMetadataHelper.CreateColumnMappings(metadata!);
 
-            var columnMappings = metadata!.Properties
-                .ToDictionary(
-                    property => property.Key,
-                    property => property.Value.ColumnName);
+            return typeof(TDerived)
+                .GetProperties()
+                .ToDictionary(property => property.Name, property => property.Name);
+        }
+
+        // Resolves entity metadata and column mappings for a query source.
+        private QuerySourceMetadata ResolveSourceMetadata<T>(string? tableName = null)
+        {
+            var metadata = EntityMetadataHelper.Resolve<T>(_metadataResolver);
+
+            return new QuerySourceMetadata(
+                tableName ?? metadata.TableName,
+                metadata.SchemaName,
+                EntityMetadataHelper.CreateColumnMappings(metadata));
+        }
+
+        // Creates a query command builder using resolved entity metadata.
+        private QueryCommandBuilder<T, TProfile> CreateCommandBuilder<T>(string? tableName = null, string? alias = null)
+        {
+            var source = ResolveSourceMetadata<T>(tableName);
+
+            return new QueryCommandBuilder<T, TProfile>(
+                _queryCompiler,
+                _metadataResolver,
+                _profile,
+                source.TableName,
+                source.SchemaName,
+                alias,
+                source.ColumnMappings);
+        }
+
+        // Creates an INSERT command builder using resolved entity metadata.
+        private InsertCommandBuilder<T, TProfile> CreateInsertCommandBuilder<T>(string? tableName = null)
+        {
+            var source = ResolveSourceMetadata<T>(tableName);
+
+            return new InsertCommandBuilder<T, TProfile>(
+                _queryCompiler,
+                _metadataResolver,
+                _profile,
+                source.TableName,
+                source.SchemaName,
+                source.ColumnMappings);
+        }
+
+        // Creates an UPDATE command builder using resolved entity metadata.
+        private UpdateCommandBuilder<T> CreateUpdateCommandBuilder<T>(string? tableName = null)
+        {
+            var source = ResolveSourceMetadata<T>(tableName);
+
+            return new UpdateCommandBuilder<T>(
+                _queryCompiler,
+                _metadataResolver,
+                source.TableName,
+                source.SchemaName,
+                source.ColumnMappings);
+        }
+
+        // Creates a DELETE command builder using resolved entity metadata.
+        private DeleteCommandBuilder<T> CreateDeleteCommandBuilder<T>(string? tableName = null)
+        {
+            var source = ResolveSourceMetadata<T>(tableName);
 
             return new DeleteCommandBuilder<T>(
                 _queryCompiler,
-                metadata.TableName,
-                columnMappings,
-                _metadataResolver);
+                _metadataResolver,
+                source.TableName,
+                source.SchemaName,
+                source.ColumnMappings);
         }
+
+        private sealed record QuerySourceMetadata(string TableName, string? SchemaName, Dictionary<string, string> ColumnMappings);
     }
 }
+

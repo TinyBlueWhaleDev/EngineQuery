@@ -1,5 +1,4 @@
-﻿using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
-using TinyBlueWhale.EngineQuery.Metadata.Models;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Models;
 using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
@@ -18,9 +17,18 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         internal IReadOnlyList<EngineQueryMetadataRegistration> Registrations => _registrations;
 
         /// <summary>
-        /// Registers fluent metadata.
+        /// Registers fluent metadata resolution.
         /// </summary>
-        public EngineQueryMetadataOptions UseFluentMetadata(Func<IEntityMetadataResolver> metadataResolverFactory)
+        /// <param name="metadataResolverFactory">
+        /// Factory used to create the fluent entity metadata resolver.
+        /// </param>
+        /// <returns>
+        /// Current metadata options instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="metadataResolverFactory"/> is null.
+        /// </exception>
+        public EngineQueryMetadataOptions UseFluentMetadata(Func<FluentEntityMetadataResolver> metadataResolverFactory)
         {
             ArgumentNullException.ThrowIfNull(metadataResolverFactory);
             _registrations.Add(
@@ -33,8 +41,11 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         }
 
         /// <summary>
-        /// Registers attribute metadata.
+        /// Registers attribute-based metadata resolution.
         /// </summary>
+        /// <returns>
+        /// Current metadata options instance.
+        /// </returns>
         public EngineQueryMetadataOptions UseAttributeMetadata()
         {
             _registrations.Add(
@@ -47,20 +58,19 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         }
 
         /// <summary>
-        /// Registers metadata using a service provider based factory.
+        /// Adds a supported metadata registration to the current metadata configuration.
         /// </summary>
-        public EngineQueryMetadataOptions UseMetadata(
-            MetadataStrategy strategy,
-            Func<IServiceProvider, IEntityMetadataResolver> metadataResolverFactory)
+        /// <param name="registration">
+        /// Metadata registration to add.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="registration"/> is null.
+        /// </exception>
+        internal void AddRegistration(EngineQueryMetadataRegistration registration)
         {
-            ArgumentNullException.ThrowIfNull(metadataResolverFactory);
-            _registrations.Add(
-                new EngineQueryMetadataRegistration
-                {
-                    Strategy = strategy,
-                    BuildMetadataResolver = metadataResolverFactory
-                });
-            return this;
+            ArgumentNullException.ThrowIfNull(registration);
+
+            _registrations.Add(registration);
         }
     }
 }

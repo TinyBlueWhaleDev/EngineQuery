@@ -13,11 +13,14 @@ namespace TinyBlueWhale.EngineQuery.Sql.Formatting
         /// Formats a SQL script.
         /// </summary>
         /// <param name="sql">
-        /// SQL script.
+        /// SQL script to format.
         /// </param>
         /// <returns>
         /// Formatted SQL script.
         /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="sql"/> is null, empty or consists only of white-space characters.
+        /// </exception>
         public static string Format(string sql)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(sql);

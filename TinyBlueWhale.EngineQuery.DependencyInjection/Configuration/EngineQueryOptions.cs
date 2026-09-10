@@ -1,14 +1,13 @@
-﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
-using TinyBlueWhale.EngineQuery.DependencyInjection.Enums;
-using TinyBlueWhale.EngineQuery.MySql.Capabilities;
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Core.Enums;
+using TinyBlueWhale.EngineQuery.Core.Interfaces;
+using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.MySql.Compilation;
-using TinyBlueWhale.EngineQuery.MySql.Dialects;
-using TinyBlueWhale.EngineQuery.PostgreSql.Capabilities;
+using TinyBlueWhale.EngineQuery.MySql.Profiles.Interfaces;
 using TinyBlueWhale.EngineQuery.PostgreSql.Compilation;
-using TinyBlueWhale.EngineQuery.PostgreSql.Dialects;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
+using TinyBlueWhale.EngineQuery.PostgreSql.Profiles.Interfaces;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
+using TinyBlueWhale.EngineQuery.SqlServer.Profiles.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
 {
@@ -26,8 +25,55 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
         internal IReadOnlyList<EngineQueryRegistration> Registrations => _registrations;
 
         /// <summary>
-        /// Registers a provider using metadata options.
+        /// Registers a provider using convention-based metadata resolution.
         /// </summary>
+        /// <param name="provider">
+        /// Query engine provider to register.
+        /// </param>
+        /// <returns>
+        /// Current EngineQuery options instance.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the specified provider is not supported.
+        /// </exception>
+        public EngineQueryOptions Add(QueryEngineProvider provider)
+        {
+            var (buildCompiler, profileContract) = BuildProviderComposition(provider);
+
+            _registrations.Add(
+                new EngineQueryRegistration
+                {
+                    ProfileContract = profileContract,
+                    Provider = provider,
+                    MetadataStrategy = null,
+                    BuildCompiler = buildCompiler,
+                    BuildMetadataResolver = _ => new ConventionEntityMetadataResolver()
+                });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Registers a provider using the configured metadata strategies.
+        /// </summary>
+        /// <param name="provider">
+        /// Query engine provider to register.
+        /// </param>
+        /// <param name="configureMetadata">
+        /// Action used to configure metadata strategies for the provider.
+        /// </param>
+        /// <returns>
+        /// Current EngineQuery options instance.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="configureMetadata"/> is null.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when no metadata strategy is configured.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the specified provider is not supported.
+        /// </exception>
         public EngineQueryOptions Add(QueryEngineProvider provider, Action<EngineQueryMetadataOptions> configureMetadata)
         {
             ArgumentNullException.ThrowIfNull(configureMetadata);
@@ -38,35 +84,57 @@ namespace TinyBlueWhale.EngineQuery.DependencyInjection.Configuration
             if (metadataOptions.Registrations.Count == 0)
                 throw new InvalidOperationException("At least one metadata strategy must be configured.");
 
+            var (buildCompiler, profileContract) = BuildProviderComposition(provider);
+
             foreach (var metadataRegistration in metadataOptions.Registrations)
             {
                 _registrations.Add(
                     new EngineQueryRegistration
                     {
+                        ProfileContract = profileContract,
                         Provider = provider,
                         MetadataStrategy = metadataRegistration.Strategy,
-                        BuildCompiler = BuildCompilerFactory(provider),
-                        BuildMetadataResolver = metadataRegistration.BuildMetadataResolver
+                        BuildCompiler = buildCompiler,
+                        BuildMetadataResolver = serviceProvider =>
+                        {
+                            var configuredResolver = metadataRegistration.BuildMetadataResolver(serviceProvider);
+
+                            return new CompositeEntityMetadataResolver(
+                            [
+                                configuredResolver,
+                                new ConventionEntityMetadataResolver()
+                            ]);
+                        }
                     });
             }
             return this;
         }
 
-        private static Func<IServiceProvider, IQueryCompiler> BuildCompilerFactory(QueryEngineProvider provider)
+        /// <summary>
+        /// Builds the compiler factory and profile contract associated with the specified provider.
+        /// </summary>
+        /// <param name="provider">
+        /// Database provider used to resolve the provider-specific composition.
+        /// </param>
+        /// <returns>
+        /// Compiler factory and profile contract associated with the specified provider.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the specified provider is not supported.
+        /// </exception>
+        private static (Func<IServiceProvider, IDatabaseProviderProfile, IQueryCompiler> BuildCompiler, Type ProfileContract) BuildProviderComposition(QueryEngineProvider provider)
         {
             return provider switch
             {
-                QueryEngineProvider.SqlServer => _ => new SqlServerQueryCompiler(
-                    new SqlServerDatabaseDialect(),
-                    new SqlServerProviderCapabilities()),
-                QueryEngineProvider.MySql => _ => new MySqlQueryCompiler(
-                    new MySqlDatabaseDialect(),
-                    new MySqlProviderCapabilities()),
-                QueryEngineProvider.PostgreSql => _ => new PostgreSqlQueryCompiler(
-                    new PostgreSqlDatabaseDialect(),
-                    new PostgreSqlProviderCapabilities()),
+                QueryEngineProvider.SqlServer => (BuildSqlServerCompiler, typeof(ISqlServerProfile)),
+                QueryEngineProvider.MySql => (BuildMySqlCompiler, typeof(IMySqlProfile)),
+                QueryEngineProvider.PostgreSql => (BuildPostgreSqlCompiler, typeof(IPostgreSqlProfile)),
                 _ => throw new NotSupportedException($"Provider '{provider}' is not supported.")
             };
         }
+
+        private static IQueryCompiler BuildSqlServerCompiler(IServiceProvider _, IDatabaseProviderProfile profile) => SqlServerQueryCompiler.Factory.CreateCompiler((ISqlServerProfile)profile);
+        private static IQueryCompiler BuildMySqlCompiler(IServiceProvider _, IDatabaseProviderProfile profile) => MySqlQueryCompiler.Factory.CreateCompiler((IMySqlProfile)profile);
+        private static IQueryCompiler BuildPostgreSqlCompiler(IServiceProvider _, IDatabaseProviderProfile profile) => PostgreSqlQueryCompiler.Factory.CreateCompiler((IPostgreSqlProfile)profile);
     }
 }

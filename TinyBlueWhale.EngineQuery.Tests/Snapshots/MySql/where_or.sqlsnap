@@ -1,7 +1,0 @@
-SELECT *
-FROM `Users` AS `Users`
-WHERE ((`Users`.`Email` LIKE @p0) OR (`Users`.`Email` LIKE @p1))
-
--- Parameters
-@p0 = %@gmail.com%
-@p1 = %@company.com%

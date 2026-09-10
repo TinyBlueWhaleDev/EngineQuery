@@ -1,19 +1,33 @@
-﻿using TinyBlueWhale.EngineQuery.Core.QueryBuilding;
-using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Resolvers;
 using TinyBlueWhale.EngineQuery.Playground.Models;
-using TinyBlueWhale.EngineQuery.SqlServer.Capabilities;
 using TinyBlueWhale.EngineQuery.SqlServer.Compilation;
-using TinyBlueWhale.EngineQuery.SqlServer.Dialects;
 
 namespace TinyBlueWhale.EngineQuery.Playground.MappingValidators
 {
+    /// <summary>
+    /// Validates attribute-based metadata resolution.
+    ///
+    /// Expected metadata resolution:
+    /// AttributeSystemEvent  -> system_logs
+    /// EventKey              -> log_id
+    /// EventMessage          -> message_text
+    /// EventCreatedAt        -> created_at
+    /// IsEnabled             -> is_active
+    ///
+    /// Expected SQL:
+    /// SELECT [log_id], [message_text], [created_at], [is_active]
+    /// FROM [system_logs]
+    /// WHERE ([is_active] = @p0)
+    /// ORDER BY [created_at] DESC
+    ///
+    /// Expected parameters:
+    /// @p0 = True
+    /// </summary>
     public static class AttributeMappingValidator
     {
         public static void Run()
         {
-            var queryBuilder = new QueryBuilder(
-                new SqlServerQueryCompiler(new SqlServerDatabaseDialect(), new SqlServerProviderCapabilities()),
-                new AttributeEntityMetadataResolver());
+            var queryBuilder = SqlServerQueryCompiler.Factory.Create(new AttributeEntityMetadataResolver());
 
             var sql = queryBuilder
                 .From<AttributeSystemEvent>()

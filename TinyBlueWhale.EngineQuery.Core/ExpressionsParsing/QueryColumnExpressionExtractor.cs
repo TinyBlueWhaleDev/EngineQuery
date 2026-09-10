@@ -1,5 +1,5 @@
-using System.Linq.Expressions;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Projection;
 
 namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
 {
@@ -11,6 +11,18 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
         /// <summary>
         /// Extracts query column definitions from a single-property or anonymous object expression.
         /// </summary>
+        /// <typeparam name="TEntity">
+        /// Entity type associated with the selected columns.
+        /// </typeparam>
+        /// <param name="expression">
+        /// Expression that selects one or more entity properties.
+        /// </param>
+        /// <returns>
+        /// Query column definitions extracted from the expression.
+        /// </returns>
+        /// <exception cref="NotSupportedException">
+        /// Thrown when the expression cannot be represented as a supported column selector.
+        /// </exception>
         public static IReadOnlyList<QueryColumnDefinition> ExtractColumns<TEntity>(Expression<Func<TEntity, object>> expression)
         {
             ArgumentNullException.ThrowIfNull(expression);

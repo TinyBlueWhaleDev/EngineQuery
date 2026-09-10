@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
 using TinyBlueWhale.EngineQuery.Abstractions.Models;
 
 namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
@@ -9,7 +10,11 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
     /// <typeparam name="T">
     /// Entity type associated with the target INSERT table.
     /// </typeparam>
-    public interface IInsertValuesCommandBuilder<T>
+    /// <typeparam name="TProfile">
+    /// Database provider profile associated with the INSERT command.
+    /// </typeparam>
+    public interface IInsertValuesCommandBuilder<T, TProfile>
+         where TProfile : IDatabaseProviderProfile
     {
         /// <summary>
         /// Adds a value assignment for the selected entity property.
@@ -26,34 +31,35 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Interfaces
         /// <returns>
         /// Current INSERT VALUES command builder instance.
         /// </returns>
-        IInsertValuesCommandBuilder<T> Set<TProperty>(Expression<Func<T, TProperty>> selector, TProperty value);
+        IInsertValuesCommandBuilder<T, TProfile> Set<TProperty>(Expression<Func<T, TProperty>> selector, TProperty value);
 
         /// <summary>
-        /// Configures the INSERT command to return the generated identity value
-        /// using the scalar identity function supported by the current provider.
+        /// Configures provider-specific scalar identity retrieval for the INSERT command.
         /// </summary>
-        /// <remarks>
-        /// SQL Server generates SCOPE_IDENTITY() and MySQL generates LAST_INSERT_ID().
-        /// PostgreSQL requires the overload that specifies the identity column.
-        /// This operation is available only for direct INSERT value assignments.
-        /// </remarks>
-        /// <returns>The current INSERT values command builder.</returns>
-        IInsertValuesCommandBuilder<T> ReturnIdentity();
+        /// <returns>
+        /// Current INSERT VALUES command builder instance.
+        /// </returns>
+        internal IInsertValuesCommandBuilder<T, TProfile> ApplyReturnIdentity()
+        {
+            throw new NotSupportedException("Scalar INSERT identity retrieval is not supported by the current INSERT builder.");
+        }
 
         /// <summary>
-        /// Configures the INSERT command to return the generated identity column.
+        /// Configures provider-specific identity retrieval using the selected target column.
         /// </summary>
-        /// <typeparam name="TProperty">The identity property type.</typeparam>
+        /// <typeparam name="TProperty">
+        /// Property type associated with the generated identity.
+        /// </typeparam>
         /// <param name="identitySelector">
-        /// An expression selecting the entity property mapped to the generated identity column.
+        /// Expression that selects the target identity property.
         /// </param>
-        /// <remarks>
-        /// This overload is required by PostgreSQL to generate its RETURNING clause.
-        /// The selected property is resolved through the configured entity metadata.
-        /// This operation is available only for direct INSERT value assignments.
-        /// </remarks>
-        /// <returns>The current INSERT values command builder.</returns>
-        IInsertValuesCommandBuilder<T> ReturnIdentity<TProperty>(Expression<Func<T, TProperty>> selector);
+        /// <returns>
+        /// Current INSERT VALUES command builder instance.
+        /// </returns>
+        internal IInsertValuesCommandBuilder<T, TProfile> ApplyReturnIdentity<TProperty>(Expression<Func<T, TProperty>> identitySelector)
+        {
+            throw new NotSupportedException("Column-based INSERT identity retrieval is not supported by the current INSERT builder.");
+        }
 
         /// <summary>
         /// Builds the current INSERT VALUES command into SQL command text and parameters.

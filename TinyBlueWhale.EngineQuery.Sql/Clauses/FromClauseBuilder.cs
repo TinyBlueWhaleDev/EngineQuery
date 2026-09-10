@@ -1,5 +1,7 @@
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+﻿using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
+using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Sql.Clauses
@@ -9,9 +11,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
     /// </summary>
     /// <remarks>
     /// This builder supports physical root tables and derived table query sources.
-    /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="FromClauseBuilder"/> class.
+    /// For INSERT SELECT commands, the SELECT source is resolved from the INSERT
+    /// definition instead of the INSERT target root source.
     /// </remarks>
     /// <param name="subqueryCompiler">
     /// Subquery compiler used to compile derived table sources.
@@ -32,40 +33,53 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// SQL FROM clause.
         /// </returns>
-        public string Build(
-            CompiledQueryDefinition queryDefinition,
-            QueryCompilationContext context)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> or
+        /// <paramref name="context"/> is null.
+        /// </exception>
+        public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
             ArgumentNullException.ThrowIfNull(context);
 
-            var rootSource = queryDefinition.SourceDefinitions.TryGetValue(queryDefinition.EntityType, out var sourceDefinition)
-                ? sourceDefinition
-                : null;
+            var sourceDefinition = ResolveFromSource(queryDefinition);
 
-            if (rootSource is not null)
-                return $"FROM {BuildQuerySourceReference(rootSource, context)}";
-
-            var tableName = context.DatabaseDialect.EscapeIdentifier(queryDefinition.TableName);
-
-            return string.IsNullOrWhiteSpace(queryDefinition.TableAlias)
-                ? $"FROM {tableName}"
-                : $"FROM {tableName} AS {context.DatabaseDialect.EscapeIdentifier(queryDefinition.TableAlias)}";
+            return $"FROM {BuildQuerySourceReference(sourceDefinition, context)}";
         }
 
+        // Resolves the query source that represents the SQL FROM clause.
+        private static QuerySourceDefinition ResolveFromSource(CompiledQueryDefinition queryDefinition)
+        {
+            if (queryDefinition.InsertDefinition?.SourceDefinition is not null)
+                return queryDefinition.InsertDefinition.SourceDefinition;
+
+            return queryDefinition.RootSource;
+        }
+
+        // Builds the SQL reference associated with the specified query source.
         private string BuildQuerySourceReference(QuerySourceDefinition sourceDefinition, QueryCompilationContext context)
         {
             if (sourceDefinition.IsDerivedTable)
             {
-                var commandText = _subqueryCompiler.CompileAndReindex(
-                    sourceDefinition.Subquery!,
-                    context);
+                if (string.IsNullOrWhiteSpace(sourceDefinition.TableAlias))
+                    throw new InvalidOperationException("Derived table query sources require an alias.");
+
+                var commandText = _subqueryCompiler.CompileAndReindex(sourceDefinition.Subquery!, context);
 
                 return $"({commandText}) AS {context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
             }
 
             if (sourceDefinition.IsTable)
-                return $"{context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableName!)} AS {context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+            {
+                var tableName = SqlIdentifierHelper.BuildTableReference(
+                    context.DatabaseDialect,
+                    sourceDefinition.TableName!,
+                    sourceDefinition.SchemaName);
+
+                return string.IsNullOrWhiteSpace(sourceDefinition.TableAlias)
+                    ? tableName
+                    : $"{tableName} AS {context.DatabaseDialect.EscapeIdentifier(sourceDefinition.TableAlias)}";
+            }
 
             throw new InvalidOperationException("Query source must define either a physical table or a derived table subquery.");
         }

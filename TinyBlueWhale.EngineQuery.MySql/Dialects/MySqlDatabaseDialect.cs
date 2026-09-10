@@ -1,29 +1,37 @@
-using TinyBlueWhale.EngineQuery.Core.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Core.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.MySql.Dialects
 {
     /// <summary>
-    /// MySql implementation of database-specific SQL syntax rules.
+    /// MySQL implementation of database-specific SQL syntax rules.
     /// </summary>
     /// <remarks>
-    /// Responsible for generating MySql compatible fragments such as
+    /// Responsible for generating MySQL compatible fragments such as
     /// escaped identifiers and pagination clauses.
     /// </remarks>
     public sealed class MySqlDatabaseDialect : ISqlDatabaseDialect
     {
         /// <summary>
-        /// Escapes a SQL identifier using MySql bracket syntax.
+        /// Escapes a SQL identifier using MySQL backtick syntax.
         /// </summary>
         /// <param name="identifier">
         /// Identifier to escape.
         /// </param>
         /// <returns>
-        /// Escaped MySql identifier.
+        /// Escaped MySQL identifier.
         /// </returns>
-        public string EscapeIdentifier(string identifier) => $"`{identifier}`";
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="identifier"/> is null, empty or consists only of white-space characters.
+        /// </exception>
+        public string EscapeIdentifier(string identifier)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
+
+            return $"`{identifier.Replace("`", "``")}`";
+        }
 
         /// <summary>
-        /// Builds a MySql pagination clause using LIMIT/OFFSET syntax.
+        /// Builds a MySQL pagination clause using LIMIT/OFFSET syntax.
         /// </summary>
         /// <param name="skip">
         /// Number of rows to skip.
@@ -32,7 +40,7 @@ namespace TinyBlueWhale.EngineQuery.MySql.Dialects
         /// Maximum number of rows to return.
         /// </param>
         /// <returns>
-        /// MySql pagination clause.
+        /// MySQL pagination clause.
         /// </returns>
         public string BuildPaginationClause(int? skip, int? take)
         {
@@ -42,11 +50,10 @@ namespace TinyBlueWhale.EngineQuery.MySql.Dialects
             if (take.HasValue && skip.HasValue)
                 return $"LIMIT {take.Value} OFFSET {skip.Value}";
 
-
             if (take.HasValue)
                 return $"LIMIT {take.Value}";
 
-            return $"OFFSET {skip!.Value}";
+            return $"LIMIT 18446744073709551615 OFFSET {skip!.Value}";
         }
 
         /// <summary>
@@ -61,6 +68,10 @@ namespace TinyBlueWhale.EngineQuery.MySql.Dialects
         /// <returns>
         /// MySQL qualified identifier.
         /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="qualifier"/> or <paramref name="identifier"/>
+        /// is null, empty or consists only of white-space characters.
+        /// </exception>
         public string BuildQualifiedIdentifier(string qualifier, string identifier)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(qualifier);
@@ -70,14 +81,17 @@ namespace TinyBlueWhale.EngineQuery.MySql.Dialects
         }
 
         /// <summary>
-        /// Resolves the provider-specific scalar function name.
+        /// Resolves the MySQL scalar function name.
         /// </summary>
         /// <param name="functionName">
         /// Canonical scalar function name.
         /// </param>
         /// <returns>
-        /// Provider-specific scalar function name.
+        /// MySQL scalar function name.
         /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="functionName"/> is null, empty or consists only of white-space characters.
+        /// </exception>
         public string ResolveScalarFunctionName(string functionName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(functionName);

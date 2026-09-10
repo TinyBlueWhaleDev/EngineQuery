@@ -1,8 +1,0 @@
-SELECT [o].[order_id] AS [OrderId], [o].[total] AS [Total], ([o].[total] * @p0) AS [TotalWithTax]
-FROM [orders] AS [o]
-WHERE (([o].[total] * @p1) > @p2)
-
--- Parameters
-@p0 = 1.16
-@p1 = 1.16
-@p2 = 1000

@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
@@ -15,13 +15,18 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Resolvers
     public sealed class AttributeEntityMetadataResolver : IEntityMetadataResolver
     {
         /// <summary>
-        /// Resolves metadata associated with the specified entity type using mapping attributes.
+        /// Resolves metadata associated with the specified entity type
+        /// using table and column mapping attributes.
         /// </summary>
         /// <typeparam name="TEntity">
         /// Entity type associated with the metadata.
         /// </typeparam>
-        /// <returns>
+        /// <param name="metadata">
         /// Resolved entity metadata.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> because attribute metadata resolution
+        /// always produces metadata using CLR naming as fallback.
         /// </returns>
         public bool TryResolve<TEntity>(out EntityMetadata? metadata)
         {
@@ -47,6 +52,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Resolvers
             metadata = new EntityMetadata
             {
                 EntityType = entityType,
+                SchemaName = tableAttribute?.Schema,
                 TableName = tableAttribute?.Name ?? entityType.Name,
                 Properties = properties
             };

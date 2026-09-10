@@ -1,0 +1,80 @@
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces;
+using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Providers;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.Playground.Models;
+using TinyBlueWhale.EngineQuery.Playground.Shared;
+
+namespace TinyBlueWhale.EngineQuery.Playground.ProviderComparisonValidators.Subqueries
+{
+
+    /// <summary>
+    /// Validates IN subqueries, outer source references and nested projection
+    /// resolution across supported database providers.
+    ///
+    /// SQL Server:
+    /// SELECT [u].[user_id] AS [UserId], [u].[email]
+    /// FROM [users] AS [u]
+    /// WHERE [u].[user_id] IN (SELECT [o].[user_id]
+    /// FROM [orders] AS [o]
+    /// WHERE ([o].[total] &gt; @p0))
+    ///
+    /// PostgreSQL:
+    /// SELECT "u"."user_id" AS "UserId", "u"."email"
+    /// FROM "users" AS "u"
+    /// WHERE "u"."user_id" IN (SELECT "o"."user_id"
+    /// FROM "orders" AS "o"
+    /// WHERE ("o"."total" &gt; @p0))
+    ///
+    /// MySQL:
+    /// SELECT `u`.`user_id` AS `UserId`, `u`.`email`
+    /// FROM `users` AS `u`
+    /// WHERE `u`.`user_id` IN (SELECT `o`.`user_id`
+    /// FROM `orders` AS `o`
+    /// WHERE (`o`.`total` &gt; @p0))
+    ///
+    /// Expected parameters:
+    /// @p0 = 100
+    /// </summary>
+    public static class InSubqueryQueryValidator
+    {
+        public static void Run()
+        {
+            var metadataResolver = ProviderMetadataFactory.CreateJoinMetadataResolver();
+
+            ProviderQueryPrinter.Print(
+                "SQL Server IN Subquery",
+                BuildQuery(ProviderQueryBuilderFactory.CreateSqlServer(metadataResolver)));
+
+            ProviderQueryPrinter.Print(
+                "PostgreSQL IN Subquery",
+                BuildQuery(ProviderQueryBuilderFactory.CreatePostgreSql(metadataResolver)));
+
+            ProviderQueryPrinter.Print(
+                "MySQL IN Subquery",
+                BuildQuery(ProviderQueryBuilderFactory.CreateMySql(metadataResolver)));
+        }
+
+        // Builds a query with an IN subquery.
+        private static GeneratedSqlQuery BuildQuery<TProfile>(IQueryBuilder<TProfile> queryBuilder)
+            where TProfile : IDatabaseProviderProfile
+        {
+            return queryBuilder
+                .From<JoinUser>(alias: "u")
+                .Select<JoinUser>(u => new
+                {
+                    UserId = u.Id,
+                    u.Email
+                })
+                .WhereIn<JoinUser, JoinOrder>(
+                    u => u.Id,
+                    alias: "o",
+                    subquery => subquery
+                        .Select<JoinOrder>(o => new
+                        {
+                            o.UserId
+                        })
+                        .Where<JoinOrder>(o => o.Total > 100))
+                .Build();
+        }
+    }
+}

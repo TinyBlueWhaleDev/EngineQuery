@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 
 namespace TinyBlueWhale.EngineQuery.Core.ExpressionScopes
 {
@@ -13,6 +13,12 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionScopes
         /// <summary>
         /// Registers an expression parameter with its query source.
         /// </summary>
+        /// <param name="parameterExpression">
+        /// Expression parameter associated with the query source.
+        /// </param>
+        /// <param name="sourceDefinition">
+        /// Query source registered for the expression parameter.
+        /// </param>
         public void Register(ParameterExpression parameterExpression, QuerySourceDefinition sourceDefinition)
         {
             ArgumentNullException.ThrowIfNull(parameterExpression);
@@ -24,6 +30,12 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionScopes
         /// <summary>
         /// Resolves the query source associated with an expression parameter.
         /// </summary>
+        /// <param name="parameterExpression">
+        /// Expression parameter whose query source should be resolved.
+        /// </param>
+        /// <returns>
+        /// Query source associated with the expression parameter.
+        /// </returns>
         public QuerySourceDefinition Resolve(ParameterExpression parameterExpression)
         {
             ArgumentNullException.ThrowIfNull(parameterExpression);

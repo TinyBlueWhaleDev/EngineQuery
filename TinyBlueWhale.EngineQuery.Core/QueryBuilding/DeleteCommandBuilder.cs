@@ -6,6 +6,7 @@ using TinyBlueWhale.EngineQuery.Core.Interfaces;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Context;
 using TinyBlueWhale.EngineQuery.Core.QueryBuilding.Filtering;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 
 namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
@@ -32,39 +33,44 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// <param name="queryCompiler">
         /// Query compiler used to generate provider-specific command output.
         /// </param>
+        /// <param name="metadataResolver">
+        /// Entity metadata resolver associated with the command.
+        /// </param>
         /// <param name="tableName">
         /// Database table name associated with the DELETE command.
+        /// </param>
+        /// <param name="schemaName">
+        /// Optional database schema name associated with the target DELETE table.
         /// </param>
         /// <param name="columnMappings">
         /// Optional property-to-column mappings used during SQL generation.
         /// </param>
-        /// <param name="metadataResolver">
-        /// Optional entity metadata resolver associated with the command.
-        /// </param>
-        internal DeleteCommandBuilder(IQueryCompiler queryCompiler, string tableName, IReadOnlyDictionary<string, string>? columnMappings = null, IEntityMetadataResolver? metadataResolver = null)
+        internal DeleteCommandBuilder(IQueryCompiler queryCompiler, IEntityMetadataResolver metadataResolver, string tableName, string? schemaName, IReadOnlyDictionary<string, string>? columnMappings = null)
         {
             ArgumentNullException.ThrowIfNull(queryCompiler);
             ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
+
+            if (schemaName is not null)
+                ArgumentException.ThrowIfNullOrWhiteSpace(schemaName);
+
+            var rootSource = new QuerySourceDefinition
+            {
+                EntityType = typeof(T),
+                SchemaName = schemaName,
+                TableName = tableName,
+                TableAlias = null,
+                ColumnMappings = columnMappings ?? new Dictionary<string, string>()
+            };
 
             _queryCompiler = queryCompiler;
 
             _queryDefinition = new CompiledQueryDefinition
             {
                 CommandType = QueryCommandType.Delete,
-                TableName = tableName,
-                TableAlias = tableName,
-                ColumnMappings = columnMappings ?? new Dictionary<string, string>(),
-                EntityType = typeof(T)
+                RootSource = rootSource
             };
 
-            _queryDefinition.SourceDefinitions[typeof(T)] =
-                new QuerySourceDefinition
-                {
-                    EntityType = typeof(T),
-                    TableName = tableName,
-                    TableAlias = tableName,
-                    ColumnMappings = _queryDefinition.ColumnMappings
-                };
+            _queryDefinition.Sources.Add(rootSource);
 
             var context = new QueryCommandBuilderContext
             {
@@ -74,8 +80,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
                 AliasRegistry = new QueryAliasRegistry()
             };
 
-            context.AliasRegistry.Register(tableName);
-
             _whereClauseBuilder = new WhereClauseBuilder(context);
         }
 
@@ -83,7 +87,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// Adds a WHERE predicate for the target entity.
         /// </summary>
         /// <param name="predicate">
-        /// Predicate expression describing the SQL filter condition.
+        /// Predicate expression added to the WHERE clause.
         /// </param>
         /// <returns>
         /// Current DELETE command builder instance.
@@ -98,10 +102,10 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// Adds a WHERE predicate for the target entity using the specified logical operator.
         /// </summary>
         /// <param name="predicate">
-        /// Predicate expression describing the SQL filter condition.
+        /// Predicate expression added to the WHERE clause.
         /// </param>
         /// <param name="logicalOperator">
-        /// Logical operator used to connect the predicate with the preceding WHERE predicate.
+        /// Logical operator used to combine the predicate with the previous condition.
         /// </param>
         /// <returns>
         /// Current DELETE command builder instance.
@@ -116,7 +120,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// Adds an IN collection condition for the target entity.
         /// </summary>
         /// <typeparam name="TProperty">
-        /// Property and collection element type.
+        /// Type of the selected property and collection elements.
         /// </typeparam>
         /// <param name="selector">
         /// Expression that selects the property evaluated by the IN condition.
@@ -130,7 +134,6 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public IDeleteCommandBuilder<T> WhereIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values)
         {
             _whereClauseBuilder.AddCollection(selector, values, isNegated: false);
-
             return this;
         }
 
@@ -138,7 +141,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         /// Adds a NOT IN collection condition for the target entity.
         /// </summary>
         /// <typeparam name="TProperty">
-        /// Property and collection element type.
+        /// Type of the selected property and collection elements.
         /// </typeparam>
         /// <param name="selector">
         /// Expression that selects the property evaluated by the NOT IN condition.
@@ -152,18 +155,17 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public IDeleteCommandBuilder<T> WhereNotIn<TProperty>(Expression<Func<T, TProperty>> selector, IEnumerable<TProperty> values)
         {
             _whereClauseBuilder.AddCollection(selector, values, isNegated: true);
-
             return this;
         }
 
         /// <summary>
-        /// Adds a filtering expression only when the specified condition is true.
+        /// Adds a WHERE predicate only when the specified condition is true.
         /// </summary>
         /// <param name="condition">
-        /// Determines whether the predicate should be added.
+        /// Indicates whether the predicate should be added.
         /// </param>
         /// <param name="predicate">
-        /// Predicate expression describing the SQL filter condition.
+        /// Predicate expression added when the condition is true.
         /// </param>
         /// <returns>
         /// Current DELETE command builder instance.
@@ -175,16 +177,16 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         }
 
         /// <summary>
-        /// Adds a conditional WHERE predicate using the specified logical operator.
+        /// Adds a WHERE predicate only when the specified condition is true using the specified logical operator.
         /// </summary>
         /// <param name="condition">
-        /// Determines whether the predicate should be added.
+        /// Indicates whether the predicate should be added.
         /// </param>
         /// <param name="predicate">
-        /// Predicate expression describing the SQL filter condition.
+        /// Predicate expression added when the condition is true.
         /// </param>
         /// <param name="logicalOperator">
-        /// Logical operator used to connect the predicate with the preceding WHERE predicate.
+        /// Logical operator used to combine the predicate with the previous condition.
         /// </param>
         /// <returns>
         /// Current DELETE command builder instance.
@@ -192,17 +194,12 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public IDeleteCommandBuilder<T> WhereIf(bool condition, Expression<Func<T, bool>> predicate, QueryLogicalOperator logicalOperator)
         {
             _whereClauseBuilder.AddIf(condition, predicate, logicalOperator);
-
             return this;
         }
 
         /// <summary>
         /// Compiles the current DELETE definition into SQL command text and parameters.
         /// </summary>
-        /// <remarks>
-        /// This method only compiles the captured DELETE definition.
-        /// It does not execute the generated command against a database.
-        /// </remarks>
         /// <returns>
         /// Generated SQL command.
         /// </returns>
@@ -212,10 +209,7 @@ namespace TinyBlueWhale.EngineQuery.Core.QueryBuilding
         public GeneratedSqlQuery Build()
         {
             if (_queryDefinition.WhereDefinitions.Count == 0 && _queryDefinition.WhereCollectionDefinitions.Count == 0)
-            {
-                throw new InvalidOperationException(
-                    "At least one WHERE predicate must be configured before building a DELETE command.");
-            }
+                throw new InvalidOperationException("At least one WHERE predicate must be configured before building a DELETE command.");
 
             return _queryCompiler.Compile(_queryDefinition);
         }

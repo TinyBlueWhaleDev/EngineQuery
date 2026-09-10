@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Core.Parameters;
+﻿using TinyBlueWhale.EngineQuery.Core.Parameters;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
 using TinyBlueWhale.EngineQuery.Sql.Interfaces;
@@ -12,9 +12,6 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// This service is used by SQL clauses that embed subqueries, such as CTEs, derived tables,
     /// EXISTS conditions, IN subqueries, APPLY clauses and set operations.
     /// </remarks>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="SubqueryCompiler"/> class.
-    /// </remarks>
     /// <param name="queryScriptBuilder">
     /// SQL script builder used to compile nested query definitions.
     /// </param>
@@ -22,7 +19,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
     /// SQL parameter rewriter used to merge nested parameters into the parent context.
     /// </param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="queryScriptBuilder"/> or <paramref name="parameterRewriter"/> is <see langword="null"/>.
+    /// Thrown when <paramref name="queryScriptBuilder"/> or
+    /// <paramref name="parameterRewriter"/> is null.
     /// </exception>
     public sealed class SubqueryCompiler(IQueryScriptBuilder queryScriptBuilder, SqlParameterRewriter parameterRewriter)
     {
@@ -42,7 +40,8 @@ namespace TinyBlueWhale.EngineQuery.Sql.Compilation
         /// Nested SQL command text with parameter names rewritten for the parent context.
         /// </returns>
         /// <exception cref="ArgumentNullException">
-        /// Thrown when <paramref name="subquery"/> or <paramref name="parentContext"/> is <see langword="null"/>.
+        /// Thrown when <paramref name="subquery"/> or
+        /// <paramref name="parentContext"/> is null.
         /// </exception>
         public string CompileAndReindex(CompiledQueryDefinition subquery, QueryCompilationContext parentContext)
         {

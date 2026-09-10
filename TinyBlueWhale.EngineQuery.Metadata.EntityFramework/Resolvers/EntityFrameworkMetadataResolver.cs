@@ -9,35 +9,34 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Resolvers
     /// <summary>
     /// Resolves EngineQuery entity metadata from an Entity Framework Core model.
     /// </summary>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="EntityFrameworkMetadataResolver"/> class.
-    /// </remarks>
     /// <param name="model">
     /// Entity Framework Core model.
     /// </param>
     /// <param name="options">
-    /// Resolver options.
+    /// Metadata resolver options.
     /// </param>
-    public sealed class EntityFrameworkMetadataResolver(
-        IModel model,
-        EntityFrameworkMetadataResolverOptions options) : IEntityMetadataResolver
+    public sealed class EntityFrameworkMetadataResolver(IModel model, EntityFrameworkMetadataResolverOptions options) : IEntityMetadataResolver
     {
         private readonly IModel _model = model ?? throw new ArgumentNullException(nameof(model));
         private readonly EntityFrameworkMetadataResolverOptions _options = options ?? throw new ArgumentNullException(nameof(options));
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EntityFrameworkMetadataResolver"/> class.
+        /// Initializes a new instance of the <see cref="EntityFrameworkMetadataResolver"/>
+        /// class using the default resolver options.
         /// </summary>
         /// <param name="model">
         /// Entity Framework Core model.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="model"/> is null.
+        /// </exception>
         public EntityFrameworkMetadataResolver(IModel model)
             : this(model, EntityFrameworkMetadataResolverOptions.Default)
         {
         }
 
         /// <summary>
-        /// Tries to resolve metadata associated with the specified entity type.
+        /// Attempts to resolve metadata associated with the specified entity type.
         /// </summary>
         /// <typeparam name="TEntity">
         /// Entity type associated with the metadata.
@@ -46,7 +45,8 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Resolvers
         /// Resolved entity metadata when available.
         /// </param>
         /// <returns>
-        /// true when metadata is resolved successfully; otherwise, false.
+        /// <see langword="true"/> when metadata is resolved successfully;
+        /// otherwise, <see langword="false"/>.
         /// </returns>
         public bool TryResolve<TEntity>(out EntityMetadata? metadata)
         {
@@ -99,9 +99,8 @@ namespace TinyBlueWhale.EngineQuery.Metadata.EntityFramework.Resolvers
             metadata = new EntityMetadata
             {
                 EntityType = entityType,
-                TableName = string.IsNullOrWhiteSpace(schema)
-                    ? tableName
-                    : $"{schema}.{tableName}",
+                SchemaName = schema,
+                TableName = tableName,
                 Properties = properties
             };
 

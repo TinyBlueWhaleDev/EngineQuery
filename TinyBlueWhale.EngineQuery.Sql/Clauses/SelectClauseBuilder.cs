@@ -1,9 +1,10 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using TinyBlueWhale.EngineQuery.Abstractions.Enums;
 using TinyBlueWhale.EngineQuery.Core.Enums;
 using TinyBlueWhale.EngineQuery.Core.ExpressionScopes;
-using TinyBlueWhale.EngineQuery.Core.Helpers;
 using TinyBlueWhale.EngineQuery.Core.QueryDefinitions;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Projection;
+using TinyBlueWhale.EngineQuery.Core.QueryDefinitions.Sources;
 using TinyBlueWhale.EngineQuery.Sql.Compilation;
 using TinyBlueWhale.EngineQuery.Sql.ExpressionsParsing;
 using TinyBlueWhale.EngineQuery.Sql.Helpers;
@@ -12,7 +13,7 @@ using TinyBlueWhale.EngineQuery.Sql.Interfaces;
 namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="SelectClauseBuilder"/> class.
+    /// Builds SQL SELECT clauses from compiled projection definitions.
     /// </summary>
     /// <param name="columnReferenceBuilder">
     /// SQL column reference builder used to resolve projection columns.
@@ -33,6 +34,10 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
         /// <returns>
         /// SQL SELECT clause.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when <paramref name="queryDefinition"/> or
+        /// <paramref name="context"/> is null.
+        /// </exception>
         public string Build(CompiledQueryDefinition queryDefinition, QueryCompilationContext context)
         {
             ArgumentNullException.ThrowIfNull(queryDefinition);
@@ -81,39 +86,21 @@ namespace TinyBlueWhale.EngineQuery.Sql.Clauses
 
         private string BuildSelectColumn(CompiledQueryDefinition queryDefinition, QuerySelectColumnDefinition selectDefinition, QueryCompilationContext context)
         {
-            var columnReference = BuildSelectColumnReference(queryDefinition, selectDefinition, context);
-            var columnName = ResolveSelectColumnName(queryDefinition, selectDefinition);
+            var source = selectDefinition.Source ?? queryDefinition.RootSource;
+            var columnReference = BuildSelectColumnReference(source, selectDefinition, context);
 
-            var alias = string.IsNullOrWhiteSpace(selectDefinition.Alias)
-                ? selectDefinition.PropertyName
-                : selectDefinition.Alias;
+            if (!string.IsNullOrWhiteSpace(selectDefinition.Alias))
+                return $"{columnReference} AS {context.DatabaseDialect.EscapeIdentifier(selectDefinition.Alias)}";
 
-            var shouldApplyAlias = queryDefinition.ForceSelectAliases ||
-                !string.IsNullOrWhiteSpace(selectDefinition.Alias) ||
-                !string.Equals(columnName, alias, StringComparison.Ordinal);
+            if (queryDefinition.ForceSelectAliases)
+                return $"{columnReference} AS {context.DatabaseDialect.EscapeIdentifier(selectDefinition.PropertyName)}";
 
-            return shouldApplyAlias
-                ? $"{columnReference} AS {context.DatabaseDialect.EscapeIdentifier(alias)}"
-                : columnReference;
+            return columnReference;
         }
 
-        private string BuildSelectColumnReference(CompiledQueryDefinition queryDefinition, QuerySelectColumnDefinition selectDefinition, QueryCompilationContext context)
+        private string BuildSelectColumnReference(QuerySourceDefinition source, QuerySelectColumnDefinition selectDefinition, QueryCompilationContext context)
         {
-            if (selectDefinition.Source is not null)
-                return _columnReferenceBuilder.Build(selectDefinition.Source, selectDefinition.PropertyName);
-
-            return QueryColumnMappingHelper.ResolveColumnReference(
-                queryDefinition,
-                context.DatabaseDialect,
-                selectDefinition.PropertyName);
-        }
-
-        private static string ResolveSelectColumnName(CompiledQueryDefinition queryDefinition, QuerySelectColumnDefinition selectDefinition)
-        {
-            if (selectDefinition.Source is not null)
-                return SqlColumnReferenceBuilder.ResolveMappedColumnName(selectDefinition.Source.ColumnMappings, selectDefinition.PropertyName);
-
-            return QueryColumnMappingHelper.ResolveColumnName(queryDefinition, selectDefinition.PropertyName);
+            return _columnReferenceBuilder.Build(source, selectDefinition.PropertyName);
         }
 
         private string BuildAggregateColumn(QueryAggregateDefinition aggregateDefinition, QueryCompilationContext context)

@@ -22,6 +22,8 @@ namespace TinyBlueWhale.EngineQuery.Core.ExpressionsParsing
         /// </returns>
         public static object? ExtractValue(Expression expression)
         {
+            ArgumentNullException.ThrowIfNull(expression);
+
             var lambda = Expression.Lambda(expression);
             var compiledExpression = lambda.Compile();
 

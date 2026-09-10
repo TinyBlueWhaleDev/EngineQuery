@@ -19,7 +19,6 @@ namespace TinyBlueWhale.EngineQuery.Abstractions.Models
         /// <summary>
         /// Gets the runtime type of the parameter value when available.
         /// </summary>
-        public Type? ValueType =>
-            Value?.GetType();
+        public Type? ValueType => Value?.GetType();
     }
 }

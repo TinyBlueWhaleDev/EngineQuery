@@ -1,0 +1,33 @@
+﻿using TinyBlueWhale.EngineQuery.Abstractions.Interfaces.Features;
+using TinyBlueWhale.EngineQuery.Abstractions.Models;
+using TinyBlueWhale.EngineQuery.Sql.Interfaces.Strategies;
+using TinyBlueWhale.EngineQuery.SqlServer.Clauses.Strategies.Pagination;
+
+namespace TinyBlueWhale.EngineQuery.SqlServer.Profiles
+{
+    /// <summary>
+    /// Represents the EngineQuery provider profile for SQL Server 2012.
+    /// </summary>
+    /// <remarks>
+    /// SQL Server 2012 introduces OFFSET/FETCH pagination support and therefore
+    /// exposes the EngineQuery pagination feature.
+    /// </remarks>
+    public class SqlServer2012Profile : SqlServer2008Profile,
+        IOffsetFetchPaginationFeature,
+        IPaginationStrategyProvider
+    {
+        /// <inheritdoc />
+        public override DatabaseProviderVersion Version { get; } = DatabaseProviderVersion.Create(11, 0);
+
+        /// <summary>
+        /// Creates the pagination strategy for SQL Server 2012.
+        /// </summary>
+        /// <returns>
+        /// The SQL Server 2012 OFFSET/FETCH pagination strategy.
+        /// </returns>
+        public IPaginationStrategy CreatePaginationStrategy()
+        {
+            return new SqlServer2012PaginationStrategy();
+        }
+    }
+}

@@ -1,4 +1,4 @@
-using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
+﻿using TinyBlueWhale.EngineQuery.Metadata.Interfaces;
 using TinyBlueWhale.EngineQuery.Metadata.Models;
 
 namespace TinyBlueWhale.EngineQuery.Metadata.Resolvers
@@ -11,7 +11,7 @@ namespace TinyBlueWhale.EngineQuery.Metadata.Resolvers
     /// </remarks>
     public sealed class CompositeEntityMetadataResolver(IReadOnlyList<IEntityMetadataResolver> resolvers) : IEntityMetadataResolver
     {
-        private readonly IReadOnlyList<IEntityMetadataResolver> _resolvers = resolvers;
+        private readonly IReadOnlyList<IEntityMetadataResolver> _resolvers = resolvers ?? throw new ArgumentNullException(nameof(resolvers));
 
         /// <summary>
         /// Attempts to resolve metadata associated with the specified entity type using the configured resolver chain.
