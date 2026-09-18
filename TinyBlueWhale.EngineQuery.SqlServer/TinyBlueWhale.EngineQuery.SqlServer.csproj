@@ -4,6 +4,7 @@
     <PackageId>TinyBlueWhale.EngineQuery.SqlServer</PackageId>
     <Description>SQL Server provider for EngineQuery deterministic SQL generation.</Description>
     <PackageTags>dotnet;sql;query-builder;sqlserver;mssql;dapper;cqrs;enginequery</PackageTags>
+    <IncludeEngineQueryGenerator>true</IncludeEngineQueryGenerator>
   </PropertyGroup>
 
   <ItemGroup>

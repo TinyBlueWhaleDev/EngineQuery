@@ -3,7 +3,7 @@
   <PropertyGroup>
     <PackageId>TinyBlueWhale.EngineQuery.DependencyInjection</PackageId>
     <Description>Dependency injection extensions for EngineQuery multi-provider SQL generation.</Description>
-    <PackageTags>dotnet;sql;query-builder;dependency-injection;di;sqlserver;postgresql;mysql;dapper;cqrs;enginequery</PackageTags>
+    <PackageTags>dotnet;sql;query-builder;dependency-injection;di;sqlserver;postgresql;mysql;dapper;cqrs;enginequery</PackageTags>    
   </PropertyGroup>
 
 

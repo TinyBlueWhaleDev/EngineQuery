@@ -9,4 +9,12 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+
+   <PropertyGroup Condition="'$(IncludeEngineQueryGenerator)' == 'true'">
+    <EngineQueryGeneratorAssembly>$(MSBuildThisFileDirectory)TinyBlueWhale.EngineQuery.Generators\bin\$(Configuration)\netstandard2.0\TinyBlueWhale.EngineQuery.Generators.dll</EngineQueryGeneratorAssembly>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IncludeEngineQueryGenerator)' == 'true'">
+    <None Include="$(EngineQueryGeneratorAssembly)" Pack="true" PackagePath="analyzers/dotnet/cs/" Visible="false" />
+  </ItemGroup>
 </Project>
