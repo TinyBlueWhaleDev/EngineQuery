@@ -4,6 +4,7 @@
     <PackageId>TinyBlueWhale.EngineQuery.MySql</PackageId>
     <Description>MySQL provider for EngineQuery deterministic SQL generation.</Description>
     <PackageTags>dotnet;sql;query-builder;mysql;dapper;cqrs;enginequery</PackageTags>
+    <IncludeEngineQueryGenerator>true</IncludeEngineQueryGenerator>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,6 +4,7 @@
     <PackageId>TinyBlueWhale.EngineQuery.PostgreSql</PackageId>
     <Description>PostgreSQL provider for EngineQuery deterministic SQL generation.</Description>
     <PackageTags>dotnet;sql;query-builder;postgresql;postgres;dapper;cqrs;enginequery</PackageTags>
+    <IncludeEngineQueryGenerator>true</IncludeEngineQueryGenerator>
   </PropertyGroup>
 
   <ItemGroup>
